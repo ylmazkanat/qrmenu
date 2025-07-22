@@ -353,11 +353,6 @@
         }, 5000);
     }
 
-    // Otomatik yenileme (30 saniyede bir)
-    setInterval(() => {
-        location.reload();
-    }, 30000);
-
     // Ses efekti için (yeni sipariş geldiğinde)
     function playNotificationSound() {
         const audio = new Audio('data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmgfBj2V4vLGdSgGKnvM8NeFOQgVZLTl5qNOGYM6AAABAAoAAg==');
@@ -368,19 +363,35 @@
 
     // Yeni sipariş kontrol et
     let lastOrderCount = {{ $pendingOrders->count() }};
-    setInterval(() => {
+    function checkNewOrders() {
         fetch('{{ route("restaurant.api.orders.updates") }}')
             .then(response => response.json())
             .then(data => {
                 if (data.pending_orders > lastOrderCount) {
                     playNotificationSound();
-                    showSuccessMessage('Yeni sipariş geldi!');
+                    showSuccessMessage(`${data.pending_orders - lastOrderCount} yeni sipariş geldi!`);
+                    
+                    // Sayfa yenile (3 saniye sonra)
+                    setTimeout(() => {
+                        location.reload();
+                    }, 3000);
                 }
                 lastOrderCount = data.pending_orders;
             })
             .catch(error => {
                 console.error('Sipariş kontrol hatası:', error);
             });
-    }, 15000);
+    }
+
+    // Her 10 saniyede bir kontrol et
+    setInterval(checkNewOrders, 10000);
+    
+    // Sayfa yüklendiğinde bir kez kontrol et
+    setTimeout(checkNewOrders, 2000);
+
+    // Otomatik yenileme (2 dakikada bir - yedek olarak)
+    setInterval(() => {
+        location.reload();
+    }, 120000);
 </script>
 @endsection 

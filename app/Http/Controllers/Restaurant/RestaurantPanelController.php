@@ -129,13 +129,21 @@ class RestaurantPanelController extends Controller
     }
 
     // Garson - Siparişi Teslim Edildi Olarak İşaretle
-    public function markAsDelivered(Order $order)
+    public function markAsDelivered(Request $request, $orderId)
     {
         $user = Auth::user();
         $restaurant = $this->getUserRestaurant($user);
         
-        if ($order->restaurant_id !== $restaurant->id) {
-            abort(403, 'Bu siparişe erişim yetkiniz yok.');
+        if (!$restaurant) {
+            return response()->json(['success' => false, 'message' => 'Bu restorana erişim yetkiniz yok.'], 403);
+        }
+
+        $order = Order::where('id', $orderId)
+                     ->where('restaurant_id', $restaurant->id)
+                     ->first();
+
+        if (!$order) {
+            return response()->json(['success' => false, 'message' => 'Bu siparişe erişim yetkiniz yok.'], 403);
         }
 
         $order->update(['status' => 'delivered']);
@@ -180,13 +188,21 @@ class RestaurantPanelController extends Controller
     }
 
     // Mutfak - Sipariş Hazırlamaya Başla
-    public function startPreparing(Order $order)
+    public function startPreparing(Request $request, $orderId)
     {
         $user = Auth::user();
         $restaurant = $this->getUserRestaurant($user);
         
-        if ($order->restaurant_id !== $restaurant->id) {
-            abort(403, 'Bu siparişe erişim yetkiniz yok.');
+        if (!$restaurant) {
+            return response()->json(['success' => false, 'message' => 'Bu restorana erişim yetkiniz yok.'], 403);
+        }
+
+        $order = Order::where('id', $orderId)
+                     ->where('restaurant_id', $restaurant->id)
+                     ->first();
+
+        if (!$order) {
+            return response()->json(['success' => false, 'message' => 'Bu siparişe erişim yetkiniz yok.'], 403);
         }
 
         $order->update(['status' => 'preparing']);
@@ -204,13 +220,21 @@ class RestaurantPanelController extends Controller
     }
 
     // Mutfak - Siparişi Hazır Olarak İşaretle
-    public function markAsReady(Order $order)
+    public function markAsReady(Request $request, $orderId)
     {
         $user = Auth::user();
         $restaurant = $this->getUserRestaurant($user);
         
-        if ($order->restaurant_id !== $restaurant->id) {
-            abort(403, 'Bu siparişe erişim yetkiniz yok.');
+        if (!$restaurant) {
+            return response()->json(['success' => false, 'message' => 'Bu restorana erişim yetkiniz yok.'], 403);
+        }
+
+        $order = Order::where('id', $orderId)
+                     ->where('restaurant_id', $restaurant->id)
+                     ->first();
+
+        if (!$order) {
+            return response()->json(['success' => false, 'message' => 'Bu siparişe erişim yetkiniz yok.'], 403);
         }
 
         $order->update(['status' => 'ready']);
@@ -259,13 +283,21 @@ class RestaurantPanelController extends Controller
     }
 
     // Kasa - Ödeme İşle
-    public function processPayment(Request $request, Order $order)
+    public function processPayment(Request $request, $orderId)
     {
         $user = Auth::user();
         $restaurant = $this->getUserRestaurant($user);
         
-        if ($order->restaurant_id !== $restaurant->id) {
-            abort(403, 'Bu siparişe erişim yetkiniz yok.');
+        if (!$restaurant) {
+            return response()->json(['success' => false, 'message' => 'Bu restorana erişim yetkiniz yok.'], 403);
+        }
+
+        $order = Order::where('id', $orderId)
+                     ->where('restaurant_id', $restaurant->id)
+                     ->first();
+
+        if (!$order) {
+            return response()->json(['success' => false, 'message' => 'Bu siparişe erişim yetkiniz yok.'], 403);
         }
 
         $request->validate([
@@ -288,16 +320,23 @@ class RestaurantPanelController extends Controller
     }
 
     // Kasa - Fiş Yazdır
-    public function printReceipt(Order $order)
+    public function printReceipt(Request $request, $orderId)
     {
         $user = Auth::user();
         $restaurant = $this->getUserRestaurant($user);
         
-        if ($order->restaurant_id !== $restaurant->id) {
-            abort(403, 'Bu siparişe erişim yetkiniz yok.');
+        if (!$restaurant) {
+            return response()->json(['success' => false, 'message' => 'Bu restorana erişim yetkiniz yok.'], 403);
         }
 
-        $order->load(['orderItems.product', 'restaurant']);
+        $order = Order::where('id', $orderId)
+                     ->where('restaurant_id', $restaurant->id)
+                     ->with(['orderItems.product', 'restaurant'])
+                     ->first();
+
+        if (!$order) {
+            return response()->json(['success' => false, 'message' => 'Bu siparişe erişim yetkiniz yok.'], 403);
+        }
 
         return view('restaurant.receipt', compact('order', 'restaurant'));
     }

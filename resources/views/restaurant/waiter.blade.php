@@ -409,5 +409,78 @@
 
     // Masa numarası input'una otofocus
     document.getElementById('table_number').focus();
+
+    // Ses efekti için (hazır sipariş bildirimi)
+    function playNotificationSound() {
+        const audio = new Audio('data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmgfBj2V4vLGdSgGKnvM8NeFOQgVZLTl5qNOGYM6AAABAAoAAg==');
+        audio.play().catch(() => {
+            // Ses çalınamazsa sessizce devam et
+        });
+    }
+
+    // Bildirim göster
+    function showNotification(title, message, type = 'success') {
+        const toastContainer = document.querySelector('.toast-container');
+        const toastId = 'toast-' + Date.now();
+        
+        const toastHtml = `
+            <div id="${toastId}" class="toast align-items-center text-bg-${type} border-0" role="alert" aria-live="assertive" aria-atomic="true">
+                <div class="d-flex">
+                    <div class="toast-body">
+                        <strong>${title}</strong><br>
+                        ${message}
+                    </div>
+                    <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Kapat"></button>
+                </div>
+            </div>
+        `;
+        
+        toastContainer.insertAdjacentHTML('beforeend', toastHtml);
+        const newToast = new bootstrap.Toast(document.getElementById(toastId));
+        newToast.show();
+        
+        // Toast kapatıldıktan sonra DOM'dan kaldır
+        setTimeout(() => {
+            const element = document.getElementById(toastId);
+            if (element) element.remove();
+        }, 6000);
+    }
+
+    // Hazır sipariş kontrolü
+    let lastReadyOrderCount = {{ $readyOrders->count() }};
+    
+    function checkReadyOrders() {
+        fetch('{{ route("restaurant.api.orders.updates") }}')
+            .then(response => response.json())
+            .then(data => {
+                if (data.ready_orders > lastReadyOrderCount) {
+                    // Yeni hazır sipariş var
+                    playNotificationSound();
+                    showNotification(
+                        '🔔 Yeni Hazır Sipariş!', 
+                        `${data.ready_orders - lastReadyOrderCount} sipariş teslim için hazır`,
+                        'warning'
+                    );
+                    
+                    // Sayaç güncelle
+                    document.getElementById('readyOrderCount').textContent = data.ready_orders;
+                    
+                    // Sayfayı yenile (hazır siparişler listesini güncellemek için)
+                    setTimeout(() => {
+                        location.reload();
+                    }, 3000);
+                }
+                lastReadyOrderCount = data.ready_orders;
+            })
+            .catch(error => {
+                console.error('Sipariş kontrol hatası:', error);
+            });
+    }
+
+    // Her 10 saniyede bir kontrol et
+    setInterval(checkReadyOrders, 10000);
+
+    // Sayfa yüklendiğinde bir kez kontrol et
+    setTimeout(checkReadyOrders, 2000);
 </script>
 @endsection 
