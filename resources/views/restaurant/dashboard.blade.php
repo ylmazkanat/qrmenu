@@ -132,6 +132,18 @@
                             </div>
                         @endif
                         
+                        @if(auth()->user()->isRestaurantManager())
+                            <div class="col-lg-3 col-md-6 mb-3">
+                                <a href="{{ route('restaurant.menu.management') }}" class="btn btn-outline-dark w-100 p-3">
+                                    <div class="text-center">
+                                        <i class="bi bi-gear fs-1 mb-2"></i>
+                                        <div class="fw-medium">Menü Yönetimi</div>
+                                        <small class="text-muted">Kategori & Ürün</small>
+                                    </div>
+                                </a>
+                            </div>
+                        @endif
+                        
                         <div class="col-lg-3 col-md-6 mb-3">
                             <a href="{{ route('menu.show', $restaurant->slug) }}" class="btn btn-outline-info w-100 p-3" target="_blank">
                                 <div class="text-center">

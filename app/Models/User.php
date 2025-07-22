@@ -110,10 +110,22 @@ class User extends Authenticatable
             return true;
         }
 
-        if ($this->isBusinessOwner() && $restaurant->business->owner_id === $this->id) {
+        // Yeni business_id yapısı
+        if (!is_null($restaurant->business_id)) {
+            if ($this->isBusinessOwner() && $restaurant->business && $restaurant->business->owner_id === $this->id) {
+                return true;
+            }
+        }
+
+        // Eski yapıda restaurant.user_id varsa kontrol et (geriye dönük uyumluluk)
+        if (!is_null($restaurant->user_id) && $restaurant->user_id === $this->id) {
             return true;
         }
 
-        return $this->restaurantStaff()->where('restaurant_id', $restaurant->id)->where('is_active', true)->exists();
+        // Aktif staff kaydı kontrolü
+        return $this->restaurantStaff()
+            ->where('restaurant_id', $restaurant->id)
+            ->where('is_active', true)
+            ->exists();
     }
 }

@@ -79,6 +79,21 @@ Route::middleware(['auth'])->prefix('restaurant')->name('restaurant.')->group(fu
     
     // Mutfak Paneli - restaurant_manager veya kitchen
     Route::get('/kitchen', [RestaurantPanelController::class, 'kitchen'])->name('kitchen');
+    // Menü Yönetimi (Kategori & Ürün CRUD)
+    Route::get('/menu-management', [RestaurantPanelController::class, 'menuManagement'])->name('menu.management');
+    
+    // Kategori İşlemleri
+    Route::post('/categories', [RestaurantPanelController::class, 'storeCategory'])->name('categories.store');
+    Route::get('/categories/{category}', [RestaurantPanelController::class, 'getCategory'])->name('categories.get');
+    Route::put('/categories/{category}', [RestaurantPanelController::class, 'updateCategory'])->name('categories.update');
+    Route::delete('/categories/{category}', [RestaurantPanelController::class, 'deleteCategory'])->name('categories.delete');
+    
+    // Ürün İşlemleri
+    Route::post('/products', [RestaurantPanelController::class, 'storeProduct'])->name('products.store');
+    Route::get('/products/{product}', [RestaurantPanelController::class, 'getProduct'])->name('products.get');
+    Route::put('/products/{product}', [RestaurantPanelController::class, 'updateProduct'])->name('products.update');
+    Route::delete('/products/{product}', [RestaurantPanelController::class, 'deleteProduct'])->name('products.delete');
+    
     Route::post('/kitchen/{order}/start-preparing', [RestaurantPanelController::class, 'startPreparing'])->name('kitchen.start-preparing');
     Route::post('/kitchen/{order}/mark-ready', [RestaurantPanelController::class, 'markAsReady'])->name('kitchen.mark-ready');
     

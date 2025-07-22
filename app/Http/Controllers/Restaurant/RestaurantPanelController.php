@@ -4,12 +4,14 @@ namespace App\Http\Controllers\Restaurant;
 
 use App\Http\Controllers\Controller;
 use App\Models\Restaurant;
+use App\Models\Category;
 use App\Models\Order;
 use App\Models\Product;
 use App\Models\OrderItem;
 use App\Models\KitchenView;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Storage;
 
 class RestaurantPanelController extends Controller
 {
@@ -339,6 +341,293 @@ class RestaurantPanelController extends Controller
         }
 
         return view('restaurant.receipt', compact('order', 'restaurant'));
+    }
+
+    // Menü Yönetimi
+    public function menuManagement()
+    {
+        $user = Auth::user();
+        $restaurant = $this->getUserRestaurant($user);
+
+        if (!$restaurant) {
+            abort(403, 'Bu restorana erişim yetkiniz yok.');
+        }
+
+        $categories = $restaurant->categories()->withCount('products')->orderBy('sort_order')->get();
+        $products = $restaurant->products()->with('category')->orderBy('sort_order')->get();
+
+        return view('restaurant.menu-management', compact('restaurant', 'categories', 'products'));
+    }
+
+    // Kategori İşlemleri
+    public function storeCategory(Request $request)
+    {
+        $user = Auth::user();
+        $restaurant = $this->getUserRestaurant($user);
+
+        if (!$restaurant) {
+            return response()->json(['success' => false, 'message' => 'Bu restorana erişim yetkiniz yok.'], 403);
+        }
+
+        $request->validate([
+            'name' => 'required|string|max:100',
+            'sort_order' => 'nullable|integer|min:0',
+            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+        ]);
+
+        $data = [
+            'name' => $request->name,
+            'sort_order' => $request->sort_order ?? 0,
+        ];
+
+        // Resim yükleme
+        if ($request->hasFile('image')) {
+            $image = $request->file('image');
+            $imageName = time() . '_category_' . uniqid() . '.' . $image->getClientOriginalExtension();
+            $imagePath = $image->storeAs('categories', $imageName, 'public');
+            $data['image'] = $imagePath;
+        }
+
+        $category = $restaurant->categories()->create($data);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Kategori başarıyla eklendi!',
+            'category' => $category
+        ]);
+    }
+
+    public function updateCategory(Request $request, $categoryId)
+    {
+        $user = Auth::user();
+        $restaurant = $this->getUserRestaurant($user);
+
+        if (!$restaurant) {
+            return response()->json(['success' => false, 'message' => 'Bu restorana erişim yetkiniz yok.'], 403);
+        }
+
+        $category = $restaurant->categories()->findOrFail($categoryId);
+
+        $request->validate([
+            'name' => 'required|string|max:100',
+            'sort_order' => 'nullable|integer|min:0',
+            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+        ]);
+
+        $data = [
+            'name' => $request->name,
+            'sort_order' => $request->sort_order ?? $category->sort_order,
+        ];
+
+        // Resim yükleme
+        if ($request->hasFile('image')) {
+            // Eski resmi sil
+            if ($category->image && Storage::disk('public')->exists($category->image)) {
+                Storage::disk('public')->delete($category->image);
+            }
+            
+            $image = $request->file('image');
+            $imageName = time() . '_category_' . uniqid() . '.' . $image->getClientOriginalExtension();
+            $imagePath = $image->storeAs('categories', $imageName, 'public');
+            $data['image'] = $imagePath;
+        }
+
+        $category->update($data);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Kategori başarıyla güncellendi!',
+            'category' => $category
+        ]);
+    }
+
+    public function deleteCategory($categoryId)
+    {
+        $user = Auth::user();
+        $restaurant = $this->getUserRestaurant($user);
+
+        if (!$restaurant) {
+            return response()->json(['success' => false, 'message' => 'Bu restorana erişim yetkiniz yok.'], 403);
+        }
+
+        $category = $restaurant->categories()->findOrFail($categoryId);
+
+        // Kategoriye bağlı ürünler varsa kategoriyi null yap
+        $category->products()->update(['category_id' => null]);
+        
+        // Kategori resmini sil
+        if ($category->image && Storage::disk('public')->exists($category->image)) {
+            Storage::disk('public')->delete($category->image);
+        }
+        
+        $category->delete();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Kategori başarıyla silindi!'
+        ]);
+    }
+
+    // Kategori detaylarını getir (edit için)
+    public function getCategory($categoryId)
+    {
+        $user = Auth::user();
+        $restaurant = $this->getUserRestaurant($user);
+
+        if (!$restaurant) {
+            return response()->json(['success' => false, 'message' => 'Bu restorana erişim yetkiniz yok.'], 403);
+        }
+
+        $category = $restaurant->categories()->findOrFail($categoryId);
+
+        return response()->json([
+            'success' => true,
+            'category' => $category
+        ]);
+    }
+
+    // Ürün İşlemleri
+    public function storeProduct(Request $request)
+    {
+        $user = Auth::user();
+        $restaurant = $this->getUserRestaurant($user);
+
+        if (!$restaurant) {
+            return response()->json(['success' => false, 'message' => 'Bu restorana erişim yetkiniz yok.'], 403);
+        }
+
+        $request->validate([
+            'name' => 'required|string|max:100',
+            'description' => 'nullable|string',
+            'price' => 'required|numeric|min:0',
+            'category_id' => 'nullable|exists:categories,id',
+            'stock' => 'nullable|integer|min:0',
+            'is_available' => 'boolean',
+            'sort_order' => 'nullable|integer|min:0',
+            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+        ]);
+
+        $data = [
+            'name' => $request->name,
+            'description' => $request->description,
+            'price' => $request->price,
+            'category_id' => $request->category_id,
+            'stock' => $request->stock ?? 100,
+            'is_available' => $request->is_available ?? true,
+            'sort_order' => $request->sort_order ?? 0,
+        ];
+
+        // Resim yükleme
+        if ($request->hasFile('image')) {
+            $image = $request->file('image');
+            $imageName = time() . '_product_' . uniqid() . '.' . $image->getClientOriginalExtension();
+            $imagePath = $image->storeAs('products', $imageName, 'public');
+            $data['image'] = $imagePath;
+        }
+
+        $product = $restaurant->products()->create($data);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Ürün başarıyla eklendi!',
+            'product' => $product->load('category')
+        ]);
+    }
+
+    public function updateProduct(Request $request, $productId)
+    {
+        $user = Auth::user();
+        $restaurant = $this->getUserRestaurant($user);
+
+        if (!$restaurant) {
+            return response()->json(['success' => false, 'message' => 'Bu restorana erişim yetkiniz yok.'], 403);
+        }
+
+        $product = $restaurant->products()->findOrFail($productId);
+
+        $request->validate([
+            'name' => 'required|string|max:100',
+            'description' => 'nullable|string',
+            'price' => 'required|numeric|min:0',
+            'category_id' => 'nullable|exists:categories,id',
+            'stock' => 'nullable|integer|min:0',
+            'is_available' => 'boolean',
+            'sort_order' => 'nullable|integer|min:0',
+            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+        ]);
+
+        $data = [
+            'name' => $request->name,
+            'description' => $request->description,
+            'price' => $request->price,
+            'category_id' => $request->category_id,
+            'stock' => $request->stock ?? $product->stock,
+            'is_available' => $request->is_available ?? $product->is_available,
+            'sort_order' => $request->sort_order ?? $product->sort_order,
+        ];
+
+        // Resim yükleme
+        if ($request->hasFile('image')) {
+            // Eski resmi sil
+            if ($product->image && Storage::disk('public')->exists($product->image)) {
+                Storage::disk('public')->delete($product->image);
+            }
+            
+            $image = $request->file('image');
+            $imageName = time() . '_product_' . uniqid() . '.' . $image->getClientOriginalExtension();
+            $imagePath = $image->storeAs('products', $imageName, 'public');
+            $data['image'] = $imagePath;
+        }
+
+        $product->update($data);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Ürün başarıyla güncellendi!',
+            'product' => $product->load('category')
+        ]);
+    }
+
+    public function deleteProduct($productId)
+    {
+        $user = Auth::user();
+        $restaurant = $this->getUserRestaurant($user);
+
+        if (!$restaurant) {
+            return response()->json(['success' => false, 'message' => 'Bu restorana erişim yetkiniz yok.'], 403);
+        }
+
+        $product = $restaurant->products()->findOrFail($productId);
+        
+        // Ürün resmini sil
+        if ($product->image && Storage::disk('public')->exists($product->image)) {
+            Storage::disk('public')->delete($product->image);
+        }
+        
+        $product->delete();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Ürün başarıyla silindi!'
+        ]);
+    }
+
+    // Ürün detaylarını getir (edit için)
+    public function getProduct($productId)
+    {
+        $user = Auth::user();
+        $restaurant = $this->getUserRestaurant($user);
+
+        if (!$restaurant) {
+            return response()->json(['success' => false, 'message' => 'Bu restorana erişim yetkiniz yok.'], 403);
+        }
+
+        $product = $restaurant->products()->with('category')->findOrFail($productId);
+
+        return response()->json([
+            'success' => true,
+            'product' => $product
+        ]);
     }
 
     // Yardımcı method - Kullanıcının bağlı olduğu restoranı getir

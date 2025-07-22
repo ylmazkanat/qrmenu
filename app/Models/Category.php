@@ -12,8 +12,29 @@ class Category extends Model
     protected $fillable = [
         'restaurant_id',
         'name',
+        'slug',
+        'image',
         'sort_order',
     ];
+
+    protected static function boot()
+    {
+        parent::boot();
+
+        static::creating(function ($category) {
+            // Slug otomatik oluştur
+            if (empty($category->slug)) {
+                $category->slug = str()->slug($category->name);
+
+                $original = $category->slug;
+                $counter = 1;
+                while (static::where('slug', $category->slug)->exists()) {
+                    $category->slug = $original.'-'.$counter;
+                    $counter++;
+                }
+            }
+        });
+    }
 
     /**
      * Get the restaurant that owns the category.

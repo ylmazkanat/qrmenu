@@ -15,9 +15,9 @@
     
     @if(auth()->user()->isRestaurantManager())
         <div class="nav-item">
-            <a href="#" class="nav-link">
+            <a href="{{ route('restaurant.menu.management') }}" class="nav-link">
                 <i class="bi bi-gear"></i>
-                Restoran Yönetimi
+                Menü Yönetimi
             </a>
         </div>
     @endif

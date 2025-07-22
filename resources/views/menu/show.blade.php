@@ -30,7 +30,7 @@
         .restaurant-header {
             background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
             color: white;
-            padding: 2rem 0;
+            padding: 1.5rem 0;
             position: relative;
             overflow: hidden;
         }
@@ -88,45 +88,6 @@
             font-size: 18px;
         }
 
-        .category-nav {
-            background: white;
-            padding: 1rem 0;
-            border-bottom: 1px solid var(--border-color);
-            overflow-x: auto;
-        }
-
-        .category-nav::-webkit-scrollbar {
-            height: 4px;
-        }
-
-        .category-nav::-webkit-scrollbar-track {
-            background: #f1f5f9;
-        }
-
-        .category-nav::-webkit-scrollbar-thumb {
-            background: var(--primary-color);
-            border-radius: 2px;
-        }
-
-        .category-pill {
-            background: #f1f5f9;
-            border: none;
-            border-radius: 25px;
-            padding: 8px 20px;
-            margin-right: 10px;
-            color: #64748b;
-            font-weight: 500;
-            text-decoration: none;
-            white-space: nowrap;
-            transition: all 0.3s ease;
-        }
-
-        .category-pill:hover, .category-pill.active {
-            background: var(--primary-color);
-            color: white;
-            transform: translateY(-2px);
-        }
-
         .product-card {
             background: white;
             border-radius: 16px;
@@ -140,6 +101,32 @@
         .product-card:hover {
             transform: translateY(-4px);
             box-shadow: 0 10px 25px -3px rgba(0, 0, 0, 0.1);
+        }
+
+        .category-card .card {
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .category-card .card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 10px 25px -3px rgba(0, 0, 0, 0.15);
+        }
+
+        #backToCategoriesBtn {
+            border-radius: 12px;
+            font-weight: 500;
+            border: 2px solid var(--primary-color);
+            color: var(--primary-color);
+            transition: all 0.3s ease;
+            white-space: nowrap;
+        }
+
+        #backToCategoriesBtn:hover {
+            background: var(--primary-color);
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
         }
 
         .product-image {
@@ -401,29 +388,12 @@
     <!-- Restaurant Header -->
     <div class="restaurant-header">
         <div class="container">
-            <div class="row align-items-center">
-                <div class="col-lg-8">
-                    <h1 class="mb-2">
+            <div class="row align-items-center justify-content-center">
+                <div class="col-12 text-center">
+                    <h1 class="mb-0">
                         <i class="bi bi-shop me-2"></i>
                         {{ $restaurant->name }}
                     </h1>
-                    @if($restaurant->description)
-                        <p class="mb-0 opacity-90">{{ $restaurant->description }}</p>
-                    @endif
-                    @if($restaurant->address)
-                        <p class="mb-0 opacity-75">
-                            <i class="bi bi-geo-alt me-1"></i>
-                            {{ $restaurant->address }}
-                        </p>
-                    @endif
-                </div>
-                <div class="col-lg-4 text-lg-end mt-3 mt-lg-0">
-                    @if($restaurant->phone)
-                        <a href="tel:{{ $restaurant->phone }}" class="btn btn-light btn-lg">
-                            <i class="bi bi-telephone me-2"></i>
-                            {{ $restaurant->phone }}
-                        </a>
-                    @endif
                 </div>
             </div>
         </div>
@@ -432,9 +402,19 @@
     <!-- Search Section -->
     <div class="search-section">
         <div class="container">
-            <div class="search-box">
-                <input type="text" class="search-input" id="searchInput" placeholder="Ürün ara... (örn: pizza, köfte, içecek)">
-                <i class="bi bi-search search-icon"></i>
+            <div class="d-flex gap-2 gap-md-3 align-items-center">
+                <!-- Kategorilere Git Butonu -->
+                <button class="btn btn-outline-primary flex-shrink-0" id="backToCategoriesBtn" style="display: none;" onclick="goBackToCategories()">
+                    <i class="bi bi-arrow-left me-2"></i>
+                    <span class="d-none d-md-inline">Kategorilere Git</span>
+                    <span class="d-md-none">Kategoriler</span>
+                </button>
+                
+                <!-- Arama Kutusu -->
+                <div class="search-box flex-grow-1">
+                    <input type="text" class="search-input" id="searchInput" placeholder="Ürün ara... (örn: pizza, köfte, içecek)">
+                    <i class="bi bi-search search-icon"></i>
+                </div>
             </div>
             
             <!-- Search Results -->
@@ -442,29 +422,53 @@
         </div>
     </div>
 
-    <!-- Category Navigation -->
+    <!-- Category Grid -->
     @if($restaurant->categories->count() > 0)
-        <div class="category-nav">
-            <div class="container">
-                <div class="d-flex" style="overflow-x: auto; padding-bottom: 5px;">
-                    <a href="#all-products" class="category-pill active" data-category="all">
-                        <i class="bi bi-grid me-1"></i> Tümü
+        <div class="container py-5" id="categoryGrid">
+            <div class="row">
+                <!-- Tümü Seçeneği -->
+                <div class="col-6 col-md-4 col-lg-3 mb-4">
+                    <a href="#all-products" class="text-decoration-none d-block category-card" data-target="all-products">
+                        <div class="card h-100 shadow-sm border-0">
+                            <div style="height: 160px; background: linear-gradient(135deg, var(--primary-color), var(--secondary-color)); display: flex; align-items: center; justify-content: center;">
+                                <i class="bi bi-grid-3x3-gap-fill text-white" style="font-size: 3rem;"></i>
+                            </div>
+                            <div class="card-body text-center">
+                                <h6 class="mb-0">Tümü</h6>
+                            </div>
+                        </div>
                     </a>
-                    @foreach($restaurant->categories as $category)
-                        <a href="#category-{{ $category->id }}" class="category-pill" data-category="{{ $category->id }}">
-                            {{ $category->name }}
-                        </a>
-                    @endforeach
                 </div>
+                
+                @foreach($restaurant->categories as $category)
+                    @php $catSlug = $category->slug ?: \Illuminate\Support\Str::slug($category->name.'-'.$category->id); @endphp
+                    <div class="col-6 col-md-4 col-lg-3 mb-4">
+                        <a href="#category-{{ $catSlug }}" class="text-decoration-none d-block category-card" data-target="category-{{ $catSlug }}">
+                            <div class="card h-100 shadow-sm border-0">
+                                @if($category->image)
+                                    <img src="{{ Storage::url($category->image) }}" class="card-img-top" style="height: 160px; object-fit: contain; background: #f8f9fa;">
+                                @else
+                                    <div style="height: 160px; background: linear-gradient(135deg, #f3f4f6, #e5e7eb); display: flex; align-items: center; justify-content: center;">
+                                        <i class="bi bi-image text-muted" style="font-size: 3rem;"></i>
+                                    </div>
+                                @endif
+                                <div class="card-body text-center">
+                                    <h6 class="mb-0">{{ $category->name }}</h6>
+                                </div>
+                            </div>
+                        </a>
+                    </div>
+                @endforeach
             </div>
         </div>
     @endif
 
     <!-- Menu Content -->
-    <div class="container py-4" id="menuContent">
+    <div class="container py-4" id="menuContent" style="display: none;">
         @if($restaurant->categories->count() > 0)
             @foreach($restaurant->categories as $category)
-                <div id="category-{{ $category->id }}" class="category-section mb-5">
+                @php $catSlug = $category->slug ?: \Illuminate\Support\Str::slug($category->name.'-'.$category->id); @endphp
+                <div id="category-{{ $catSlug }}" class="category-section mb-5">
                     <h3 class="mb-4">
                         <i class="bi bi-bookmark-fill text-primary me-2"></i>
                         {{ $category->name }}
@@ -477,7 +481,7 @@
                                     <div class="product-card fade-in">
                                         <div class="product-image" 
                                              @if($product->image) 
-                                                style="background-image: url('{{ Storage::url($product->image) }}')"
+                                                style="background: #f8f9fa url('{{ Storage::url($product->image) }}') center/contain no-repeat;"
                                              @else
                                                 style="background: linear-gradient(135deg, #f3f4f6, #e5e7eb); display: flex; align-items: center; justify-content: center;"
                                              @endif>
@@ -664,6 +668,7 @@
         const searchInput = document.getElementById('searchInput');
         const searchResults = document.getElementById('searchResults');
         const menuContent = document.getElementById('menuContent');
+        const backToCategoriesBtn = document.getElementById('backToCategoriesBtn');
 
         searchInput.addEventListener('input', function() {
             const query = this.value.trim().toLowerCase();
@@ -671,6 +676,7 @@
             if (query.length === 0) {
                 searchResults.style.display = 'none';
                 menuContent.style.display = 'block';
+                backToCategoriesBtn.style.display = 'none';
                 return;
             }
 
@@ -734,6 +740,7 @@
             
             searchResults.style.display = 'block';
             menuContent.style.display = 'none';
+            backToCategoriesBtn.style.display = 'block';
         }
 
         function addToCartFromSearch(productId, productName, productPrice, productImage, inStock) {
@@ -751,29 +758,8 @@
             searchInput.value = '';
             searchResults.style.display = 'none';
             menuContent.style.display = 'block';
+            backToCategoriesBtn.style.display = 'none';
         }
-
-        // Category navigation
-        document.querySelectorAll('.category-pill').forEach(pill => {
-            pill.addEventListener('click', function(e) {
-                e.preventDefault();
-                
-                // Update active state
-                document.querySelectorAll('.category-pill').forEach(p => p.classList.remove('active'));
-                this.classList.add('active');
-                
-                // Clear search
-                searchInput.value = '';
-                searchResults.style.display = 'none';
-                menuContent.style.display = 'block';
-                
-                // Scroll to category
-                const target = document.querySelector(this.getAttribute('href'));
-                if (target && this.dataset.category !== 'all') {
-                    target.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                }
-            });
-        });
 
         // Add to cart functionality
         document.querySelectorAll('.add-to-cart').forEach(button => {
@@ -1041,9 +1027,105 @@
             updateCartDisplay();
         }
 
-        // Initialize
+        // Global function for back to categories button
+        function goBackToCategories() {
+            const searchInput = document.getElementById('searchInput');
+            const searchResults = document.getElementById('searchResults');
+            const backToCategoriesBtn = document.getElementById('backToCategoriesBtn');
+            const menuContent = document.getElementById('menuContent');
+            const categoryGrid = document.getElementById('categoryGrid');
+            
+            window.location.hash = ''; // URL'den hash'i kaldır
+            
+            if (categoryGrid) categoryGrid.style.display = 'block';
+            menuContent.style.display = 'none';
+            searchInput.value = '';
+            searchResults.style.display = 'none';
+            backToCategoriesBtn.style.display = 'none';
+        }
+
+        // İlk açılışta kategori gridini göster, menüyü gizle
         document.addEventListener('DOMContentLoaded', function() {
             loadCart();
+            const menuContent = document.getElementById('menuContent');
+            const categoryGrid = document.getElementById('categoryGrid');
+
+            function showMenu() {
+                if (categoryGrid) categoryGrid.style.display = 'none';
+                menuContent.style.display = 'block';
+                backToCategoriesBtn.style.display = 'block'; // Menüdeyken butonu göster
+            }
+
+            function showCategoryGrid() {
+                if (categoryGrid) categoryGrid.style.display = 'block';
+                menuContent.style.display = 'none';
+                backToCategoriesBtn.style.display = 'none'; // Kategori grid'inde butonu gizle
+            }
+
+            // Eğer URL hash ile geldiysek menüyü göster ve o kategoriye kaydır
+            if (window.location.hash.startsWith('#category-')) {
+                showMenu();
+                const target = document.querySelector(window.location.hash);
+                if (target) {
+                    setTimeout(() => target.scrollIntoView({behavior: 'smooth'}), 300);
+                }
+            } else {
+                // Hash yoksa kategori gridini göster
+                showCategoryGrid();
+            }
+
+            // Hash değişikliklerini dinle (tarayıcı geri butonu için)
+            window.addEventListener('hashchange', function() {
+                if (window.location.hash.startsWith('#category-')) {
+                    showMenu();
+                    const target = document.querySelector(window.location.hash);
+                    if (target) {
+                        // Önce tüm kategorileri gizle
+                        document.querySelectorAll('.category-section').forEach(section => {
+                            section.style.display = 'none';
+                        });
+                        // Sadece seçilen kategoriyi göster
+                        target.style.display = 'block';
+                        setTimeout(() => target.scrollIntoView({behavior: 'smooth'}), 300);
+                    }
+                } else {
+                    showCategoryGrid();
+                }
+            });
+
+            // Grid kartlarına tıklama
+            document.querySelectorAll('.category-card').forEach(card => {
+                card.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    const targetId = this.getAttribute('data-target');
+                    
+                    // Eğer "Tümü" seçeneğine tıklandıysa
+                    if (targetId === 'all-products') {
+                        window.location.hash = '';
+                        showMenu();
+                        // Tüm kategorileri göster
+                        document.querySelectorAll('.category-section').forEach(section => {
+                            section.style.display = 'block';
+                        });
+                        // En üste kaydır
+                        menuContent.scrollIntoView({behavior: 'smooth'});
+                    } else {
+                        // Belirli kategori seçildiyse
+                        window.location.hash = '#'+targetId;
+                        showMenu();
+                        const target = document.getElementById(targetId);
+                        if (target) {
+                            // Önce tüm kategorileri gizle
+                            document.querySelectorAll('.category-section').forEach(section => {
+                                section.style.display = 'none';
+                            });
+                            // Sadece seçilen kategoriyi göster
+                            target.style.display = 'block';
+                            setTimeout(() => target.scrollIntoView({behavior: 'smooth'}), 300);
+                        }
+                    }
+                });
+            });
         });
     </script>
 </body>
