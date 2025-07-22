@@ -1,0 +1,285 @@
+---
+alwaysApply: true
+---
+## 📦 Özellik Listesi
+
+### Admin Panel
+
+* Tüm restoranları, kullanıcıları, istatistikleri görme
+* Üyelik planları ve ödeme entegrasyonu (ileride Stripe, Iyzico vs.)
+
+### Restoran Paneli
+
+* Menü ve kategori oluşturma
+* Ürün ekleme ve düzenleme
+* Masa yönetimi & QR kod oluşturma
+* Kullanıcı ekleme (Garson, Mutfak vs.)
+* Sipariş takip
+* Custom domain ekleme (DNS TXT kayıtları ile açıklama verilir)
+
+### Garson Paneli
+
+* Masa seçip sipariş alma
+* Siparişi mutfağa gönderme
+
+### Mutfak Paneli
+
+* Gelen siparişleri görme
+* Sipariş durumunu güncelleme (Hazır, Bekliyor vs.)
+
+### Müşteri Arayüzü
+
+* `qrmenu.com/test/menu` veya `customdomain.com` ile menüye ulaşım
+* Kategorili ürün listeleme
+* Sipariş verme (ileride)
+
+---
+
+## 🧠 Geliştirme & Kod Standartları
+
+* Laravel MVC yapısı
+* Clean Code prensipleri
+* Repository Pattern (isteğe bağlı)
+* Service Layer (sipariş gibi iş kuralları için)
+* Validation: Laravel Form Requests
+* Exception Handling: `App\Exceptions`
+
+---
+
+## 🎨 UI Kit / Hazır Tasarımlar
+
+Projemizde modern, temiz ve kullanımı kolay bir admin panel altyapısı için **[Tabler UI](https://tabler.io/)** kullanıyoruz.
+Admin paneli https://github.com/tabler/tabler
+İconlar: https://github.com/tabler/tabler-icons
+Bu linkleri kullanabilirsin. 
+### Tabler UI Nedir?
+
+Tabler, Bootstrap 5 tabanlı, açık kaynak ve ücretsiz bir admin panel şablonudur.  
+Minimalist tasarımı, geniş komponent kütüphanesi ve responsive yapısı ile projemizin yönetim panelleri için ideal bir çözümdür.
+
+### Neden Tabler?
+
+- **Bootstrap 5** ile uyumlu, bu sayede kolayca özelleştirilebilir ve geniş geliştirici topluluğu desteği vardır.  
+- Zengin UI bileşenleri (tablolar, form elemanları, grafikler, menüler, modallar vb.) ile hızlı geliştirme imkanı sağlar.  
+- Modern ve sade tasarımı sayesinde kullanıcı deneyimini artırır.  
+- Vue.js veya diğer frontend frameworkleri ile kolay entegre edilebilir.  
+- Ücretsiz ve açık kaynak olması maliyet avantajı sağlar.
+
+### Projede Kullanımı
+
+- Admin panel ve yönetici arayüzü için Tabler bileşenleri ve tasarımları temel alınmıştır.  
+- Laravel Blade şablonları içinde kolayca kullanılabilir ve ihtiyaç halinde Vue.js ile dinamik hale getirilebilir.  
+- Tabler’ın sağladığı responsive tasarım sayesinde masaüstü ve mobil cihazlarda uyumlu arayüzler oluşturulmaktadır.
+
+
+
+
+---
+
+## 🗃️ Otomasyonlar
+
+* Yeni restoran oluşturulunca `qrmenu.com/{slug}/menu` rotası aktif hale gelir
+* DNS TXT kaydı ile custom domain bağlama (Cloudflare gibi sistemlerde müşteriye TXT ve A kaydı örneği verilir)
+
+---
+
+## 📌 Notlar
+
+* SSL yönetimi cloudflare ile yapılacaksa sistem içinde otomatik SSL üretimi yapılmayacak
+* Her özellik bağımsız modüller halinde yazılmalı
+* Test verileri için seeder dosyaları hazır olmalı
+
+---
+
+## 📈 Yol Haritası
+
+* [x] Kullanıcı Giriş & Kayıt Sistemi
+* [x] Restoran Oluşturma & Slug Yönetimi
+* [x] Menü & Ürün Sistemi
+* [ ] Garson & Mutfak ekranı
+* [ ] QR Sipariş Alma
+* [ ] Admin panel istatistikleri
+* [ ] Üyelik & Faturalandırma Sistemi
+* [ ] Flutter ile mobil verisyonunu da daha sonra yapılucak
+
+
+ÖNEMLİ : Mobil olayı için apiları flutter uygulamasından ulaşabilecek şekilde ayarla lütfen yani hem webte hemde mobilde aynı apilarla çalışabilsin.
+Ektra eklenebilir olanlar:
+
+## 💡 Ekstra Öneriler & İpuçları
+
+* **Veritabanı Tasarımı:**
+
+  * `created_by` ve `updated_by` gibi alanlar ekleyerek hangi kullanıcının veriyi oluşturup güncellediğini tutabilirsin. Bu, audit (denetim) için faydalı olur.
+  * Soft delete (mantıksal silme) için `deleted_at` timestamp sütunu ekleyip Laravel’in `SoftDeletes` trait’ini kullanabilirsin. Böylece veriler tamamen silinmeden geri alınabilir olur.
+
+* **Uluslararasılaştırma (i18n):**
+
+  * İleride çoklu dil desteklemek için menü isimleri, açıklamalar gibi metinler için JSON tipinde çoklu dil destekli alanlar veya ayrı çeviri tabloları tasarlanabilir.
+  * Laravel’in yerleşik `Lang` sistemi ile front-end ve back-end metinleri çok dilli hale getirebilirsin.
+
+* **Veri Validasyonu ve Güvenlik:**
+
+  * Laravel Form Request’lerle güçlü validasyon uygula.
+  * Rol tabanlı erişim kontrolünü (RBAC) `spatie/laravel-permission` paketi ile çok kolay ve güvenli yapabilirsin.
+  * API veya Ajax istekleri için Laravel Sanctum ile token bazlı güvenlik ekle.
+
+* **Performans & Ölçeklenebilirlik:**
+
+  * Yoğun sorguları azaltmak için sorgu optimizasyonu, eager loading (`with`) kullanımı önemlidir.
+  * Redis cache ile sık kullanılan sorgu ve ayarları önbelleğe alabilirsin.
+  * Büyük veri tabloları için indekslemeyi unutmamalısın.
+
+* **Domain ve SSL Yönetimi:**
+
+  * Custom domain doğrulama için DNS TXT kaydı kontrolünü otomatik yapacak bir komut ya da webhook sistemi kurulabilir.
+  * SSL otomasyonu Cloudflare üzerinden yapılacağı için backend’de SSL işlemleri minimum tutulabilir.
+
+* **Yapay Zeka İle Entegrasyon:**
+
+  * Menü önerileri, otomatik kategori ataması, stok yönetimi tahmini gibi AI tabanlı modüller ileride eklenebilir.
+  * Chatbot veya sesli asistan entegrasyonları da düşünülebilir.
+
+* **Kod Kalitesi:**
+
+  * PSR standartlarına uy, kodlar unit test ve feature test ile güvence altına alınsın.
+  * `Repository Pattern` ve `Service Layer` kullanarak kodun modüler ve test edilebilir olsun.
+
+
+
+
+
+Veri Tabanı Yapısı:
+-- Veritabanı karakter seti ve sıralama kuralı
+CREATE DATABASE IF NOT EXISTS qrmenu_db
+CHARACTER SET utf8mb4
+COLLATE utf8mb4_unicode_ci;
+
+USE qrmenu_db;
+
+-- Kullanıcılar
+CREATE TABLE users (
+    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+    email VARCHAR(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL UNIQUE,
+    password VARCHAR(255) NOT NULL,
+    role ENUM('admin', 'restaurant_owner', 'waiter', 'kitchen') CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT 'restaurant_owner',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+-- Restoranlar
+CREATE TABLE restaurants (
+    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    user_id BIGINT UNSIGNED NOT NULL,
+    name VARCHAR(150) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+    slug VARCHAR(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL UNIQUE,
+    description TEXT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
+    logo VARCHAR(255),
+    phone VARCHAR(20),
+    address TEXT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
+    is_active BOOLEAN DEFAULT TRUE,
+    custom_domain VARCHAR(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
+    subdomain VARCHAR(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+-- Kategoriler
+CREATE TABLE categories (
+    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    restaurant_id BIGINT UNSIGNED NOT NULL,
+    name VARCHAR(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+    sort_order INT DEFAULT 0,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (restaurant_id) REFERENCES restaurants(id) ON DELETE CASCADE
+) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+-- Ürünler
+CREATE TABLE products (
+    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    restaurant_id BIGINT UNSIGNED NOT NULL,
+    category_id BIGINT UNSIGNED,
+    name VARCHAR(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+    description TEXT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
+    price DECIMAL(10,2) NOT NULL,
+    image VARCHAR(255),
+    stock INT DEFAULT 100,
+    is_available BOOLEAN DEFAULT TRUE,
+    sort_order INT DEFAULT 0,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (restaurant_id) REFERENCES restaurants(id) ON DELETE CASCADE,
+    FOREIGN KEY (category_id) REFERENCES categories(id) ON DELETE SET NULL
+) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+-- Siparişler
+CREATE TABLE orders (
+    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    restaurant_id BIGINT UNSIGNED NOT NULL,
+    table_number VARCHAR(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
+    status ENUM('pending', 'preparing', 'ready', 'delivered', 'cancelled') CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT 'pending',
+    total DECIMAL(10,2) DEFAULT 0,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (restaurant_id) REFERENCES restaurants(id) ON DELETE CASCADE
+) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+-- Sipariş Ürünleri
+CREATE TABLE order_items (
+    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    order_id BIGINT UNSIGNED NOT NULL,
+    product_id BIGINT UNSIGNED NOT NULL,
+    quantity INT DEFAULT 1,
+    price DECIMAL(10,2) NOT NULL,
+    note TEXT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
+    FOREIGN KEY (order_id) REFERENCES orders(id) ON DELETE CASCADE,
+    FOREIGN KEY (product_id) REFERENCES products(id) ON DELETE CASCADE
+) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+-- Garsonlar
+CREATE TABLE waiters (
+    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    restaurant_id BIGINT UNSIGNED NOT NULL,
+    name VARCHAR(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
+    pin_code VARCHAR(10) NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (restaurant_id) REFERENCES restaurants(id) ON DELETE CASCADE
+) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+-- Mutfak ekranı için
+CREATE TABLE kitchen_views (
+    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    order_id BIGINT UNSIGNED NOT NULL,
+    seen BOOLEAN DEFAULT FALSE,
+    seen_at TIMESTAMP NULL,
+    FOREIGN KEY (order_id) REFERENCES orders(id) ON DELETE CASCADE
+) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+-- Domain yönlendirmeleri
+CREATE TABLE domain_mappings (
+    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    restaurant_id BIGINT UNSIGNED NOT NULL,
+    domain_type ENUM('subdomain', 'custom') CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT 'subdomain',
+    domain VARCHAR(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL UNIQUE,
+    is_verified BOOLEAN DEFAULT FALSE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (restaurant_id) REFERENCES restaurants(id) ON DELETE CASCADE
+) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+
+
+
+
+Son detay:
+> **Yazılımımızın temel prensibi, `sade` ve `kullanımı kolay` bir arayüz sunmaktır.**  
+> Bu sayede hem kullanıcılar hem de yöneticiler, karmaşık işlemlerle uğraşmadan hızlıca işlerini yapabilirler.  
+>  
+> Kod tarafında ise, proje mutlaka `Clean Code` prensiplerine uygun, `MVC` mimarisi ile yapılandırılmalıdır.  
+> Böylece farklı geliştiriciler projeye kolayca adapte olabilir, kodun anlaşılabilirliği ve sürdürülebilirliği sağlanır.  
+>  
+> `Geliştirmeye açık`, modüler bir yapı ile her yeni özellik rahatlıkla entegre edilebilir ve ileride projeyi büyütmek çok daha kolay olur.  
+>  
+> Kısacası, `temiz`, `anlaşılır`, `esnek` ve `kullanıcı dostu` bir yazılım tasarlamalıyız.
