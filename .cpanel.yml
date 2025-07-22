@@ -1,0 +1,14 @@
+---
+deployment:
+  tasks:
+    - export COMPOSER_ALLOW_SUPERUSER=1
+    - /opt/cpanel/composer/bin/composer install --no-dev --optimize-autoloader
+    - php artisan migrate --force
+    - php artisan config:cache
+    - php artisan route:cache
+    - php artisan view:cache
+    - php artisan storage:link
+    - chmod -R 775 storage
+    - chmod -R 775 bootstrap/cache
+    - find storage -type f -exec chmod 664 {} \;
+    - find bootstrap/cache -type f -exec chmod 664 {} \; 
