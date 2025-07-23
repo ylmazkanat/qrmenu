@@ -14,6 +14,7 @@ use App\Models\RestaurantOrderSettings;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
+use Barryvdh\DomPDF\Facade\Pdf;
 
 class RestaurantPanelController extends Controller
 {
@@ -214,7 +215,10 @@ class RestaurantPanelController extends Controller
             }
         }
 
-        $order->update(['status' => 'cancelled']);
+        $order->update([
+            'status' => 'cancelled',
+            'last_status' => $order->status,
+        ]);
 
         return response()->json([
             'success' => true,
@@ -258,32 +262,53 @@ class RestaurantPanelController extends Controller
     {
         $user = Auth::user();
         $restaurant = $this->getUserRestaurant($user);
-        
         if (!$restaurant) {
             abort(403, 'Bu restorana erişim yetkiniz yok.');
         }
-
         $pendingOrders = $restaurant->orders()
             ->where('status', 'pending')
             ->with(['orderItems.product'])
             ->orderBy('created_at')
             ->get();
-
         $preparingOrders = $restaurant->orders()
             ->where('status', 'preparing')
             ->with(['orderItems.product'])
             ->orderBy('created_at')
             ->get();
-
         $readyOrders = $restaurant->orders()
             ->where('status', 'ready')
             ->with(['orderItems.product'])
             ->orderBy('created_at')
             ->get();
-
+        $cancelledOrders = $restaurant->orders()
+            ->whereIn('status', ['cancelled', 'musteri_iptal', 'zafiyat'])
+            ->where(function($q){
+                $q->where('cancelled_by_customer', true)->orWhere('status', 'musteri_iptal')->orWhere('status', 'zafiyat');
+            })
+            ->with(['orderItems.product'])
+            ->orderByDesc('updated_at')
+            ->get();
         $todayOrdersCount = $restaurant->getTodayOrdersCount();
+        return view('restaurant.kitchen', compact('restaurant', 'pendingOrders', 'preparingOrders', 'readyOrders', 'cancelledOrders', 'todayOrdersCount'));
+    }
 
-        return view('restaurant.kitchen', compact('restaurant', 'pendingOrders', 'preparingOrders', 'readyOrders', 'todayOrdersCount'));
+    // Mutfak - Zafiyat işlemi
+    public function markAsZafiyat(Request $request, $orderId)
+    {
+        $user = Auth::user();
+        $restaurant = $this->getUserRestaurant($user);
+        if (!$restaurant) {
+            return response()->json(['success' => false, 'message' => 'Bu restorana erişim yetkiniz yok.'], 403);
+        }
+        $order = $restaurant->orders()->where('id', $orderId)
+            ->whereIn('status', ['cancelled', 'musteri_iptal', 'zafiyat'])
+            ->first();
+        if (!$order) {
+            return response()->json(['success' => false, 'message' => 'Sipariş bulunamadı veya uygun değil.'], 404);
+        }
+        $order->update(['status' => 'zafiyat']);
+        // Burada kasiyer panelinde zafiyat olarak gösterilecek
+        return response()->json(['success' => true, 'message' => 'Sipariş zafiyat olarak işaretlendi.']);
     }
 
     // Mutfak - Sipariş Hazırlamaya Başla
@@ -1031,5 +1056,60 @@ class RestaurantPanelController extends Controller
             'success' => true,
             'message' => 'Sipariş ayarları başarıyla güncellendi!'
         ]);
+    }
+
+    // Kasiyer - Gün Sonu PDF Raporu
+    public function endOfDayPdf(Request $request)
+    {
+        $user = Auth::user();
+        $restaurant = $this->getUserRestaurant($user);
+        if (!$restaurant) {
+            abort(403, 'Bu restorana erişim yetkiniz yok.');
+        }
+        $today = now()->toDateString();
+        $orders = $restaurant->orders()
+            ->where('status', 'completed')
+            ->whereDate('created_at', $today)
+            ->with(['orderItems.product'])
+            ->orderBy('created_at')
+            ->get();
+        $totalRevenue = $orders->sum('total');
+        $totalCount = $orders->count();
+        $payments = [];
+        foreach ($orders as $order) {
+            $paymentData = json_decode($order->payment_method, true);
+            if (isset($paymentData['methods'])) {
+                foreach ($paymentData['methods'] as $method) {
+                    $payments[$method['method']] = ($payments[$method['method']] ?? 0) + $method['amount'];
+                }
+            }
+        }
+        $pdf = Pdf::loadView('restaurant.cashier_endofday_pdf', [
+            'restaurant' => $restaurant,
+            'orders' => $orders,
+            'totalRevenue' => $totalRevenue,
+            'totalCount' => $totalCount,
+            'payments' => $payments,
+            'today' => $today,
+        ]);
+        return $pdf->stream('gunsonu_'.$today.'.pdf');
+    }
+
+    // Mutfak - Klasik iptal işlemi
+    public function kitchenCancelOrder(Request $request, $orderId)
+    {
+        $user = Auth::user();
+        $restaurant = $this->getUserRestaurant($user);
+        if (!$restaurant) {
+            return response()->json(['success' => false, 'message' => 'Bu restorana erişim yetkiniz yok.'], 403);
+        }
+        $order = $restaurant->orders()->where('id', $orderId)
+            ->whereIn('status', ['cancelled', 'musteri_iptal', 'zafiyat'])
+            ->first();
+        if (!$order) {
+            return response()->json(['success' => false, 'message' => 'Sipariş bulunamadı veya uygun değil.'], 404);
+        }
+        $order->update(['status' => 'kitchen_cancelled']);
+        return response()->json(['success' => true, 'message' => 'Sipariş mutfak tarafından iptal edildi.']);
     }
 }

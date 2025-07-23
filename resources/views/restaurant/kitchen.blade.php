@@ -272,6 +272,72 @@
             </div>
         </div>
     </div>
+    <!-- Müşteri Tarafından İptal Edilenler -->
+    @php
+        $customerCancelledOrders = isset($cancelledOrders) ? $cancelledOrders->filter(function($order) {
+            return $order->status === 'musteri_iptal';
+        }) : collect();
+    @endphp
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="content-card">
+                <div class="card-header">
+                    <h5 class="card-title">
+                        <i class="bi bi-x-circle me-2 text-danger"></i>
+                        Müşteri Tarafından İptal Edilenler
+                        <span class="badge bg-danger ms-2">{{ $customerCancelledOrders->count() }}</span>
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        @forelse($customerCancelledOrders as $order)
+                            <div class="col-md-6 col-lg-4 mb-3">
+                                <div class="order-card cancelled">
+                                    <div class="d-flex justify-content-between align-items-start mb-2">
+                                        <div>
+                                            <h6 class="mb-1">Masa {{ $order->table_number }}</h6>
+                                            @if($order->customer_name)
+                                                <div class="text-primary fw-medium mb-1">{{ $order->customer_name }}</div>
+                                            @endif
+                                            <small class="text-muted">İptal Edildi: {{ $order->updated_at->format('H:i') }}</small>
+                                            <br>
+                                            <span class="badge bg-secondary">Aşama: {{ $order->last_status ?? '-' }}</span>
+                                        </div>
+                                    </div>
+                                    <div class="order-items mb-2">
+                                        @foreach($order->orderItems as $item)
+                                            <div class="d-flex justify-content-between align-items-center mb-2 p-2 bg-light rounded">
+                                                <div>
+                                                    <div class="fw-medium">{{ $item->product->name }}</div>
+                                                    @if($item->note)
+                                                        <small class="text-muted">Not: {{ $item->note }}</small>
+                                                    @endif
+                                                </div>
+                                                <div class="text-center">
+                                                    <span class="badge bg-danger">{{ $item->quantity }}x</span>
+                                                </div>
+                                            </div>
+                                        @endforeach
+                                    </div>
+                                    <div class="d-flex gap-2">
+                                        <button class="btn btn-outline-danger w-50" onclick="markCancelled({{ $order->id }})">İptal</button>
+                                        <button class="btn btn-outline-warning w-50" onclick="markZafiyat({{ $order->id }})">Zafiyat</button>
+                                    </div>
+                                </div>
+                            </div>
+                        @empty
+                            <div class="col-12">
+                                <div class="text-center text-muted py-3">
+                                    <i class="bi bi-x-circle fs-3"></i>
+                                    <p class="mt-2">Müşteri tarafından iptal edilen sipariş yok</p>
+                                </div>
+                            </div>
+                        @endforelse
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 @endsection
 
 @section('scripts')
@@ -400,5 +466,44 @@
     setInterval(() => {
         location.reload();
     }, 120000);
+
+    function markZafiyat(orderId) {
+        if (!confirm('Bu siparişi zafiyat olarak işaretlemek istiyor musunuz?')) return;
+        fetch(`/restaurant/kitchen/${orderId}/zafiyat`, {
+            method: 'POST',
+            headers: {
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                'Accept': 'application/json'
+            }
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.success) {
+                alert('Sipariş zafiyat olarak işaretlendi.');
+                location.reload();
+            } else {
+                alert(data.message || 'İşlem başarısız.');
+            }
+        });
+    }
+    function markCancelled(orderId) {
+        if (!confirm('Bu siparişi tamamen iptal etmek istiyor musunuz?')) return;
+        fetch(`/restaurant/kitchen/${orderId}/cancel`, {
+            method: 'POST',
+            headers: {
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                'Accept': 'application/json'
+            }
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.success) {
+                alert('Sipariş iptal edildi.');
+                location.reload();
+            } else {
+                alert(data.message || 'İşlem başarısız.');
+            }
+        });
+    }
 </script>
 @endsection 

@@ -4,6 +4,11 @@
 @section('page-title', 'Kasiyer Paneli')
 
 @section('content')
+    <div class="d-flex justify-content-end mb-3">
+        <button class="btn btn-outline-dark" id="endOfDayReportBtn">
+            <i class="bi bi-file-earmark-pdf"></i> Gün Sonu (PDF)
+        </button>
+    </div>
     <!-- İstatistik Kartları -->
     <div class="row mb-4">
         <div class="col-lg-3 col-md-6 mb-3">
@@ -281,6 +286,30 @@
                     <i class="bi bi-check-circle"></i>
                     Ödemeyi Tamamla
                 </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Gün Sonu PDF Modal -->
+<div class="modal fade" id="endOfDayPdfModal" tabindex="-1">
+    <div class="modal-dialog modal-xl">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="bi bi-file-earmark-pdf me-2"></i>
+                    Gün Sonu Raporu (PDF)
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" style="min-height: 80vh;">
+                <iframe id="endOfDayPdfFrame" src="" style="width:100%;height:70vh;border:none;"></iframe>
+            </div>
+            <div class="modal-footer">
+                <a id="downloadEndOfDayPdf" href="#" class="btn btn-primary" download>
+                    <i class="bi bi-download"></i> PDF İndir
+                </a>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Kapat</button>
             </div>
         </div>
     </div>
@@ -765,5 +794,13 @@
             alert.remove();
         }, 5000);
     }
+
+    document.getElementById('endOfDayReportBtn').addEventListener('click', function() {
+        const modal = new bootstrap.Modal(document.getElementById('endOfDayPdfModal'));
+        const pdfUrl = '{{ route('restaurant.cashier.endofday.pdf') }}';
+        document.getElementById('endOfDayPdfFrame').src = pdfUrl;
+        document.getElementById('downloadEndOfDayPdf').href = pdfUrl;
+        modal.show();
+    });
 </script>
 @endsection 

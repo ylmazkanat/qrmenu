@@ -107,10 +107,13 @@ Route::middleware(['auth'])->prefix('restaurant')->name('restaurant.')->group(fu
     
     Route::post('/kitchen/{order}/start-preparing', [RestaurantPanelController::class, 'startPreparing'])->name('kitchen.start-preparing');
     Route::post('/kitchen/{order}/mark-ready', [RestaurantPanelController::class, 'markAsReady'])->name('kitchen.mark-ready');
+    Route::post('/kitchen/{order}/zafiyat', [RestaurantPanelController::class, 'markAsZafiyat'])->name('kitchen.mark-zafiyat');
+    Route::post('/kitchen/{order}/cancel', [RestaurantPanelController::class, 'kitchenCancelOrder'])->name('kitchen.cancel-order');
     
     // Kasa Paneli - restaurant_manager veya cashier
     Route::get('/cashier', [RestaurantPanelController::class, 'cashier'])->name('cashier');
     Route::post('/cashier/process-table-payment', [RestaurantPanelController::class, 'processTablePayment'])->name('cashier.process-table-payment');
+    Route::get('/cashier/endofday-pdf', [RestaurantPanelController::class, 'endOfDayPdf'])->name('cashier.endofday.pdf');
     Route::get('/tables/{tableNumber}/details', [RestaurantPanelController::class, 'getTableDetails'])->name('tables.details');
     Route::get('/cashier/{order}/print-receipt', [RestaurantPanelController::class, 'printReceipt'])->name('cashier.print-receipt');
     
@@ -156,3 +159,7 @@ Route::get('/admin', function () {
 Route::get('/business', function () {
     return redirect('/business/dashboard');
 });
+
+// Menü (Müşteri) API
+Route::get('/api/menu/{slug}/active-orders', [\App\Http\Controllers\Menu\MenuController::class, 'activeOrders']);
+Route::post('/api/menu/{slug}/orders/{order}/cancel', [\App\Http\Controllers\Menu\MenuController::class, 'cancelOrderFromCustomer']);

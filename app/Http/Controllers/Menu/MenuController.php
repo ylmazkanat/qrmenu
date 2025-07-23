@@ -262,4 +262,55 @@ class MenuController extends Controller
         
         return view('menu.order-success', compact('restaurant', 'order'));
     }
+
+    /**
+     * Masa ve duruma göre aktif siparişleri getir (JSON)
+     */
+    public function activeOrders(Request $request, $slug)
+    {
+        $tableNumber = $request->query('table_number');
+        $restaurant = Restaurant::where('slug', $slug)->firstOrFail();
+        $orders = $restaurant->orders()
+            ->where('table_number', $tableNumber)
+            ->whereIn('status', ['pending', 'preparing', 'ready'])
+            ->with(['orderItems.product'])
+            ->orderBy('created_at')
+            ->get();
+        return response()->json([
+            'success' => true,
+            'orders' => $orders
+        ]);
+    }
+
+    /**
+     * Müşteri - Siparişini iptal et (sadece kendi masası ve işlemde olanlar)
+     */
+    public function cancelOrderFromCustomer(Request $request, $slug, $orderId)
+    {
+        $tableNumber = $request->input('table_number');
+        $restaurant = Restaurant::where('slug', $slug)->firstOrFail();
+        $order = $restaurant->orders()
+            ->where('id', $orderId)
+            ->where('table_number', $tableNumber)
+            ->whereIn('status', ['pending', 'preparing'])
+            ->first();
+        if (!$order) {
+            return response()->json(['success' => false, 'message' => 'Bu siparişi iptal edemezsiniz.'], 403);
+        }
+        // Stokları geri ver
+        foreach ($order->orderItems as $item) {
+            $product = $item->product;
+            if ($product && $product->stock !== -1) {
+                $product->increment('stock', $item->quantity);
+            }
+        }
+        $order->update([
+            'status' => 'musteri_iptal',
+            'cancelled_by_customer' => true,
+            'last_status' => $order->status,
+        ]);
+        // Bildirim: mutfak ve garsona tetiklenebilir (ör: event, notification, log)
+        // ...
+        return response()->json(['success' => true, 'message' => 'Sipariş iptal edildi.']);
+    }
 }

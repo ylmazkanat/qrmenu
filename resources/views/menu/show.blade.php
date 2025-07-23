@@ -44,6 +44,26 @@
             bottom: 0;
             background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="pattern" x="0" y="0" width="10" height="10" patternUnits="userSpaceOnUse"><circle cx="5" cy="5" r="1" fill="rgba(255,255,255,0.1)"/></pattern></defs><rect width="100" height="100" fill="url(%23pattern)"/></svg>');
             opacity: 0.3;
+        function ensureMasaHashAtEnd() {
+            // If tableNumber exists, make sure #masaXX is at the end of the hash
+            if (tableNumber) {
+                let hash = window.location.hash;
+                let masaHash = `#masa${tableNumber}`;
+                // Remove any existing masa hash
+                hash = hash.replace(/#masa\w+/g, '');
+                // Remove trailing #
+                hash = hash.replace(/#+$/, '');
+                // Add masa hash at the end
+                window.location.hash = (hash ? hash : '') + masaHash;
+            }
+        }
+        window.addEventListener('hashchange', ensureMasaHashAtEnd);
+        document.addEventListener('DOMContentLoaded', function() {
+            loadTableNumber();
+            updateCartDisplay();
+            loadCart();
+            ensureMasaHashAtEnd();
+        });
         }
 
         .restaurant-header .container {
@@ -441,7 +461,9 @@
                 </div>
                 
                 @foreach($restaurant->categories as $category)
-                    @php $catSlug = $category->slug ?: \Illuminate\Support\Str::slug($category->name.'-'.$category->id); @endphp
+                    @php 
+                        $catSlug = $category->slug ?: \Illuminate\Support\Str::slug($category->name.'-'.$category->id); 
+                    @endphp
                     <div class="col-6 col-md-4 col-lg-3 mb-4">
                         <a href="#category-{{ $catSlug }}" class="text-decoration-none d-block category-card" data-target="category-{{ $catSlug }}">
                             <div class="card h-100 shadow-sm border-0">
@@ -571,19 +593,10 @@
     </div>
 
     <!-- Cart FAB -->
-    @php
-        $showCartFab = false;
-        if($restaurant->orderSettings && $restaurant->orderSettings->ordering_enabled) {
-            $showCartFab = true;
-        }
-    @endphp
-    
-    @if($showCartFab)
-        <button class="cart-fab" id="cartFab" style="display: none;" data-bs-toggle="modal" data-bs-target="#cartModal">
-            <i class="bi bi-cart"></i>
-            <span class="cart-badge" id="cartBadge">0</span>
-        </button>
-    @endif
+    <button class="cart-fab" id="cartFab" style="display: block;" data-bs-toggle="modal" data-bs-target="#cartModal">
+        <i class="bi bi-cart"></i>
+        <span class="cart-badge" id="cartBadge">0</span>
+    </button>
 
     <!-- Product Detail Modal -->
     <div class="modal fade modal-modern" id="productModal" tabindex="-1">
@@ -628,6 +641,11 @@
                         </div>
                         <h5 class="text-muted">Sepetiniz boş</h5>
                         <p class="text-muted">Lezzetli ürünlerimizi sepete ekleyerek başlayın.</p>
+                    </div>
+                    <hr class="my-4">
+                    <div id="activeOrdersArea">
+                        <h6 class="mb-3"><i class="bi bi-clock-history me-2"></i> Masadaki Aktif Siparişlerim</h6>
+                        <div id="activeOrdersList" class="mb-2"></div>
                     </div>
                 </div>
                 <div class="modal-footer">
@@ -683,29 +701,43 @@
         let tableNumber = '';
         let currentProductForModal = null;
 
-        // URL'den masa numarasını al
+        // URL'den masa numarasını al (en sondaki #masa ile başlayan kısmı bul)
         function getTableNumberFromUrl() {
-            const hash = window.location.hash;
-            if (hash.includes('#masa')) {
-                const match = hash.match(/#masa(\w+)/);
-                if (match) {
-                    return match[1];
+            const hashes = window.location.hash.split('#');
+            for (let i = hashes.length - 1; i >= 0; i--) {
+                const h = hashes[i];
+                if (h.startsWith('masa')) {
+                    return h.replace('masa', '');
                 }
             }
             return '';
         }
 
-        // Sayfa yüklendiğinde masa numarasını kontrol et
-        document.addEventListener('DOMContentLoaded', function() {
+        // Masa numarasını localStorage'dan yükle ve kaydet
+        function saveTableNumber(num) {
+            localStorage.setItem('qrmenu_table', num);
+        }
+        function loadTableNumber() {
             const urlTableNumber = getTableNumberFromUrl();
+            let stored = localStorage.getItem('qrmenu_table');
             if (urlTableNumber) {
                 tableNumber = urlTableNumber;
-                document.getElementById('tableNumber').value = urlTableNumber;
-                
-                // Masa numarası olan linkten geldiyse sepet iconunda göster
-                updateCartDisplay();
-                loadCart();
+                saveTableNumber(urlTableNumber);
+            } else if (stored) {
+                tableNumber = stored;
+                // URL'de yoksa, URL'ye ekle
+                if (!window.location.hash.includes('#masa')) {
+                    window.location.hash = '#masa' + stored;
+                }
             }
+            if (tableNumber) {
+                document.getElementById('tableNumber').value = tableNumber;
+            }
+        }
+        document.addEventListener('DOMContentLoaded', function() {
+            loadTableNumber();
+            updateCartDisplay();
+            loadCart();
         });
 
         // Search functionality
@@ -863,24 +895,18 @@
             
             updateCartDisplay();
             saveCart();
+            saveTableNumber(tableNumber);
         }
 
         function saveCart() {
             localStorage.setItem('qrmenu_cart', JSON.stringify(cart));
-            localStorage.setItem('qrmenu_table', tableNumber);
         }
 
         function loadCart() {
             const savedCart = localStorage.getItem('qrmenu_cart');
-            const savedTable = localStorage.getItem('qrmenu_table');
             
             if (savedCart) {
                 cart = JSON.parse(savedCart);
-            }
-            
-            if (savedTable && !tableNumber) {
-                tableNumber = savedTable;
-                document.getElementById('tableNumber').value = savedTable;
             }
             
             updateCartDisplay();
@@ -895,7 +921,7 @@
                 cartFab.style.display = 'block';
                 cartBadge.textContent = cartCount;
             } else {
-                cartFab.style.display = 'none';
+                
             }
             
             updateCartModal();
@@ -971,18 +997,13 @@
             saveCart();
         }
 
+        // Masa modalı ve inputu tamamen kaldırıldı
         function showTableModal(callback) {
-            const modal = new bootstrap.Modal(document.getElementById('tableModal'));
-            modal.show();
-            
-            document.getElementById('confirmTable').onclick = () => {
-                const tableNum = document.getElementById('tableNumber').value.trim();
-                if (tableNum) {
-                    tableNumber = tableNum;
-                    modal.hide();
-                    callback();
-                }
-            };
+            if (!tableNumber) {
+                alert('Masa bilgisi bulunamadı, lütfen QR kodu tekrar okutun.');
+                return;
+            }
+            if (typeof callback === 'function') callback();
         }
 
         // Product detail modal
@@ -1084,22 +1105,26 @@
         // Local storage
         function saveCart() {
             localStorage.setItem('qrmenu_cart', JSON.stringify(cart));
-            localStorage.setItem('qrmenu_table', tableNumber);
         }
 
         function loadCart() {
             const savedCart = localStorage.getItem('qrmenu_cart');
-            const savedTable = localStorage.getItem('qrmenu_table');
             
             if (savedCart) {
                 cart = JSON.parse(savedCart);
             }
             
-            if (savedTable) {
-                tableNumber = savedTable;
-            }
-            
             updateCartDisplay();
+        }
+
+        // Hash'ten masa ve kategori ayıklama fonksiyonları
+        function extractMasaHash(hash) {
+            const matches = hash.match(/#masa\w+/);
+            return matches ? matches[0] : '';
+        }
+        function extractCategoryHash(hash) {
+            const matches = hash.match(/#category-[^#]+/);
+            return matches ? matches[0] : '';
         }
 
         // Global function for back to categories button
@@ -1173,10 +1198,10 @@
                 card.addEventListener('click', function(e) {
                     e.preventDefault();
                     const targetId = this.getAttribute('data-target');
-                    
+                    const masaHash = extractMasaHash(window.location.hash);
                     // Eğer "Tümü" seçeneğine tıklandıysa
                     if (targetId === 'all-products') {
-                        window.location.hash = '';
+                        window.location.hash = masaHash;
                         showMenu();
                         // Tüm kategorileri göster
                         document.querySelectorAll('.category-section').forEach(section => {
@@ -1186,7 +1211,7 @@
                         menuContent.scrollIntoView({behavior: 'smooth'});
                     } else {
                         // Belirli kategori seçildiyse
-                        window.location.hash = '#'+targetId;
+                        window.location.hash = '#' + targetId + masaHash;
                         showMenu();
                         const target = document.getElementById(targetId);
                         if (target) {
@@ -1201,7 +1226,113 @@
                     }
                 });
             });
+            // Sayfa açılışında ve hash değişiminde masa hash'i en sonda değilse, en sona taşı
+            function ensureMasaHashAtEnd() {
+                const hash = window.location.hash;
+                const masaHash = extractMasaHash(hash);
+                const categoryHash = extractCategoryHash(hash);
+                if (masaHash && (!hash.endsWith(masaHash) || (categoryHash && hash.indexOf(masaHash) < hash.indexOf(categoryHash)))) {
+                    // Masa hash'i en sonda değilse, düzelt
+                    window.location.hash = (categoryHash ? categoryHash : '') + masaHash;
+                }
+            }
+            ensureMasaHashAtEnd();
+            window.addEventListener('hashchange', ensureMasaHashAtEnd);
         });
+
+        // Aktif siparişleri getir ve göster
+        function fetchActiveOrders() {
+            if (!tableNumber) return;
+            fetch(`/api/menu/{{ $restaurant->slug }}/active-orders?table_number=${encodeURIComponent(tableNumber)}`)
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success) {
+                        renderActiveOrders(data.orders);
+                    }
+                });
+        }
+        // Aktif sipariş durumlarını Türkçe göster
+        function renderActiveOrders(orders) {
+            const area = document.getElementById('activeOrdersList');
+            if (!orders || orders.length === 0) {
+                area.innerHTML = '<div class="text-muted">Bu masada işlemde olan sipariş yok.</div>';
+                return;
+            }
+            const statusMap = {
+                'pending': 'Bekliyor',
+                'preparing': 'Hazırlanıyor',
+                'ready': 'Hazır'
+            };
+            area.innerHTML = orders.map(order => {
+                let canCancel = (order.status === 'pending' || order.status === 'preparing');
+                let items = order.order_items.map(item => `<li>${item.product ? item.product.name : 'Ürün'} x${item.quantity}</li>`).join('');
+                return `<div class="border rounded p-2 mb-2">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <b>#${order.id}</b> - <span class="badge bg-secondary">${statusMap[order.status] || order.status}</span>
+                        </div>
+                        ${canCancel ? `<button class="btn btn-sm btn-outline-danger" onclick="cancelOrder(${order.id})"><i class='bi bi-x-circle'></i> İptal Et</button>` : ''}
+                    </div>
+                    <ul class="mb-1">${items}</ul>
+                    <div class="text-end small text-muted">${order.created_at}</div>
+                </div>`;
+            }).join('');
+        }
+        // Sepet modalı açıldığında aktif siparişleri getir
+        document.getElementById('cartModal').addEventListener('show.bs.modal', fetchActiveOrders);
+        // Sipariş iptal fonksiyonu
+        function cancelOrder(orderId) {
+            if (!confirm('Siparişi iptal etmek istediğinize emin misiniz?')) return;
+            fetch(`/api/menu/{{ $restaurant->slug }}/orders/${orderId}/cancel`, {
+                method: 'POST',
+                headers: {
+                    'X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]').getAttribute('content'),
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ table_number: tableNumber })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    alert('Sipariş iptal edildi.');
+                    fetchActiveOrders();
+                } else {
+                    alert(data.message || 'İptal edilemedi.');
+                }
+            });
+        }
+
+        // Sepet butonuna tıklanınca masa yoksa uyarı ver
+        const cartFab = document.getElementById('cartFab');
+        if (cartFab) {
+            cartFab.addEventListener('click', function(e) {
+                // Try to get table number from URL hash
+                let urlTableNumber = getTableNumberFromUrl();
+                if (!urlTableNumber) {
+                    // Try to get from localStorage
+                    let stored = localStorage.getItem('qrmenu_table');
+                    if (stored) {
+                        // Restore to URL hash and variable
+                        window.location.hash = '#masa' + stored;
+                        tableNumber = stored;
+                        // Optionally, update input field if present
+                        if (document.getElementById('tableNumber')) {
+                            document.getElementById('tableNumber').value = stored;
+                        }
+                        // Allow cart modal to open
+                        return;
+                    } else {
+                        e.preventDefault();
+                        alert('Masa bilgisi bulunamadı, lütfen QR kodu tekrar okutun.');
+                        return false;
+                    }
+                } else {
+                    // Table number found in URL, update variable
+                    tableNumber = urlTableNumber;
+                }
+            });
+        }
     </script>
 </body>
 </html> 
