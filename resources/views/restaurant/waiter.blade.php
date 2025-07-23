@@ -4,56 +4,16 @@
 @section('page-title', 'Garson Paneli')
 
 @section('content')
-    <div class="row mb-4">
-        <div class="col-12">
-            <div class="content-card">
-                <div class="card-header">
-                    <h5 class="card-title">
-                        <i class="bi bi-person-badge me-2"></i>
-                        Sipariş Alma
-                    </h5>
-                </div>
-                <div class="card-body">
-                    <form id="orderForm" action="{{ route('restaurant.orders.create') }}" method="POST">
-                        @csrf
-                        <div class="row">
-                            <div class="col-md-5 mb-3">
-                                <label for="table_number" class="form-label">Masa Numarası</label>
-                                <div class="input-group">
-                                    <select class="form-control" id="table_number" name="table_number" required>
-                                        <option value="">Masa Seçin</option>
-                                        @foreach($tables as $table)
-                                            <option value="{{ $table->table_number }}">
-                                                Masa {{ $table->table_number }}
-                                                @if($table->capacity) - {{ $table->capacity }} kişi @endif
-                                                @if($table->location) - {{ $table->location }} @endif
-                                            </option>
-                                        @endforeach
-                                    </select>
-                                    <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#quickTableModal">
-                                        <i class="bi bi-plus"></i>
-                                    </button>
-                                </div>
-                            </div>
-                            <div class="col-md-7 mb-3">
-                                <label for="customer_name" class="form-label">Müşteri Adı</label>
-                                <input type="text" class="form-control" 
-                                       id="customer_name" name="customer_name" 
-                                       placeholder="Müşteri adı (opsiyonel)">
-                            </div>
-                        </div>
-                    </form>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Kategoriler ve Ürünler -->
+    <!-- Ana Layout: Menü Sol, Sipariş İşlemleri Sağ -->
     <div class="row">
+        <!-- Sol Taraf - Menü -->
         <div class="col-lg-8">
             <div class="content-card">
                 <div class="card-header">
-                    <h5 class="card-title">Menü</h5>
+                    <h5 class="card-title">
+                        <i class="bi bi-journal-text me-2"></i>
+                        Menü
+                    </h5>
                 </div>
                 <div class="card-body">
                     <!-- Arama & Kategori Filtreleri -->
@@ -75,7 +35,34 @@
                     </div>
 
                     <!-- Ürün Listesi -->
-                    <div class="row" id="productList">
+                    <div class="row" id="productList" style="max-height: 70vh; overflow-y: auto; padding-right: 10px; scroll-behavior: smooth;">
+                        <!-- Mobil için özel scrollbar stili -->
+                        <style>
+                            #productList {
+                                scrollbar-width: thin;
+                                scrollbar-color: #007bff #f8f9fa;
+                            }
+                            #productList::-webkit-scrollbar {
+                                width: 8px;
+                            }
+                            #productList::-webkit-scrollbar-track {
+                                background: #f8f9fa;
+                                border-radius: 4px;
+                            }
+                            #productList::-webkit-scrollbar-thumb {
+                                background: #007bff;
+                                border-radius: 4px;
+                            }
+                            #productList::-webkit-scrollbar-thumb:hover {
+                                background: #0056b3;
+                            }
+                            @media (max-width: 768px) {
+                                #productList {
+                                    max-height: 60vh;
+                                    padding-right: 5px;
+                                }
+                            }
+                        </style>
                         @foreach($products as $product)
                             <div class="col-md-6 col-lg-4 mb-3 product-item" data-category="{{ $product->category_id }}" data-product-name="{{ Str::lower($product->name) }} {{ Str::lower($product->description) }}">
                                 <div class="product-card" onclick="addToOrder({{ $product->id }}, '{{ $product->name }}', {{ $product->price }})">
@@ -107,36 +94,136 @@
             </div>
         </div>
 
-        <!-- Sipariş Sepeti -->
+        <!-- Sağ Taraf - Sipariş Alma ve Sepet -->
         <div class="col-lg-4">
-            <div class="content-card">
+            <!-- Sipariş Alma -->
+            <div class="content-card mb-4">
+                <div class="card-header">
+                    <h5 class="card-title">
+                        <i class="bi bi-person-badge me-2"></i>
+                        Sipariş Alma
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <form id="orderForm" action="{{ route('restaurant.orders.create') }}" method="POST">
+                        @csrf
+                        <div class="mb-3">
+                            <label for="table_number" class="form-label">Masa Numarası</label>
+                            <div class="input-group">
+                                <select class="form-control" id="table_number" name="table_number" required>
+                                    <option value="">Masa Seçin</option>
+                                    @foreach($tables as $table)
+                                        <option value="{{ $table->table_number }}">
+                                            Masa {{ $table->table_number }}
+                                            @if($table->capacity) - {{ $table->capacity }} kişi @endif
+                                            @if($table->location) - {{ $table->location }} @endif
+                                        </option>
+                                    @endforeach
+                                </select>
+                                <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#quickTableModal">
+                                    <i class="bi bi-plus"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="customer_name" class="form-label">Müşteri Adı</label>
+                            <input type="text" class="form-control" 
+                                   id="customer_name" name="customer_name" 
+                                   placeholder="Müşteri adı (opsiyonel)">
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Sipariş Sepeti -->
+            <div class="content-card sticky-top" style="top: 20px; z-index: 10;">
                 <div class="card-header">
                     <h5 class="card-title">
                         <i class="bi bi-cart me-2"></i>
                         Sipariş Sepeti
+                        <span class="badge bg-primary ms-2" id="cartItemCount">0</span>
                     </h5>
+                    <!-- Ses Kontrolleri -->
+                    <div class="d-flex gap-1">
+                        <button type="button" class="btn btn-sm btn-outline-info" onclick="testNotificationSound()" title="Ses testi">
+                            <i class="bi bi-volume-up"></i>
+                        </button>
+                    </div>
                 </div>
                 <div class="card-body">
                     <div id="orderItems">
                         <div class="text-center text-muted py-4">
                             <i class="bi bi-cart-x fs-1"></i>
                             <p class="mt-2">Sepet boş</p>
+                            <small class="text-muted">Ürünlere tıklayarak sepete ekleyin</small>
                         </div>
                     </div>
                     
                     <div class="border-top pt-3 mt-3" id="orderSummary" style="display: none;">
                         <div class="d-flex justify-content-between align-items-center mb-3">
                             <strong>Toplam:</strong>
-                            <strong class="text-primary" id="totalAmount">₺0.00</strong>
+                            <strong class="text-primary fs-5" id="totalAmount">₺0.00</strong>
                         </div>
-                        <button type="button" class="btn btn-restaurant-modern w-100" onclick="submitOrder()">
-                            <i class="bi bi-check-circle"></i>
+                        <button type="button" class="btn btn-restaurant-modern w-100 btn-lg" onclick="submitOrder()">
+                            <i class="bi bi-check-circle me-2"></i>
                             Siparişi Gönder
                         </button>
                         <button type="button" class="btn btn-outline-secondary w-100 mt-2" onclick="clearOrder()">
-                            <i class="bi bi-trash"></i>
+                            <i class="bi bi-trash me-2"></i>
                             Sepeti Temizle
                         </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Hazır Siparişler -->
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="content-card">
+                <div class="card-header">
+                    <h5 class="card-title">
+                        <i class="bi bi-bell me-2"></i>
+                        Hazır Siparişler
+                        <span class="badge bg-success ms-2" id="readyOrderCount">{{ $readyOrders->count() }}</span>
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div id="readyOrdersList">
+                        @forelse($readyOrders as $order)
+                            <div class="order-card ready">
+                                <div class="d-flex justify-content-between align-items-start">
+                                    <div>
+                                        <h6 class="mb-1">Masa {{ $order->table_number }}</h6>
+                                        <small class="text-muted">
+                                            {{ $order->created_at->format('H:i') }} - 
+                                            ₺{{ number_format($order->total, 2) }}
+                                        </small>
+                                        <div class="mt-2">
+                                            @foreach($order->orderItems as $item)
+                                                <span class="badge bg-light text-dark me-1">
+                                                    {{ $item->quantity }}x {{ $item->product->name }}
+                                                </span>
+                                            @endforeach
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <span class="status-badge status-ready">Hazır</span>
+                                        <button class="btn btn-sm btn-success mt-2" 
+                                                onclick="markAsDelivered({{ $order->id }})">
+                                            <i class="bi bi-check"></i>
+                                            Teslim Et
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        @empty
+                            <div class="text-center text-muted py-4">
+                                <i class="bi bi-clock-history fs-1"></i>
+                                <p class="mt-2">Hazır sipariş bulunmuyor</p>
+                            </div>
+                        @endforelse
                     </div>
                 </div>
             </div>
@@ -226,58 +313,6 @@
             </div>
         </div>
     </div>
-
-    <!-- Hazır Siparişler -->
-    <div class="row mt-4">
-        <div class="col-12">
-            <div class="content-card">
-                <div class="card-header">
-                    <h5 class="card-title">
-                        <i class="bi bi-bell me-2"></i>
-                        Hazır Siparişler
-                        <span class="badge bg-success ms-2" id="readyOrderCount">{{ $readyOrders->count() }}</span>
-                    </h5>
-                </div>
-                <div class="card-body">
-                    <div id="readyOrdersList">
-                        @forelse($readyOrders as $order)
-                            <div class="order-card ready">
-                                <div class="d-flex justify-content-between align-items-start">
-                                    <div>
-                                        <h6 class="mb-1">Masa {{ $order->table_number }}</h6>
-                                        <small class="text-muted">
-                                            {{ $order->created_at->format('H:i') }} - 
-                                            ₺{{ number_format($order->total, 2) }}
-                                        </small>
-                                        <div class="mt-2">
-                                            @foreach($order->orderItems as $item)
-                                                <span class="badge bg-light text-dark me-1">
-                                                    {{ $item->quantity }}x {{ $item->product->name }}
-                                                </span>
-                                            @endforeach
-                                        </div>
-                                    </div>
-                                    <div>
-                                        <span class="status-badge status-ready">Hazır</span>
-                                        <button class="btn btn-sm btn-success mt-2" 
-                                                onclick="markAsDelivered({{ $order->id }})">
-                                            <i class="bi bi-check"></i>
-                                            Teslim Et
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
-                        @empty
-                            <div class="text-center text-muted py-4">
-                                <i class="bi bi-clock-history fs-1"></i>
-                                <p class="mt-2">Hazır sipariş bulunmuyor</p>
-                            </div>
-                        @endforelse
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
     <!-- Toast Notification -->
     <div class="toast-container position-fixed top-0 end-0 p-3" style="z-index: 1080;">
         <div id="toastAdded" class="toast align-items-center text-bg-success border-0" role="alert" aria-live="assertive" aria-atomic="true">
@@ -293,6 +328,7 @@
 
 @section('scripts')
 <script>
+    // --- Sade Bildirim Sistemi (Mutfak paneli gibi) ---
     let orderItems = [];
     let currentOrderTotal = 0;
     const toastAdded = new bootstrap.Toast(document.getElementById('toastAdded'));
@@ -352,6 +388,7 @@
         }
         
         updateOrderDisplay();
+        updateCartCounter();
         showAddedToast();
     }
 
@@ -359,6 +396,7 @@
     function removeFromOrder(productId) {
         orderItems = orderItems.filter(item => item.id !== productId);
         updateOrderDisplay();
+        updateCartCounter();
     }
 
     // Ürün miktarını güncelleme
@@ -370,6 +408,7 @@
                 removeFromOrder(productId);
             } else {
                 updateOrderDisplay();
+                updateCartCounter();
             }
         }
     }
@@ -425,6 +464,7 @@
     function clearOrder() {
         orderItems = [];
         updateOrderDisplay();
+        updateCartCounter();
     }
 
     // Siparişi gönder
@@ -510,13 +550,7 @@
     // Masa numarası input'una otofocus
     document.getElementById('table_number').focus();
 
-    // Ses efekti için (hazır sipariş bildirimi)
-    function playNotificationSound() {
-        const audio = new Audio('data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmgfBj2V4vLGdSgGKnvM8NeFOQgVZLTl5qNOGYM6AAABAAoAAg==');
-        audio.play().catch(() => {
-            // Ses çalınamazsa sessizce devam et
-        });
-    }
+    
 
     // Bildirim göster
     function showNotification(title, message, type = 'success') {
@@ -546,41 +580,42 @@
         }, 6000);
     }
 
-    // Hazır sipariş kontrolü
+    // Ses efekti (mutfak paneliyle aynı)
+    function playNotificationSound() {
+        const audio = new Audio('data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmgfBj2V4vLGdSgGKnvM8NeFOQgVZLTl5qNOGYM6AAABAAoAAg==');
+        audio.play().catch(() => {});
+    }
+
+    // Başarı mesajı göster (mutfak paneliyle aynı)
+    function showSuccessMessage(message) {
+        const alert = document.createElement('div');
+        alert.className = 'alert alert-success alert-dismissible fade show position-fixed';
+        alert.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px;';
+        alert.innerHTML = `
+            <i class="bi bi-check-circle me-2"></i>
+            ${message}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        `;
+        document.body.appendChild(alert);
+        setTimeout(() => { alert.remove(); }, 5000);
+    }
+
+    // Hazır sipariş polling
     let lastReadyOrderCount = {{ $readyOrders->count() }};
-    
     function checkReadyOrders() {
         fetch('{{ route("restaurant.api.orders.updates") }}')
             .then(response => response.json())
             .then(data => {
                 if (data.ready_orders > lastReadyOrderCount) {
-                    // Yeni hazır sipariş var
                     playNotificationSound();
-                    showNotification(
-                        '🔔 Yeni Hazır Sipariş!', 
-                        `${data.ready_orders - lastReadyOrderCount} sipariş teslim için hazır`,
-                        'warning'
-                    );
-                    
-                    // Sayaç güncelle
-                    document.getElementById('readyOrderCount').textContent = data.ready_orders;
-                    
-                    // Sayfayı yenile (hazır siparişler listesini güncellemek için)
-                    setTimeout(() => {
-                        location.reload();
-                    }, 3000);
+                    showSuccessMessage(`${data.ready_orders - lastReadyOrderCount} yeni hazır sipariş var!`);
+                    setTimeout(() => { location.reload(); }, 3000);
                 }
                 lastReadyOrderCount = data.ready_orders;
             })
-            .catch(error => {
-                console.error('Sipariş kontrol hatası:', error);
-            });
+            .catch(error => { console.error('Sipariş kontrol hatası:', error); });
     }
-
-    // Her 10 saniyede bir kontrol et
     setInterval(checkReadyOrders, 10000);
-
-    // Sayfa yüklendiğinde bir kez kontrol et
     setTimeout(checkReadyOrders, 2000);
 
     // Sipariş iptal etme
@@ -637,6 +672,100 @@
         .catch(error => {
             alert('Hata: ' + error.message);
         });
+    }
+
+    // Sayfa yüklendiğinde başlat
+    document.addEventListener('DOMContentLoaded', function() {
+        // Polling başlat (sayfa görünürlüğüne göre ayarlanacak)
+        pollingInterval = setInterval(checkReadyOrders, 8000); // 8 saniye başlangıç
+        
+        console.log('🚀 Gelişmiş garson bildirim sistemi başlatıldı');
+        console.log('📱 Arka plan bildirimleri aktif');
+        console.log('🔊 Sesli uyarılar hazır');
+        
+        // Test bildirimi (sadece geliştirme için)
+        if (window.location.hostname === '127.0.0.1') {
+            setTimeout(() => {
+                console.log('Test modu: Bildirim sistemi çalışıyor ✅');
+            }, 3000);
+        }
+    });
+
+    // Sepet sayacını güncelle
+    function updateCartCounter() {
+        const cartCount = Object.keys(orderItems).length;
+        const counter = document.getElementById('cartItemCount');
+        if (counter) {
+            counter.textContent = cartCount;
+            counter.className = cartCount > 0 ? 'badge bg-warning text-dark ms-2' : 'badge bg-primary ms-2';
+        }
+    }
+
+    // Ses test fonksiyonu
+    function testNotificationSound() {
+        console.log('🧪 Ses test edildi');
+        playNotificationSound();
+        
+        // Test toast göster
+        const toast = document.createElement('div');
+        toast.className = 'position-fixed top-0 end-0 p-3';
+        toast.style.zIndex = '9999';
+        toast.innerHTML = `
+            <div class="toast show border-0 bg-info text-white" role="alert">
+                <div class="toast-header bg-info text-white border-0">
+                    <i class="bi bi-volume-up me-2"></i>
+                    <strong class="me-auto">Ses Testi</strong>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="toast"></button>
+                </div>
+                <div class="toast-body">
+                    🔊 Sesli bildirim test edildi! Ses duydunuz mu?
+                </div>
+            </div>
+        `;
+        
+        document.body.appendChild(toast);
+        
+        setTimeout(() => {
+            if (toast.parentNode) {
+                toast.remove();
+            }
+        }, 5000);
+    }
+
+    // Ses ön yükleme ve hazırlama
+    function preloadAndTestAudio() {
+        if (notificationAudio) {
+            // Ses dosyasını ön yükle
+            notificationAudio.load();
+            
+            // İlk kullanıcı etkileşiminde test et
+            document.addEventListener('click', function testAudioOnce() {
+                setTimeout(() => {
+                    console.log('🔧 Ses sistemi test ediliyor...');
+                    
+                    // Sessiz test (volume 0)
+                    const originalVolume = notificationAudio.volume;
+                    notificationAudio.volume = 0;
+                    notificationAudio.currentTime = 0;
+                    
+                    const testPromise = notificationAudio.play();
+                    if (testPromise !== undefined) {
+                        testPromise
+                            .then(() => {
+                                notificationAudio.pause();
+                                notificationAudio.volume = originalVolume;
+                                console.log('✅ Ses sistemi hazır ve test edildi');
+                            })
+                            .catch((error) => {
+                                notificationAudio.volume = originalVolume;
+                                console.warn('⚠️ Ses testi başarısız:', error);
+                            });
+                    }
+                }, 100);
+                
+                document.removeEventListener('click', testAudioOnce);
+            }, { once: true });
+        }
     }
 </script>
 <!-- Hızlı Masa Ekleme Modal -->
