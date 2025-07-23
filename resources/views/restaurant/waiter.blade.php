@@ -17,17 +17,29 @@
                     <form id="orderForm" action="{{ route('restaurant.orders.create') }}" method="POST">
                         @csrf
                         <div class="row">
-                            <div class="col-md-6 mb-3">
+                            <div class="col-md-5 mb-3">
                                 <label for="table_number" class="form-label">Masa Numarası</label>
-                                <input type="text" class="form-control table-number-input" 
-                                       id="table_number" name="table_number" required 
-                                       placeholder="Masa No" autocomplete="off">
+                                <div class="input-group">
+                                    <select class="form-control" id="table_number" name="table_number" required>
+                                        <option value="">Masa Seçin</option>
+                                        @foreach($tables as $table)
+                                            <option value="{{ $table->table_number }}">
+                                                Masa {{ $table->table_number }}
+                                                @if($table->capacity) - {{ $table->capacity }} kişi @endif
+                                                @if($table->location) - {{ $table->location }} @endif
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                    <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#quickTableModal">
+                                        <i class="bi bi-plus"></i>
+                                    </button>
+                                </div>
                             </div>
-                            <div class="col-md-6 mb-3">
-                                <label for="customer_name" class="form-label">Müşteri Adı (Opsiyonel)</label>
+                            <div class="col-md-7 mb-3">
+                                <label for="customer_name" class="form-label">Müşteri Adı</label>
                                 <input type="text" class="form-control" 
                                        id="customer_name" name="customer_name" 
-                                       placeholder="Müşteri adı">
+                                       placeholder="Müşteri adı (opsiyonel)">
                             </div>
                         </div>
                     </form>
@@ -126,6 +138,90 @@
                             Sepeti Temizle
                         </button>
                     </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Benim Siparişlerim -->
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="content-card">
+                <div class="card-header">
+                    <h5 class="card-title">
+                        <i class="bi bi-person-check me-2"></i>
+                        Benim Siparişlerim
+                        <span class="badge bg-primary ms-2">{{ $myOrders->count() }}</span>
+                    </h5>
+                </div>
+                <div class="card-body">
+                    @forelse($myOrders as $order)
+                        <div class="order-card mb-3 border-primary" style="border-left: 4px solid var(--bs-primary);">
+                            <div class="d-flex justify-content-between align-items-start mb-3">
+                                <div>
+                                    <h6 class="mb-1">Masa {{ $order->table_number }}</h6>
+                                    @if($order->customer_name)
+                                        <div class="text-primary fw-medium mb-1">{{ $order->customer_name }}</div>
+                                    @endif
+                                    <small class="text-muted">
+                                        {{ $order->created_at->format('H:i') }} - {{ $order->created_at->diffForHumans() }}
+                                    </small>
+                                </div>
+                                <div class="d-flex align-items-center gap-2">
+                                    @if($order->status == 'pending')
+                                        <span class="badge bg-warning">Bekliyor</span>
+                                    @elseif($order->status == 'preparing')
+                                        <span class="badge bg-info">Hazırlanıyor</span>
+                                    @elseif($order->status == 'ready')
+                                        <span class="badge bg-success">Hazır</span>
+                                    @elseif($order->status == 'delivered')
+                                        <span class="badge bg-primary">Teslim Edildi</span>
+                                    @elseif($order->status == 'completed')
+                                        <span class="badge bg-dark">Tamamlandı</span>
+                                    @endif
+                                    <div class="dropdown">
+                                        <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                                            <i class="bi bi-three-dots"></i>
+                                        </button>
+                                        <ul class="dropdown-menu">
+                                            <li><a class="dropdown-item" href="#" onclick="editOrder({{ $order->id }}, '{{ $order->table_number }}')">
+                                                <i class="bi bi-pencil me-2"></i>Masa Değiştir</a></li>
+                                            @if($order->status == 'pending')
+                                                <li><a class="dropdown-item text-danger" href="#" onclick="cancelOrder({{ $order->id }})">
+                                                    <i class="bi bi-x-circle me-2"></i>İptal Et</a></li>
+                                            @endif
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="order-items mb-2">
+                                @foreach($order->orderItems as $item)
+                                    <div class="d-flex justify-content-between align-items-center mb-1">
+                                        <div>
+                                            <span class="fw-medium">{{ $item->product->name }}</span>
+                                            @if($item->note)
+                                                <br><small class="text-muted">Not: {{ $item->note }}</small>
+                                            @endif
+                                        </div>
+                                        <div class="text-end">
+                                            <span class="badge bg-info">{{ $item->quantity }}x</span>
+                                            <br><small class="text-muted">₺{{ number_format($item->price * $item->quantity, 2) }}</small>
+                                        </div>
+                                    </div>
+                                @endforeach
+                            </div>
+                            
+                            <div class="d-flex justify-content-between align-items-center">
+                                <strong>Toplam: ₺{{ number_format($order->total, 2) }}</strong>
+                            </div>
+                        </div>
+                    @empty
+                        <div class="text-center text-muted py-3">
+                            <i class="bi bi-info-circle fs-3"></i>
+                            <p class="mt-2">Henüz sipariş oluşturmadınız</p>
+                        </div>
+                    @endforelse
                 </div>
             </div>
         </div>
@@ -486,5 +582,144 @@
 
     // Sayfa yüklendiğinde bir kez kontrol et
     setTimeout(checkReadyOrders, 2000);
+
+    // Sipariş iptal etme
+    function cancelOrder(orderId) {
+        if (!confirm('Bu siparişi iptal etmek istediğinizden emin misiniz?')) {
+            return;
+        }
+
+        fetch(`/restaurant/orders/${orderId}/cancel`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                location.reload();
+            } else {
+                alert(data.message || 'Hata oluştu');
+            }
+        })
+        .catch(error => {
+            alert('Hata: ' + error.message);
+        });
+    }
+
+    // Sipariş düzenleme (masa değiştirme)
+    function editOrder(orderId, currentTable) {
+        const newTable = prompt('Yeni masa numarası:', currentTable);
+        if (!newTable || newTable === currentTable) {
+            return;
+        }
+
+        fetch(`/restaurant/orders/${orderId}/update-table`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+            },
+            body: JSON.stringify({
+                table_number: newTable
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                location.reload();
+            } else {
+                alert(data.message || 'Hata oluştu');
+            }
+        })
+        .catch(error => {
+            alert('Hata: ' + error.message);
+        });
+    }
 </script>
+<!-- Hızlı Masa Ekleme Modal -->
+<div class="modal fade" id="quickTableModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Hızlı Masa Ekle</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form id="quickTableForm">
+                <div class="modal-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="quickTableNumber" class="form-label">Masa Numarası</label>
+                                <input type="text" class="form-control" id="quickTableNumber" required>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="quickTableCapacity" class="form-label">Kapasite</label>
+                                <input type="number" class="form-control" id="quickTableCapacity" min="1" max="20">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="quickTableLocation" class="form-label">Konum</label>
+                        <input type="text" class="form-control" id="quickTableLocation" placeholder="Örn: Teras, İç Salon">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">İptal</button>
+                    <button type="submit" class="btn btn-success">Masa Ekle</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+// Hızlı masa ekleme (geçici - veritabanına kaydetmez)
+document.getElementById('quickTableForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    const tableNumber = document.getElementById('quickTableNumber').value.trim();
+    
+    if (!tableNumber) {
+        alert('Masa numarası gereklidir!');
+        return;
+    }
+    
+         // Selectbox'a geçici masa ekle
+     const tableSelect = document.getElementById('table_number');
+    
+    // Zaten var mı kontrol et
+    const existingOption = Array.from(tableSelect.options).find(option => option.value === tableNumber);
+    if (existingOption) {
+        alert('Bu masa numarası zaten mevcut!');
+        return;
+    }
+    
+    // Yeni option ekle (geçici)
+    const newOption = document.createElement('option');
+    newOption.value = tableNumber;
+    newOption.textContent = `Masa ${tableNumber} (Geçici)`;
+    newOption.setAttribute('data-temp', 'true');
+    tableSelect.appendChild(newOption);
+    
+    // Yeni masayı seç
+    tableSelect.value = tableNumber;
+    
+    // Modal'ı kapat
+    bootstrap.Modal.getInstance(document.getElementById('quickTableModal')).hide();
+    
+    // Form'u temizle
+    document.getElementById('quickTableForm').reset();
+    
+         alert('Geçici masa eklendi! Bu masa sadece sipariş için kullanılacak, veritabanına kaydedilmeyecek.');
+            document.getElementById('quickTableForm').reset();
+            
+
+});
+</script>
+
 @endsection 

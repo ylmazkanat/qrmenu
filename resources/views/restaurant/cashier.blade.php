@@ -35,10 +35,10 @@
         <div class="col-lg-3 col-md-6 mb-3">
             <div class="stats-card">
                 <div class="stats-icon gradient-warning text-white">
-                    <i class="bi bi-clock"></i>
+                    <i class="bi bi-table"></i>
                 </div>
-                <div class="stats-value">{{ $paymentPendingOrders->count() }}</div>
-                <div class="stats-label">Ödeme Bekliyor</div>
+                <div class="stats-value">{{ $openOrders->count() }}</div>
+                <div class="stats-label">Açık Masalar</div>
                 <div class="stats-change positive">
                     <i class="bi bi-credit-card"></i>
                     Bekleyen
@@ -60,68 +60,62 @@
         </div>
     </div>
 
-    <!-- Ödeme Bekleyen Siparişler -->
+    <!-- Masalar (Açık/Kapalı) -->
     <div class="row mb-4">
         <div class="col-12">
             <div class="content-card">
                 <div class="card-header">
                     <h5 class="card-title">
-                        <i class="bi bi-credit-card me-2 text-warning"></i>
-                        Ödeme Bekleyen Siparişler
-                        <span class="badge bg-warning ms-2">{{ $paymentPendingOrders->count() }}</span>
+                        <i class="bi bi-table me-2 text-warning"></i>
+                        Masa Durumu
+                        <span class="badge bg-warning ms-2">{{ $openOrders->count() }} açık masa</span>
                     </h5>
                 </div>
                 <div class="card-body">
-                    <div class="row" id="paymentPendingList">
-                        @forelse($paymentPendingOrders as $order)
+                    <div class="row" id="tablesGrid">
+                        @forelse($openOrders as $tableNumber => $orders)
+                            @php
+                                $totalAmount = $orders->sum('total');
+                                $hasDelivered = $orders->where('status', 'delivered')->count() > 0;
+                                $allDelivered = $orders->every(fn($order) => $order->status === 'delivered');
+                            @endphp
                             <div class="col-md-6 col-lg-4 mb-3">
-                                <div class="order-card ready border-warning">
-                                    <div class="d-flex justify-content-between align-items-start mb-3">
-                                        <div>
-                                            <h6 class="mb-1">Masa {{ $order->table_number }}</h6>
-                                            <small class="text-muted">
-                                                Hazır: {{ $order->updated_at->format('H:i') }}
-                                                <br>
-                                                Bekliyor: {{ $order->updated_at->diffForHumans() }}
-                                            </small>
-                                        </div>
-                                        <div>
-                                            <span class="status-badge bg-warning text-dark">Ödeme Bekliyor</span>
-                                        </div>
-                                    </div>
-                                    
-                                    <div class="order-items mb-3">
-                                        @foreach($order->orderItems as $item)
-                                            <div class="d-flex justify-content-between align-items-center mb-2 p-2 bg-light rounded">
-                                                <div>
-                                                    <div class="fw-medium">{{ $item->product->name }}</div>
-                                                    <small class="text-muted">₺{{ number_format($item->price, 2) }}</small>
-                                                </div>
-                                                <div class="text-center">
-                                                    <span class="badge bg-warning text-dark">{{ $item->quantity }}x</span>
-                                                    <br>
-                                                    <small class="fw-bold">₺{{ number_format($item->price * $item->quantity, 2) }}</small>
-                                                </div>
-                                            </div>
-                                        @endforeach
-                                    </div>
-                                    
-                                    <div class="border-top pt-3 mb-3">
+                                <div class="table-card {{ $allDelivered ? 'ready-for-payment' : 'has-pending' }}" 
+                                     data-table="{{ $tableNumber }}" 
+                                     onclick="showTableDetails('{{ $tableNumber }}')">
+                                    <div class="table-header">
                                         <div class="d-flex justify-content-between align-items-center">
-                                            <strong>Toplam:</strong>
-                                            <strong class="text-primary fs-5">₺{{ number_format($order->total, 2) }}</strong>
+                                            <h5 class="mb-0">Masa {{ $tableNumber }}</h5>
+                                            <span class="table-status {{ $allDelivered ? 'delivered' : 'pending' }}">
+                                                {{ $allDelivered ? 'Ödeme Bekliyor' : 'Açık' }}
+                                            </span>
                                         </div>
                                     </div>
                                     
-                                    <div class="d-grid gap-2">
-                                        <button class="btn btn-success" onclick="showPaymentModal({{ $order->id }}, {{ $order->total }}, '{{ $order->table_number }}')">
-                                            <i class="bi bi-credit-card"></i>
-                                            Ödeme Al
+                                    <div class="table-body">
+                                        <div class="orders-summary">
+                                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                                <div class="d-flex align-items-center">
+                                                    <span class="text-muted">{{ $orders->count() }} sipariş</span>
+                                                    <i class="bi bi-arrow-right-circle ms-2 text-primary" style="font-size: 1rem;"></i>
+                                                </div>
+                                                <span class="fw-bold">Son: {{ $orders->sortByDesc('created_at')->first()->created_at->format('H:i') }}</span>
+                                            </div>
+                                            
+                                            <div class="total-amount">
+                                                <h4 class="text-primary mb-0">₺{{ number_format($totalAmount, 2) }}</h4>
+                                                <small class="text-muted">Toplam Tutar</small>
+                                        </div>
+                                    </div>
+                                    
+                                        @if($allDelivered)
+                                            <div class="text-center mt-3">
+                                                <button class="btn btn-success btn-sm" 
+                                                        onclick="event.stopPropagation(); showPaymentModal('{{ $tableNumber }}', {{ $totalAmount }})">
+                                                    <i class="bi bi-credit-card"></i> Ödeme Al
                                         </button>
-                                        <button class="btn btn-outline-info btn-sm" onclick="printReceipt({{ $order->id }})">
-                                            <i class="bi bi-printer"></i>
-                                            Fiş Yazdır
-                                        </button>
+                                            </div>
+                                        @endif
                                     </div>
                                 </div>
                             </div>
@@ -129,8 +123,8 @@
                             <div class="col-12">
                                 <div class="text-center text-muted py-5">
                                     <i class="bi bi-check-circle fs-1"></i>
-                                    <h5 class="mt-3">Tüm ödemeler tamamlandı!</h5>
-                                    <p>Ödeme bekleyen sipariş yok.</p>
+                                    <h5 class="mt-3">Tüm masalar kapalı!</h5>
+                                    <p>Ödeme bekleyen masa yok.</p>
                                 </div>
                             </div>
                         @endforelse
@@ -168,13 +162,29 @@
                                     <tr>
                                         <td>
                                             <span class="fw-bold">Masa {{ $order->table_number }}</span>
+                                            @if($order->customer_name)
+                                                <br><small class="text-primary">{{ $order->customer_name }}</small>
+                                            @endif
                                         </td>
                                         <td>{{ $order->created_at->format('H:i') }}</td>
                                         <td>{{ $order->updated_at->format('H:i') }}</td>
                                         <td>
-                                            <span class="badge bg-primary">
-                                                {{ $order->payment_method ?? 'Nakit' }}
+                                            @if($order->payment_method)
+                                                @php
+                                                    $paymentData = json_decode($order->payment_method, true);
+                                                @endphp
+                                                @if(is_array($paymentData) && isset($paymentData['methods']))
+                                                    @foreach($paymentData['methods'] as $method)
+                                                        <span class="badge {{ $method['method'] === 'nakit' ? 'bg-success' : 'bg-primary' }} me-1">
+                                                            {{ ucfirst($method['method']) }} ₺{{ number_format($method['amount'], 2) }}
                                             </span>
+                                                    @endforeach
+                                                @else
+                                                    <span class="badge bg-primary">{{ $order->payment_method }}</span>
+                                                @endif
+                                            @else
+                                                <span class="badge bg-secondary">Bilinmiyor</span>
+                                            @endif
                                         </td>
                                         <td>
                                             <span class="fw-bold text-success">₺{{ number_format($order->total, 2) }}</span>
@@ -202,58 +212,72 @@
     </div>
 @endsection
 
+<!-- Masa Detay Modal -->
+<div class="modal fade" id="tableDetailsModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="bi bi-table me-2"></i>
+                    Masa <span id="detailTableNumber"></span> Detayları
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="tableDetailsContent">
+                <div class="text-center">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Yükleniyor...</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
 <!-- Ödeme Modal -->
 <div class="modal fade" id="paymentModal" tabindex="-1">
-    <div class="modal-dialog">
+    <div class="modal-dialog modal-lg">
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title">
                     <i class="bi bi-credit-card me-2"></i>
-                    Ödeme Al
+                    Ödeme Al - Masa <span id="paymentTableNumber"></span>
                 </h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
-                <div class="text-center mb-4">
-                    <h4>Masa <span id="modalTableNumber"></span></h4>
-                    <h2 class="text-primary">₺<span id="modalAmount"></span></h2>
+                <div class="text-center mb-4 p-4 bg-light rounded">
+                    <h2 class="text-primary mb-0">₺<span id="paymentTotalAmount"></span></h2>
+                    <small class="text-muted">Toplam Ödeme Tutarı</small>
                 </div>
                 
                 <form id="paymentForm">
-                    <div class="mb-3">
-                        <label class="form-label">Ödeme Yöntemi</label>
-                        <div class="btn-group w-100" role="group">
-                            <input type="radio" class="btn-check" name="payment_method" id="cash" value="nakit" checked>
-                            <label class="btn btn-outline-success" for="cash">
-                                <i class="bi bi-cash"></i>
-                                Nakit
-                            </label>
-                            
-                            <input type="radio" class="btn-check" name="payment_method" id="card" value="kart">
-                            <label class="btn btn-outline-primary" for="card">
-                                <i class="bi bi-credit-card"></i>
-                                Kart
-                            </label>
-                        </div>
+                    <div class="row" id="paymentMethods">
+                        <!-- Ödeme yöntemleri dinamik olarak eklenecek -->
                     </div>
                     
-                    <div class="mb-3" id="cashFields">
-                        <label for="cashReceived" class="form-label">Alınan Tutar</label>
-                        <div class="input-group">
-                            <span class="input-group-text">₺</span>
-                            <input type="number" class="form-control" id="cashReceived" 
-                                   step="0.01" min="0" placeholder="0.00">
+                    <div class="border-top pt-3 mt-3">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <span>Toplam Ödeme:</span>
+                            <span class="fw-bold" id="totalPaymentDisplay">₺0.00</span>
                         </div>
-                        <div class="mt-2">
-                            <small class="text-muted">Para üstü: </small>
-                            <span class="fw-bold text-success" id="changeAmount">₺0.00</span>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span>Kalan:</span>
+                            <span class="fw-bold" id="remainingAmountDisplay">₺0.00</span>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center" id="changeRow" style="display: none;">
+                            <span class="text-success">Para Üstü:</span>
+                            <span class="fw-bold text-success" id="changeAmountDisplay">₺0.00</span>
                         </div>
                     </div>
                 </form>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">İptal</button>
-                <button type="button" class="btn btn-success" onclick="processPayment()">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" onclick="resetPaymentModal()">İptal</button>
+                <button type="button" class="btn btn-outline-primary me-2" onclick="addPaymentMethod()">
+                    <i class="bi bi-plus-circle"></i> Ödeme Yöntemi Ekle
+                </button>
+                <button type="button" class="btn btn-success" onclick="processTablePayment()" id="completePaymentBtn" disabled>
                     <i class="bi bi-check-circle"></i>
                     Ödemeyi Tamamla
                 </button>
@@ -262,75 +286,402 @@
     </div>
 </div>
 
+@section('styles')
+<style>
+.table-card {
+    border: 2px solid #e9ecef;
+    border-radius: 12px;
+    padding: 1.5rem;
+    background: white;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    height: 100%;
+}
+
+.table-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+}
+
+.table-card:hover .bi-arrow-right-circle {
+    transform: translateX(3px);
+    transition: transform 0.2s ease;
+}
+
+.table-card.has-pending {
+    border-color: #ffc107;
+    background: linear-gradient(135deg, #fff3cd 0%, #ffffff 100%);
+}
+
+.table-card.ready-for-payment {
+    border-color: #28a745;
+    background: linear-gradient(135deg, #d4edda 0%, #ffffff 100%);
+}
+
+.table-status {
+    padding: 0.25rem 0.75rem;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 600;
+}
+
+.table-status.pending {
+    background: #ffc107;
+    color: #000;
+}
+
+.table-status.delivered {
+    background: #28a745;
+    color: white;
+}
+
+.total-amount {
+    text-align: center;
+    padding: 1rem 0;
+}
+
+.payment-method-row {
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
+    padding: 1rem;
+    margin-bottom: 1rem;
+    background: #f8f9fa;
+}
+
+.payment-method-row:last-child {
+    margin-bottom: 0;
+}
+
+.remove-payment {
+    position: absolute;
+    top: -8px;
+    right: -8px;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    padding: 0;
+    line-height: 1;
+}
+</style>
+@endsection
+
 @section('scripts')
 <script>
-    let currentOrderId = null;
-    let currentOrderTotal = 0;
+    let currentTableNumber = null;
+    let currentTotalAmount = 0;
+    let paymentMethods = [];
 
-    // Ödeme modalını göster
-    function showPaymentModal(orderId, total, tableNumber) {
-        currentOrderId = orderId;
-        currentOrderTotal = total;
+    // Masa detaylarını göster
+    function showTableDetails(tableNumber) {
+        currentTableNumber = tableNumber;
         
-        document.getElementById('modalTableNumber').textContent = tableNumber;
-        document.getElementById('modalAmount').textContent = total.toFixed(2);
-        document.getElementById('cashReceived').value = total.toFixed(2);
+        document.getElementById('detailTableNumber').textContent = tableNumber;
         
-        updateChangeAmount();
-        
-        const modal = new bootstrap.Modal(document.getElementById('paymentModal'));
+        const modal = new bootstrap.Modal(document.getElementById('tableDetailsModal'));
         modal.show();
+        
+        // AJAX ile masa detaylarını yükle
+        fetch(`{{ url('restaurant/tables') }}/${encodeURIComponent(tableNumber)}/details`, {
+            method: 'GET',
+            headers: {
+                'Accept': 'application/json',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                displayTableDetails(data);
+            } else {
+                document.getElementById('tableDetailsContent').innerHTML = 
+                    '<div class="alert alert-danger">' + (data.message || 'Masa detayları yüklenemedi') + '</div>';
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            document.getElementById('tableDetailsContent').innerHTML = 
+                '<div class="alert alert-danger">Masa detayları yüklenirken hata oluştu</div>';
+        });
     }
 
-    // Para üstünü hesapla
-    function updateChangeAmount() {
-        const received = parseFloat(document.getElementById('cashReceived').value) || 0;
-        const change = received - currentOrderTotal;
-        const changeElement = document.getElementById('changeAmount');
+    // Masa detaylarını görüntüle
+    function displayTableDetails(data) {
+        let html = `
+            <div class="mb-4">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6>Toplam Sipariş:</h6>
+                        <p class="fw-bold">${data.order_count} adet</p>
+                    </div>
+                    <div class="col-md-6">
+                        <h6>Toplam Tutar:</h6>
+                        <p class="fw-bold text-primary fs-4">₺${data.total_amount.toFixed(2)}</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="orders-list">
+                <h6>Siparişler:</h6>
+        `;
         
-        if (change >= 0) {
-            changeElement.textContent = `₺${change.toFixed(2)}`;
-            changeElement.className = 'fw-bold text-success';
+        data.orders.forEach((order, orderIndex) => {
+            const statusBadge = getStatusBadge(order.status);
+            const orderTime = new Date(order.created_at).toLocaleTimeString('tr-TR', {hour: '2-digit', minute: '2-digit'});
+            const orderTotal = parseFloat(order.total) || 0;
+            
+            html += `
+                <div class="order-detail mb-3 p-3 border rounded">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <h6 class="mb-0">Sipariş #${order.id}</h6>
+                        <div>
+                            ${statusBadge}
+                            <small class="text-muted ms-2">${orderTime}</small>
+                        </div>
+                    </div>
+                    
+                    ${order.customer_name ? `<p class="text-primary mb-2"><i class="bi bi-person"></i> ${order.customer_name}</p>` : ''}
+                    ${order.created_by ? `<p class="text-muted mb-2"><i class="bi bi-person-badge"></i> Garson: ${order.created_by.name}</p>` : ''}
+                    
+                    <div class="order-items">
+            `;
+            
+            if (order.order_items && Array.isArray(order.order_items)) {
+                order.order_items.forEach(item => {
+                    const itemPrice = parseFloat(item.price) || 0;
+                    const itemQuantity = parseInt(item.quantity) || 0;
+                    const itemTotal = itemPrice * itemQuantity;
+                    
+                    html += `
+                        <div class="d-flex justify-content-between align-items-center py-2 border-bottom">
+                            <div>
+                                <span class="fw-medium">${item.product ? item.product.name : 'Bilinmeyen Ürün'}</span>
+                                ${item.note ? `<br><small class="text-muted fst-italic">${item.note}</small>` : ''}
+                            </div>
+                            <div class="text-end">
+                                <span class="badge bg-secondary">${itemQuantity}x</span>
+                                <br><span class="fw-bold">₺${itemTotal.toFixed(2)}</span>
+                            </div>
+                        </div>
+                    `;
+                });
+            }
+            
+            html += `
+                    </div>
+                    <div class="text-end mt-2">
+                        <span class="fw-bold">Sipariş Toplamı: ₺${orderTotal.toFixed(2)}</span>
+                    </div>
+                </div>
+            `;
+        });
+        
+        html += `</div>`;
+        
+        // Tümü delivered ise ödeme butonu ekle
+        const allDelivered = data.orders.every(order => order.status === 'delivered');
+        if (allDelivered) {
+            html += `
+                <div class="text-center mt-4">
+                    <button class="btn btn-success btn-lg" onclick="showPaymentModal('${data.table_number}', ${data.total_amount})">
+                        <i class="bi bi-credit-card"></i> Ödeme Al (₺${data.total_amount.toFixed(2)})
+                    </button>
+                </div>
+            `;
+        }
+        
+        document.getElementById('tableDetailsContent').innerHTML = html;
+    }
+
+    // Status badge helper
+    function getStatusBadge(status) {
+        const badges = {
+            'pending': '<span class="badge bg-warning">Bekliyor</span>',
+            'preparing': '<span class="badge bg-info">Hazırlanıyor</span>',
+            'ready': '<span class="badge bg-primary">Hazır</span>',
+            'delivered': '<span class="badge bg-success">Teslim Edildi</span>',
+            'completed': '<span class="badge bg-dark">Tamamlandı</span>'
+        };
+        return badges[status] || `<span class="badge bg-secondary">${status}</span>`;
+    }
+
+    // Ödeme modalını göster
+    function showPaymentModal(tableNumber, totalAmount) {
+        currentTableNumber = tableNumber;
+        currentTotalAmount = totalAmount;
+        
+        // Ödeme yöntemlerini sıfırla
+        resetPaymentModal();
+        
+        document.getElementById('paymentTableNumber').textContent = tableNumber;
+        document.getElementById('paymentTotalAmount').textContent = totalAmount.toFixed(2);
+        
+        // İlk ödeme yöntemini ekle
+        addPaymentMethod();
+        
+        // Modal'ı kapat (eğer masa detay modalı açıksa)
+        const tableDetailsModal = bootstrap.Modal.getInstance(document.getElementById('tableDetailsModal'));
+        if (tableDetailsModal) {
+            tableDetailsModal.hide();
+            // Kısa bir gecikme ile yeni modalı aç
+            setTimeout(() => {
+                const modal = new bootstrap.Modal(document.getElementById('paymentModal'));
+                modal.show();
+            }, 300);
         } else {
-            changeElement.textContent = `₺${Math.abs(change).toFixed(2)} eksik`;
-            changeElement.className = 'fw-bold text-danger';
+            const modal = new bootstrap.Modal(document.getElementById('paymentModal'));
+            modal.show();
         }
     }
 
-    // Nakit/kart seçimine göre alanları göster/gizle
-    document.querySelectorAll('input[name="payment_method"]').forEach(radio => {
-        radio.addEventListener('change', function() {
-            const cashFields = document.getElementById('cashFields');
-            if (this.value === 'nakit') {
-                cashFields.style.display = 'block';
-                document.getElementById('cashReceived').value = currentOrderTotal.toFixed(2);
-                updateChangeAmount();
-            } else {
-                cashFields.style.display = 'none';
-            }
-        });
-    });
-
-    // Alınan tutar değiştiğinde para üstünü güncelle
-    document.getElementById('cashReceived').addEventListener('input', updateChangeAmount);
-
-    // Ödemeyi işle
-    function processPayment() {
-        const paymentMethod = document.querySelector('input[name="payment_method"]:checked').value;
-        const cashReceived = parseFloat(document.getElementById('cashReceived').value) || 0;
+    // Ödeme modalını sıfırla
+    function resetPaymentModal() {
+        paymentMethods = [];
+        document.getElementById('paymentMethods').innerHTML = '';
+        document.getElementById('totalPaymentDisplay').textContent = '₺0.00';
+        document.getElementById('remainingAmountDisplay').textContent = '₺0.00';
+        document.getElementById('changeRow').style.display = 'none';
         
-        if (paymentMethod === 'nakit' && cashReceived < currentOrderTotal) {
-            alert('Alınan tutar yetersiz!');
+        const completeBtn = document.getElementById('completePaymentBtn');
+        completeBtn.disabled = true;
+        completeBtn.className = 'btn btn-success';
+        completeBtn.innerHTML = '<i class="bi bi-check-circle"></i> Ödemeyi Tamamla';
+    }
+
+    // Ödeme yöntemi ekle
+    function addPaymentMethod() {
+        const methodId = 'payment_' + Date.now();
+        const remaining = currentTotalAmount - paymentMethods.reduce((sum, p) => sum + p.amount, 0);
+        
+        const html = `
+            <div class="col-12 position-relative payment-method-row" data-method-id="${methodId}">
+                <button type="button" class="btn btn-sm btn-danger remove-payment" onclick="removePaymentMethod('${methodId}')">
+                    <i class="bi bi-x"></i>
+                </button>
+                
+                <div class="row">
+                    <div class="col-md-4">
+                        <label class="form-label">Ödeme Yöntemi</label>
+                        <select class="form-select payment-method-select" data-method-id="${methodId}" onchange="updatePaymentMethod('${methodId}')">
+                            <option value="nakit">Nakit</option>
+                            <option value="kart">Kart</option>
+                        </select>
+                    </div>
+                    <div class="col-md-8">
+                        <label class="form-label">Tutar</label>
+                        <div class="input-group">
+                            <span class="input-group-text">₺</span>
+                            <input type="number" class="form-control payment-amount" 
+                                   data-method-id="${methodId}" 
+                                   step="0.01" min="0" max="${remaining.toFixed(2)}" 
+                                   value="${remaining.toFixed(2)}"
+                                   onchange="updatePaymentMethod('${methodId}')">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        document.getElementById('paymentMethods').insertAdjacentHTML('beforeend', html);
+        
+        // Ödeme yöntemini listeye ekle
+        paymentMethods.push({
+            id: methodId,
+            method: 'nakit',
+            amount: remaining
+        });
+        
+        updatePaymentSummary();
+    }
+
+    // Ödeme yöntemini kaldır
+    function removePaymentMethod(methodId) {
+        if (paymentMethods.length <= 1) {
+            alert('En az bir ödeme yöntemi gereklidir!');
+            return;
+        }
+        
+        // DOM'dan kaldır
+        document.querySelector(`[data-method-id="${methodId}"]`).remove();
+        
+        // Listeden kaldır
+        paymentMethods = paymentMethods.filter(p => p.id !== methodId);
+        
+        updatePaymentSummary();
+    }
+
+    // Ödeme yöntemini güncelle
+    function updatePaymentMethod(methodId) {
+        const methodElement = document.querySelector(`select[data-method-id="${methodId}"]`);
+        const amountElement = document.querySelector(`input[data-method-id="${methodId}"]`);
+        
+        const method = methodElement.value;
+        const amount = parseFloat(amountElement.value) || 0;
+        
+        // Listede güncelle
+        const paymentIndex = paymentMethods.findIndex(p => p.id === methodId);
+        if (paymentIndex !== -1) {
+            paymentMethods[paymentIndex] = {
+                id: methodId,
+                method: method,
+                amount: amount
+            };
+        }
+        
+        updatePaymentSummary();
+    }
+
+    // Ödeme özetini güncelle
+    function updatePaymentSummary() {
+        const totalPaid = paymentMethods.reduce((sum, p) => sum + p.amount, 0);
+        const remaining = currentTotalAmount - totalPaid;
+        const change = remaining < 0 ? Math.abs(remaining) : 0;
+        
+        document.getElementById('totalPaymentDisplay').textContent = `₺${totalPaid.toFixed(2)}`;
+        document.getElementById('remainingAmountDisplay').textContent = `₺${Math.max(0, remaining).toFixed(2)}`;
+        
+        const changeRow = document.getElementById('changeRow');
+        const changeDisplay = document.getElementById('changeAmountDisplay');
+        
+        if (change > 0) {
+            changeRow.style.display = 'flex';
+            changeDisplay.textContent = `₺${change.toFixed(2)}`;
+        } else {
+            changeRow.style.display = 'none';
+        }
+        
+        // Ödeme tamamlama butonunu kontrol et
+        const completeBtn = document.getElementById('completePaymentBtn');
+        if (Math.abs(remaining) < 0.01) { // Küsurat toleransı
+            completeBtn.disabled = false;
+            completeBtn.className = 'btn btn-success';
+        } else if (remaining < 0) {
+            completeBtn.disabled = false;
+            completeBtn.className = 'btn btn-warning';
+            completeBtn.innerHTML = '<i class="bi bi-exclamation-triangle"></i> Para Üstü ile Tamamla';
+        } else {
+            completeBtn.disabled = true;
+            completeBtn.className = 'btn btn-success';
+            completeBtn.innerHTML = '<i class="bi bi-check-circle"></i> Ödemeyi Tamamla';
+        }
+    }
+
+    // Masa ödemeini işle
+    function processTablePayment() {
+        if (paymentMethods.length === 0) {
+            alert('Ödeme yöntemi eklemelisiniz!');
             return;
         }
         
         const paymentData = {
-            payment_method: paymentMethod,
-            cash_received: paymentMethod === 'nakit' ? cashReceived : currentOrderTotal,
+            table_number: currentTableNumber,
+            payments: paymentMethods.map(p => ({
+                method: p.method,
+                amount: p.amount
+            })),
             _token: document.querySelector('meta[name="csrf-token"]').getAttribute('content')
         };
         
-        fetch(`{{ route("restaurant.cashier.process-payment", ":id") }}`.replace(':id', currentOrderId), {
+        fetch('{{ route("restaurant.cashier.process-table-payment") }}', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -341,19 +692,18 @@
         .then(response => response.json())
         .then(data => {
             if (data.success) {
-                showSuccessMessage('Ödeme başarıyla alındı!');
+                showSuccessMessage(data.message);
                 
                 // Para üstü varsa göster
-                if (paymentMethod === 'nakit') {
-                    const change = cashReceived - currentOrderTotal;
-                    if (change > 0) {
+                const totalPaid = paymentMethods.reduce((sum, p) => sum + p.amount, 0);
+                const change = totalPaid - currentTotalAmount;
+                if (change > 0.01) {
                         showSuccessMessage(`Para üstü: ₺${change.toFixed(2)}`);
-                    }
                 }
                 
                 // Modal'ı kapat ve sayfayı yenile
                 bootstrap.Modal.getInstance(document.getElementById('paymentModal')).hide();
-                location.reload();
+                setTimeout(() => location.reload(), 1000);
             } else {
                 showErrorMessage('Hata: ' + (data.message || 'Bilinmeyen hata'));
             }
@@ -388,6 +738,16 @@
             alert.remove();
         }, 5000);
     }
+
+    // Modal event listeners
+    document.addEventListener('DOMContentLoaded', function() {
+        const paymentModal = document.getElementById('paymentModal');
+        if (paymentModal) {
+            paymentModal.addEventListener('hidden.bs.modal', function() {
+                resetPaymentModal();
+            });
+        }
+    });
 
     // Hata mesajı göster
     function showErrorMessage(message) {

@@ -79,9 +79,13 @@
                                     <div class="d-flex justify-content-between align-items-start mb-3">
                                         <div>
                                             <h6 class="mb-1">Masa {{ $order->table_number }}</h6>
+                                            @if($order->customer_name)
+                                                <div class="text-primary fw-medium mb-1">{{ $order->customer_name }}</div>
+                                            @endif
                                             <small class="text-muted">
-                                                {{ $order->created_at->format('H:i') }} 
-                                                ({{ $order->created_at->diffForHumans() }})
+                                                Başlama: {{ $order->updated_at->format('H:i') }}
+                                                <br>
+                                                Süre: {{ $order->updated_at->diffForHumans() }}
                                             </small>
                                         </div>
                                         <div>
@@ -217,6 +221,9 @@
                                     <div class="d-flex justify-content-between align-items-start mb-3">
                                         <div>
                                             <h6 class="mb-1">Masa {{ $order->table_number }}</h6>
+                                            @if($order->customer_name)
+                                                <div class="text-primary fw-medium mb-1">{{ $order->customer_name }}</div>
+                                            @endif
                                             <small class="text-muted">
                                                 Hazır: {{ $order->updated_at->format('H:i') }}
                                                 <br>

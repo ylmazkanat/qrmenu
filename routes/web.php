@@ -76,6 +76,8 @@ Route::middleware(['auth'])->prefix('restaurant')->name('restaurant.')->group(fu
     Route::get('/waiter', [RestaurantPanelController::class, 'waiter'])->name('waiter');
     Route::post('/orders', [RestaurantPanelController::class, 'createOrder'])->name('orders.create');
     Route::post('/orders/{order}/deliver', [RestaurantPanelController::class, 'markAsDelivered'])->name('orders.deliver');
+    Route::post('/orders/{order}/cancel', [RestaurantPanelController::class, 'cancelOrder'])->name('orders.cancel');
+    Route::post('/orders/{order}/update-table', [RestaurantPanelController::class, 'updateOrderTable'])->name('orders.update-table');
     
     // Mutfak Paneli - restaurant_manager veya kitchen
     Route::get('/kitchen', [RestaurantPanelController::class, 'kitchen'])->name('kitchen');
@@ -94,12 +96,22 @@ Route::middleware(['auth'])->prefix('restaurant')->name('restaurant.')->group(fu
     Route::put('/products/{product}', [RestaurantPanelController::class, 'updateProduct'])->name('products.update');
     Route::delete('/products/{product}', [RestaurantPanelController::class, 'deleteProduct'])->name('products.delete');
     
+    // Masa İşlemleri
+    Route::post('/tables', [RestaurantPanelController::class, 'storeTables'])->name('tables.store');
+    Route::get('/tables/{table}', [RestaurantPanelController::class, 'getTable'])->name('tables.get');
+    Route::put('/tables/{table}', [RestaurantPanelController::class, 'updateTable'])->name('tables.update');
+    Route::delete('/tables/{table}', [RestaurantPanelController::class, 'deleteTable'])->name('tables.delete');
+    
+    // Sipariş Ayarları
+    Route::post('/order-settings', [RestaurantPanelController::class, 'storeOrderSettings'])->name('order-settings.store');
+    
     Route::post('/kitchen/{order}/start-preparing', [RestaurantPanelController::class, 'startPreparing'])->name('kitchen.start-preparing');
     Route::post('/kitchen/{order}/mark-ready', [RestaurantPanelController::class, 'markAsReady'])->name('kitchen.mark-ready');
     
     // Kasa Paneli - restaurant_manager veya cashier
     Route::get('/cashier', [RestaurantPanelController::class, 'cashier'])->name('cashier');
-    Route::post('/cashier/{order}/process-payment', [RestaurantPanelController::class, 'processPayment'])->name('cashier.process-payment');
+    Route::post('/cashier/process-table-payment', [RestaurantPanelController::class, 'processTablePayment'])->name('cashier.process-table-payment');
+    Route::get('/tables/{tableNumber}/details', [RestaurantPanelController::class, 'getTableDetails'])->name('tables.details');
     Route::get('/cashier/{order}/print-receipt', [RestaurantPanelController::class, 'printReceipt'])->name('cashier.print-receipt');
     
     // Ortak API'ler (tüm restoran çalışanları)

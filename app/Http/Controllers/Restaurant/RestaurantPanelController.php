@@ -9,6 +9,8 @@ use App\Models\Order;
 use App\Models\Product;
 use App\Models\OrderItem;
 use App\Models\KitchenView;
+use App\Models\Table;
+use App\Models\RestaurantOrderSettings;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
@@ -63,6 +65,7 @@ class RestaurantPanelController extends Controller
         $categories = $restaurant->categories()->with('products')->get();
         // Tüm mevcut ürünleri (stokta ve menüde aktif) al
         $products = $restaurant->products()->where('is_available', true)->orderBy('sort_order')->get();
+        $tables = $restaurant->tables()->where('is_active', true)->orderBy('table_number')->get();
         $activeOrders = $restaurant->orders()
             ->whereIn('status', ['pending', 'preparing', 'ready'])
             ->with(['orderItems.product'])
@@ -75,7 +78,24 @@ class RestaurantPanelController extends Controller
             ->latest()
             ->get();
 
-        return view('restaurant.waiter', compact('restaurant', 'categories', 'products', 'activeOrders', 'readyOrders'));
+        // Garsonun kendi oluşturduğu siparişler
+        $myOrders = $restaurant->orders()
+            ->where('created_by_user_id', $user->id)
+            ->whereIn('status', ['pending', 'preparing', 'ready', 'delivered'])
+            ->with(['orderItems.product', 'createdBy'])
+            ->latest()
+            ->get();
+
+        // Debug için
+        \Log::info('Waiter Panel Debug', [
+            'user_id' => $user->id,
+            'restaurant_id' => $restaurant->id,
+            'total_orders' => $restaurant->orders()->count(),
+            'my_orders_count' => $myOrders->count(),
+            'my_orders_ids' => $myOrders->pluck('id')->toArray(),
+        ]);
+
+        return view('restaurant.waiter', compact('restaurant', 'categories', 'products', 'tables', 'activeOrders', 'readyOrders', 'myOrders'));
     }
 
     // Garson - Sipariş Oluştur
@@ -96,6 +116,8 @@ class RestaurantPanelController extends Controller
         $order = Order::create([
             'restaurant_id' => $restaurant->id,
             'table_number' => $request->table_number,
+            'customer_name' => $request->customer_name,
+            'created_by_user_id' => $user->id,
             'status' => 'pending',
             'total' => 0,
         ]);
@@ -103,6 +125,14 @@ class RestaurantPanelController extends Controller
         $total = 0;
         foreach ($request->items as $item) {
             $product = Product::findOrFail($item['product_id']);
+            
+            // Stok kontrolü ve düşme
+            if (!$product->decreaseStock($item['quantity'])) {
+                return response()->json([
+                    'success' => false,
+                    'message' => $product->name . ' ürününde yetersiz stok!'
+                ], 400);
+            }
             
             OrderItem::create([
                 'order_id' => $order->id,
@@ -153,6 +183,73 @@ class RestaurantPanelController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'Sipariş teslim edildi olarak işaretlendi!',
+        ]);
+    }
+
+    // Garson - Siparişi İptal Et
+    public function cancelOrder(Request $request, $orderId)
+    {
+        $user = Auth::user();
+        $restaurant = $this->getUserRestaurant($user);
+        
+        if (!$restaurant) {
+            return response()->json(['success' => false, 'message' => 'Bu restorana erişim yetkiniz yok.'], 403);
+        }
+
+        $order = Order::where('id', $orderId)
+                     ->where('restaurant_id', $restaurant->id)
+                     ->where('created_by_user_id', $user->id)
+                     ->whereIn('status', ['pending'])
+                     ->first();
+
+        if (!$order) {
+            return response()->json(['success' => false, 'message' => 'Bu siparişi iptal edemezsiniz.'], 403);
+        }
+
+        // Stokları geri ver
+        foreach ($order->orderItems as $item) {
+            $product = $item->product;
+            if ($product->stock !== -1) {  // Sınırsız stok değilse
+                $product->increment('stock', $item->quantity);
+            }
+        }
+
+        $order->update(['status' => 'cancelled']);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Sipariş iptal edildi ve stoklar geri yüklendi!',
+        ]);
+    }
+
+    // Garson - Sipariş Masa Numarası Güncelle
+    public function updateOrderTable(Request $request, $orderId)
+    {
+        $user = Auth::user();
+        $restaurant = $this->getUserRestaurant($user);
+        
+        if (!$restaurant) {
+            return response()->json(['success' => false, 'message' => 'Bu restorana erişim yetkiniz yok.'], 403);
+        }
+
+        $request->validate([
+            'table_number' => 'required|string|max:50',
+        ]);
+
+        $order = Order::where('id', $orderId)
+                     ->where('restaurant_id', $restaurant->id)
+                     ->where('created_by_user_id', $user->id)
+                     ->first();
+
+        if (!$order) {
+            return response()->json(['success' => false, 'message' => 'Bu siparişi düzenleyemezsiniz.'], 403);
+        }
+
+        $order->update(['table_number' => $request->table_number]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Masa numarası güncellendi!',
         ]);
     }
 
@@ -257,14 +354,24 @@ class RestaurantPanelController extends Controller
             abort(403, 'Bu restorana erişim yetkiniz yok.');
         }
 
+        // Masa bazlı ödeme bekleyen siparişleri grupla
         $paymentPendingOrders = $restaurant->orders()
-            ->where('status', 'ready')
-            ->with(['orderItems.product'])
-            ->orderBy('created_at')
-            ->get();
-
-        $recentPayments = $restaurant->orders()
             ->where('status', 'delivered')
+            ->with(['orderItems.product'])
+            ->get()
+            ->groupBy('table_number');
+
+        // Masa bazlı açık (ödenmemiş) siparişleri grupla
+        $openOrders = $restaurant->orders()
+            ->whereIn('status', ['pending', 'preparing', 'ready', 'delivered'])
+            ->with(['orderItems.product', 'createdBy'])
+            ->orderBy('created_at')
+            ->get()
+            ->groupBy('table_number');
+
+        // Bugünkü tamamlanan ödemeler
+        $recentPayments = $restaurant->orders()
+            ->where('status', 'completed')
             ->whereDate('created_at', today())
             ->with(['orderItems.product'])
             ->orderByDesc('created_at')
@@ -276,7 +383,8 @@ class RestaurantPanelController extends Controller
 
         return view('restaurant.cashier', compact(
             'restaurant', 
-            'paymentPendingOrders', 
+            'paymentPendingOrders',
+            'openOrders',
             'recentPayments', 
             'todayRevenue', 
             'todayOrdersCount', 
@@ -284,8 +392,8 @@ class RestaurantPanelController extends Controller
         ));
     }
 
-    // Kasa - Ödeme İşle
-    public function processPayment(Request $request, $orderId)
+    // Kasa - Masa Bazlı Ödeme İşle
+    public function processTablePayment(Request $request)
     {
         $user = Auth::user();
         $restaurant = $this->getUserRestaurant($user);
@@ -294,30 +402,113 @@ class RestaurantPanelController extends Controller
             return response()->json(['success' => false, 'message' => 'Bu restorana erişim yetkiniz yok.'], 403);
         }
 
-        $order = Order::where('id', $orderId)
-                     ->where('restaurant_id', $restaurant->id)
-                     ->first();
+        $request->validate([
+            'table_number' => 'required|string',
+            'payments' => 'required|array',
+            'payments.*.method' => 'required|in:nakit,kart',
+            'payments.*.amount' => 'required|numeric|min:0',
+        ]);
 
-        if (!$order) {
-            return response()->json(['success' => false, 'message' => 'Bu siparişe erişim yetkiniz yok.'], 403);
+        // Masanın açık siparişlerini al
+        $tableOrders = $restaurant->orders()
+            ->where('table_number', $request->table_number)
+            ->whereIn('status', ['pending', 'preparing', 'ready', 'delivered'])
+            ->get();
+
+        if ($tableOrders->isEmpty()) {
+            return response()->json(['success' => false, 'message' => 'Bu masada ödeme bekleyen sipariş bulunamadı.'], 404);
         }
 
-        $request->validate([
-            'payment_method' => 'required|in:nakit,kart',
-            'cash_received' => 'nullable|numeric|min:0',
-        ]);
+        // Toplam tutarı hesapla
+        $totalAmount = $tableOrders->sum('total');
+        $paymentTotal = collect($request->payments)->sum('amount');
 
-        // Ödeme bilgilerini order'a ekle (eğer order tablosunda payment alanları varsa)
-        $order->update([
-            'status' => 'delivered',
-            'payment_method' => $request->payment_method,
-            'cash_received' => $request->cash_received,
-            'paid_at' => now(),
-        ]);
+        if (abs($totalAmount - $paymentTotal) > 0.01) { // Küsurat farkını tolere et
+            return response()->json([
+                'success' => false, 
+                'message' => 'Ödeme tutarı toplam fatura tutarı ile eşleşmiyor.'
+            ], 400);
+        }
+
+        // Ödeme detaylarını hazırla
+        $paymentDetails = [
+            'methods' => $request->payments,
+            'total_paid' => $paymentTotal,
+            'payment_date' => now()
+        ];
+
+        // Tüm siparişleri completed yap ve ödeme bilgilerini ekle
+        foreach ($tableOrders as $order) {
+            $order->update([
+                'status' => 'completed',
+                'payment_method' => json_encode($paymentDetails),
+                'cash_received' => $paymentTotal, // Toplam ödenen tutar
+            ]);
+        }
 
         return response()->json([
             'success' => true,
-            'message' => 'Ödeme başarıyla tamamlandı!',
+            'message' => "Masa {$request->table_number} için ödeme başarıyla tamamlandı!",
+            'completed_orders' => $tableOrders->count(),
+            'total_amount' => $totalAmount
+        ]);
+    }
+
+    // Masa Detaylarını Getir (AJAX)
+    public function getTableDetails(Request $request, $tableNumber)
+    {
+        $user = Auth::user();
+        $restaurant = $this->getUserRestaurant($user);
+        
+        if (!$restaurant) {
+            return response()->json(['success' => false, 'message' => 'Bu restorana erişim yetkiniz yok.'], 403);
+        }
+
+        $tableOrders = $restaurant->orders()
+            ->where('table_number', $tableNumber)
+            ->whereIn('status', ['pending', 'preparing', 'ready', 'delivered'])
+            ->with(['orderItems.product', 'createdBy'])
+            ->orderBy('created_at')
+            ->get();
+
+        if ($tableOrders->isEmpty()) {
+            return response()->json(['success' => false, 'message' => 'Bu masada açık sipariş bulunamadı.'], 404);
+        }
+
+        $totalAmount = $tableOrders->sum('total');
+
+        return response()->json([
+            'success' => true,
+            'table_number' => $tableNumber,
+            'orders' => $tableOrders->map(function($order) {
+                return [
+                    'id' => $order->id,
+                    'status' => $order->status,
+                    'total' => (float) $order->total,
+                    'customer_name' => $order->customer_name,
+                    'created_at' => $order->created_at->toISOString(),
+                    'updated_at' => $order->updated_at->toISOString(),
+                    'created_by' => $order->createdBy ? [
+                        'id' => $order->createdBy->id,
+                        'name' => $order->createdBy->name
+                    ] : null,
+                    'order_items' => $order->orderItems->map(function($item) {
+                        return [
+                            'id' => $item->id,
+                            'quantity' => $item->quantity,
+                            'price' => (float) $item->price,
+                            'note' => $item->note,
+                            'product' => [
+                                'id' => $item->product->id,
+                                'name' => $item->product->name,
+                                'price' => (float) $item->product->price
+                            ]
+                        ];
+                    })
+                ];
+            }),
+            'total_amount' => (float) $totalAmount,
+            'order_count' => $tableOrders->count()
         ]);
     }
 
@@ -355,8 +546,9 @@ class RestaurantPanelController extends Controller
 
         $categories = $restaurant->categories()->withCount('products')->orderBy('sort_order')->get();
         $products = $restaurant->products()->with('category')->orderBy('sort_order')->get();
+        $tables = $restaurant->tables()->orderBy('table_number')->get();
 
-        return view('restaurant.menu-management', compact('restaurant', 'categories', 'products'));
+        return view('restaurant.menu-management', compact('restaurant', 'categories', 'products', 'tables'));
     }
 
     // Kategori İşlemleri
@@ -679,6 +871,165 @@ class RestaurantPanelController extends Controller
             'preparing_orders' => $preparingOrders,
             'ready_orders' => $readyOrders,
             'total_notifications' => $pendingOrders + $readyOrders,
+        ]);
+    }
+
+    // Masa Yönetimi Metodları
+    public function storeTables(Request $request)
+    {
+        $user = Auth::user();
+        $restaurant = $this->getUserRestaurant($user);
+
+        if (!$restaurant) {
+            return response()->json(['success' => false, 'message' => 'Bu restorana erişim yetkiniz yok.'], 403);
+        }
+
+        $request->validate([
+            'table_number' => 'required|string|max:20',
+            'capacity' => 'nullable|integer|min:1|max:20',
+            'location' => 'nullable|string|max:100',
+            'description' => 'nullable|string|max:255',
+        ]);
+
+        // Aynı masa numarasının olup olmadığını kontrol et
+        $existingTable = $restaurant->tables()->where('table_number', $request->table_number)->first();
+        if ($existingTable) {
+            return response()->json(['success' => false, 'message' => 'Bu masa numarası zaten mevcut!'], 400);
+        }
+
+        $table = $restaurant->tables()->create([
+            'table_number' => $request->table_number,
+            'capacity' => $request->capacity,
+            'location' => $request->location,
+            'description' => $request->description,
+            'is_active' => true,
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Masa başarıyla eklendi!',
+            'table' => $table
+        ]);
+    }
+
+    public function updateTable(Request $request, $tableId)
+    {
+        $user = Auth::user();
+        $restaurant = $this->getUserRestaurant($user);
+
+        if (!$restaurant) {
+            return response()->json(['success' => false, 'message' => 'Bu restorana erişim yetkiniz yok.'], 403);
+        }
+
+        $table = $restaurant->tables()->findOrFail($tableId);
+
+        $request->validate([
+            'table_number' => 'required|string|max:20',
+            'capacity' => 'nullable|integer|min:1|max:20',
+            'location' => 'nullable|string|max:100',
+            'description' => 'nullable|string|max:255',
+            'is_active' => 'boolean',
+        ]);
+
+        // Aynı masa numarasının başka masada olup olmadığını kontrol et
+        $existingTable = $restaurant->tables()
+            ->where('table_number', $request->table_number)
+            ->where('id', '!=', $tableId)
+            ->first();
+        
+        if ($existingTable) {
+            return response()->json(['success' => false, 'message' => 'Bu masa numarası zaten mevcut!'], 400);
+        }
+
+        $table->update([
+            'table_number' => $request->table_number,
+            'capacity' => $request->capacity,
+            'location' => $request->location,
+            'description' => $request->description,
+            'is_active' => $request->boolean('is_active', true),
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Masa başarıyla güncellendi!',
+            'table' => $table
+        ]);
+    }
+
+    public function deleteTable($tableId)
+    {
+        $user = Auth::user();
+        $restaurant = $this->getUserRestaurant($user);
+
+        if (!$restaurant) {
+            return response()->json(['success' => false, 'message' => 'Bu restorana erişim yetkiniz yok.'], 403);
+        }
+
+        $table = $restaurant->tables()->findOrFail($tableId);
+
+        // Aktif siparişi olan masayı silmeyi engelle
+        $activeOrders = $restaurant->orders()
+            ->where('table_number', $table->table_number)
+            ->whereIn('status', ['pending', 'preparing', 'ready'])
+            ->count();
+
+        if ($activeOrders > 0) {
+            return response()->json(['success' => false, 'message' => 'Bu masanın aktif siparişi var, silinemez!'], 400);
+        }
+
+        $table->delete();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Masa başarıyla silindi!'
+        ]);
+    }
+
+    public function getTable($tableId)
+    {
+        $user = Auth::user();
+        $restaurant = $this->getUserRestaurant($user);
+
+        if (!$restaurant) {
+            return response()->json(['success' => false, 'message' => 'Bu restorana erişim yetkiniz yok.'], 403);
+        }
+
+        $table = $restaurant->tables()->findOrFail($tableId);
+
+        return response()->json([
+            'success' => true,
+            'table' => $table
+        ]);
+    }
+
+    // Sipariş Ayarları
+    public function storeOrderSettings(Request $request)
+    {
+        $user = Auth::user();
+        $restaurant = $this->getUserRestaurant($user);
+
+        if (!$restaurant) {
+            return response()->json(['success' => false, 'message' => 'Bu restorana erişim yetkiniz yok.'], 403);
+        }
+
+        $request->validate([
+            'ordering_enabled' => 'boolean',
+            'enabled_categories' => 'required|string',
+        ]);
+
+        $enabledCategories = json_decode($request->enabled_categories, true);
+
+        $restaurant->orderSettings()->updateOrCreate(
+            ['restaurant_id' => $restaurant->id],
+            [
+                'ordering_enabled' => $request->boolean('ordering_enabled'),
+                'enabled_categories' => $enabledCategories,
+            ]
+        );
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Sipariş ayarları başarıyla güncellendi!'
         ]);
     }
 }

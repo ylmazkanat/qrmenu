@@ -86,6 +86,16 @@ class Restaurant extends Model
         return $this->hasMany(Waiter::class);
     }
 
+    public function tables()
+    {
+        return $this->hasMany(Table::class);
+    }
+
+    public function orderSettings()
+    {
+        return $this->hasOne(RestaurantOrderSettings::class);
+    }
+
     public function kitchenViews()
     {
         return $this->hasManyThrough(KitchenView::class, Order::class);

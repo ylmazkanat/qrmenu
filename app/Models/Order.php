@@ -12,8 +12,12 @@ class Order extends Model
     protected $fillable = [
         'restaurant_id',
         'table_number',
+        'customer_name',
+        'created_by_user_id',
         'status',
         'total',
+        'payment_method',
+        'cash_received',
     ];
 
     protected $casts = [
@@ -42,6 +46,14 @@ class Order extends Model
     public function kitchenView()
     {
         return $this->hasOne(KitchenView::class);
+    }
+
+    /**
+     * Get the user who created this order.
+     */
+    public function createdBy()
+    {
+        return $this->belongsTo(User::class, 'created_by_user_id');
     }
 
     /**

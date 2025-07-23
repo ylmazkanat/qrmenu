@@ -55,6 +55,42 @@ class Product extends Model
      */
     public function inStock(): bool
     {
-        return $this->stock > 0 && $this->is_available;
+        return ($this->stock > 0 || $this->stock == -1) && $this->is_available;
+    }
+
+    /**
+     * Check if product has unlimited stock
+     */
+    public function hasUnlimitedStock(): bool
+    {
+        return $this->stock == -1;
+    }
+
+    /**
+     * Decrease stock after order
+     */
+    public function decreaseStock(int $quantity): bool
+    {
+        if ($this->hasUnlimitedStock()) {
+            return true; // Sınırsız stok, hiçbir şey yapma
+        }
+
+        if ($this->stock >= $quantity) {
+            $this->decrement('stock', $quantity);
+            return true;
+        }
+
+        return false; // Yetersiz stok
+    }
+
+    /**
+     * Get stock display text
+     */
+    public function getStockDisplayAttribute(): string
+    {
+        if ($this->hasUnlimitedStock()) {
+            return 'Sınırsız';
+        }
+        return (string) $this->stock;
     }
 }

@@ -179,6 +179,7 @@
                                 <thead>
                                     <tr>
                                         <th>Masa</th>
+                                        <th>Müşteri</th>
                                         <th>Sipariş Zamanı</th>
                                         <th>Durum</th>
                                         <th>Tutar</th>
@@ -190,6 +191,13 @@
                                         <tr>
                                             <td>
                                                 <span class="fw-bold">Masa {{ $order->table_number }}</span>
+                                            </td>
+                                            <td>
+                                                @if($order->customer_name)
+                                                    <span class="text-primary">{{ $order->customer_name }}</span>
+                                                @else
+                                                    <span class="text-muted">-</span>
+                                                @endif
                                             </td>
                                             <td>{{ $order->created_at->format('H:i') }}</td>
                                             <td>
@@ -315,6 +323,7 @@
                                 <thead>
                                     <tr>
                                         <th>Masa</th>
+                                        <th>Müşteri</th>
                                         <th>Sipariş Zamanı</th>
                                         <th>Ürünler</th>
                                         <th>Durum</th>
@@ -327,6 +336,13 @@
                                         <tr>
                                             <td>
                                                 <span class="fw-bold">Masa {{ $order->table_number }}</span>
+                                            </td>
+                                            <td>
+                                                @if($order->customer_name)
+                                                    <span class="text-primary">{{ $order->customer_name }}</span>
+                                                @else
+                                                    <span class="text-muted">-</span>
+                                                @endif
                                             </td>
                                             <td>{{ $order->created_at->format('H:i') }}</td>
                                             <td>

@@ -23,7 +23,7 @@ class MenuController extends Controller
                 $query->orderBy('sort_order');
             }, 'categories.products' => function($query) {
                 $query->where('is_available', true)->orderBy('sort_order');
-            }])
+            }, 'orderSettings'])
             ->firstOrFail();
 
         return view('menu.show', compact('restaurant'));
@@ -42,7 +42,7 @@ class MenuController extends Controller
                 $query->orderBy('sort_order');
             }, 'categories.products' => function($query) {
                 $query->where('is_available', true)->orderBy('sort_order');
-            }])
+            }, 'orderSettings'])
             ->firstOrFail();
 
         return view('menu.show', compact('restaurant'));
@@ -155,6 +155,7 @@ class MenuController extends Controller
         if ($request->isJson() || $request->wantsJson()) {
             $request->validate([
                 'table_number' => 'required|string|max:50',
+                'customer_name' => 'nullable|string|max:100',
                 'items' => 'required|array|min:1',
                 'items.*.product_id' => 'required|exists:products,id',
                 'items.*.quantity' => 'required|integer|min:1',
@@ -164,6 +165,7 @@ class MenuController extends Controller
             $order = Order::create([
                 'restaurant_id' => $restaurant->id,
                 'table_number' => $request->table_number,
+                'customer_name' => $request->customer_name ?: 'Müşteri',
                 'status' => 'pending',
                 'total' => 0,
             ]);
@@ -171,6 +173,14 @@ class MenuController extends Controller
             $total = 0;
             foreach ($request->items as $item) {
                 $product = Product::findOrFail($item['product_id']);
+
+                // Stok kontrolü ve düşme
+                if (!$product->decreaseStock($item['quantity'])) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => $product->name . ' ürününde yetersiz stok!'
+                    ], 400);
+                }
 
                 OrderItem::create([
                     'order_id' => $order->id,
@@ -205,12 +215,14 @@ class MenuController extends Controller
         }
 
         $request->validate([
-            'table_number' => 'required|string|max:50'
+            'table_number' => 'required|string|max:50',
+            'customer_name' => 'nullable|string|max:100'
         ]);
 
         $order = Order::create([
             'restaurant_id' => $restaurant->id,
             'table_number' => $request->table_number,
+            'customer_name' => $request->customer_name ?: 'Müşteri',
             'status' => 'pending',
             'total' => 0,
         ]);

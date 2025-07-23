@@ -505,7 +505,17 @@
                                             @endif
                                             
                                             <div class="product-actions">
-                                                @if($product->inStock())
+                                                @php
+                                                    $showAddToCart = false;
+                                                    if($restaurant->orderSettings && $restaurant->orderSettings->ordering_enabled) {
+                                                        $enabledCategories = $restaurant->orderSettings->enabled_categories ?? [];
+                                                        if(in_array('all', $enabledCategories) || in_array($category->id, $enabledCategories)) {
+                                                            $showAddToCart = true;
+                                                        }
+                                                    }
+                                                @endphp
+                                                
+                                                @if($showAddToCart && $product->inStock())
                                                     <button class="btn btn-add-cart btn-modern add-to-cart" 
                                                             data-product-id="{{ $product->id }}"
                                                             data-product-name="{{ $product->name }}"
@@ -514,7 +524,7 @@
                                                         <i class="bi bi-cart-plus me-2"></i>
                                                         Sepete Ekle
                                                     </button>
-                                                @else
+                                                @elseif($showAddToCart && !$product->inStock())
                                                     <button class="btn btn-secondary btn-modern" disabled>
                                                         <i class="bi bi-x-circle me-2"></i>
                                                         Tükendi
@@ -561,10 +571,19 @@
     </div>
 
     <!-- Cart FAB -->
-    <button class="cart-fab" id="cartFab" style="display: none;" data-bs-toggle="modal" data-bs-target="#cartModal">
-        <i class="bi bi-cart"></i>
-        <span class="cart-badge" id="cartBadge">0</span>
-    </button>
+    @php
+        $showCartFab = false;
+        if($restaurant->orderSettings && $restaurant->orderSettings->ordering_enabled) {
+            $showCartFab = true;
+        }
+    @endphp
+    
+    @if($showCartFab)
+        <button class="cart-fab" id="cartFab" style="display: none;" data-bs-toggle="modal" data-bs-target="#cartModal">
+            <i class="bi bi-cart"></i>
+            <span class="cart-badge" id="cartBadge">0</span>
+        </button>
+    @endif
 
     <!-- Product Detail Modal -->
     <div class="modal fade modal-modern" id="productModal" tabindex="-1">
@@ -663,6 +682,31 @@
         let cart = [];
         let tableNumber = '';
         let currentProductForModal = null;
+
+        // URL'den masa numarasını al
+        function getTableNumberFromUrl() {
+            const hash = window.location.hash;
+            if (hash.includes('#masa')) {
+                const match = hash.match(/#masa(\w+)/);
+                if (match) {
+                    return match[1];
+                }
+            }
+            return '';
+        }
+
+        // Sayfa yüklendiğinde masa numarasını kontrol et
+        document.addEventListener('DOMContentLoaded', function() {
+            const urlTableNumber = getTableNumberFromUrl();
+            if (urlTableNumber) {
+                tableNumber = urlTableNumber;
+                document.getElementById('tableNumber').value = urlTableNumber;
+                
+                // Masa numarası olan linkten geldiyse sepet iconunda göster
+                updateCartDisplay();
+                loadCart();
+            }
+        });
 
         // Search functionality
         const searchInput = document.getElementById('searchInput');
@@ -764,6 +808,13 @@
         // Add to cart functionality
         document.querySelectorAll('.add-to-cart').forEach(button => {
             button.addEventListener('click', function() {
+                // URL'den masa numarasını kontrol et
+                const urlTableNumber = getTableNumberFromUrl();
+                if (urlTableNumber && !tableNumber) {
+                    tableNumber = urlTableNumber;
+                    document.getElementById('tableNumber').value = urlTableNumber;
+                }
+                
                 if (!tableNumber) {
                     showTableModal(() => {
                         addToCartFromButton(this);
@@ -812,6 +863,27 @@
             
             updateCartDisplay();
             saveCart();
+        }
+
+        function saveCart() {
+            localStorage.setItem('qrmenu_cart', JSON.stringify(cart));
+            localStorage.setItem('qrmenu_table', tableNumber);
+        }
+
+        function loadCart() {
+            const savedCart = localStorage.getItem('qrmenu_cart');
+            const savedTable = localStorage.getItem('qrmenu_table');
+            
+            if (savedCart) {
+                cart = JSON.parse(savedCart);
+            }
+            
+            if (savedTable && !tableNumber) {
+                tableNumber = savedTable;
+                document.getElementById('tableNumber').value = savedTable;
+            }
+            
+            updateCartDisplay();
         }
 
         function updateCartDisplay() {
@@ -989,9 +1061,12 @@
             .then(data => {
                 if (data.success) {
                     alert('Siparişiniz başarıyla alındı! Teşekkür ederiz.');
+                    // Sepeti ve masa numarasını temizle
                     cart = [];
+                    tableNumber = '';
+                    localStorage.removeItem('qrmenu_cart');
+                    localStorage.removeItem('qrmenu_table');
                     updateCartDisplay();
-                    saveCart();
                     bootstrap.Modal.getInstance(document.getElementById('cartModal')).hide();
                 } else {
                     alert('Hata: ' + (data.message || 'Bilinmeyen hata'));
