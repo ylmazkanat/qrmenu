@@ -1,11 +1,14 @@
-# QRMENU ana dizini için .htaccess
 <IfModule mod_rewrite.c>
+<IfModule mod_negotiation.c>
+Options -Indexes
+</IfModule>
+RewriteEngine On
+RewriteRule ^(.*)$ public/$1 [L]
+</IfModule>
+<IfModule mod_rewrite.c>
+  <IfModule mod_negotiation.c>
+		Options -Indexes
+	</IfModule>	
     RewriteEngine On
-
-    # Eğer istenen dosya veya dizin mevcutsa yönlendirme yapma
-    RewriteCond %{REQUEST_FILENAME} !-f
-    RewriteCond %{REQUEST_FILENAME} !-d
-
-    # Tüm istekleri public klasörüne yönlendir
     RewriteRule ^(.*)$ public/$1 [L]
 </IfModule>
