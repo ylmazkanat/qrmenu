@@ -1,13 +1,208 @@
-<!DOCTYPE html>
-<html lang="tr">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ $restaurant->name }} - Menü</title>
-    <meta name="csrf-token" content="{{ csrf_token() }}">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+@extends('layouts.menu')
+
+@section('content')
+<div class="container">
+    <!-- Categories & Products -->
+    <div class="row">
+        <div class="col-12 mb-4">
+            @foreach($restaurant->categories as $category)
+                @if($category->products->count() > 0)
+                    <div class="card mb-4">
+                        <div class="card-header bg-light">
+                            <h2 class="mb-0">{{ $category->name }}</h2>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                @foreach($category->products as $product)
+                                    <div class="col-12 col-md-6 col-lg-4 mb-4">
+                                        <div class="card h-100 product-card" data-product-id="{{ $product->id }}">
+                                            @if($product->image)
+                                                <img src="{{ asset('storage/' . $product->image) }}" class="card-img-top" alt="{{ $product->name }}">
+                                            @endif
+                                            <div class="card-body">
+                                                <h5 class="card-title d-flex justify-content-between">
+                                                    <span>{{ $product->name }}</span>
+                                                    <span class="text-primary">{{ number_format($product->price, 2) }} ₺</span>
+                                                </h5>
+                                                @if($product->description)
+                                                    <p class="card-text text-muted">{{ $product->description }}</p>
+                                                @endif
+                                            </div>
+                                            <div class="card-footer bg-white border-top-0">
+                                                <button class="btn btn-primary btn-sm w-100 add-to-cart-btn" 
+                                                        data-product-id="{{ $product->id }}"
+                                                        data-product-name="{{ $product->name }}"
+                                                        data-product-price="{{ $product->price }}">
+                                                    <i class="bi bi-plus-lg me-1"></i>Sepete Ekle
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                @endforeach
+                            </div>
+                        </div>
+                    </div>
+                @endif
+            @endforeach
+        </div>
+    </div>
+</div>
+
+<!-- Cart Button -->
+<button class="btn btn-primary cart-button" data-bs-toggle="modal" data-bs-target="#cartModal">
+    <i class="bi bi-cart-fill fs-5"></i>
+    <span class="cart-badge" id="cartBadge">0</span>
+</button>
+
+<!-- Cart Modal -->
+<div class="modal fade" id="cartModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Sepetim</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="cartItems">
+                <!-- Cart items will be loaded here -->
+            </div>
+            <div class="modal-footer justify-content-between">
+                <div>
+                    <strong>Toplam: <span id="cartTotal">0.00</span> ₺</strong>
+                </div>
+                <div>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Kapat</button>
+                    <a href="{{ route('menu.cart', $restaurant->slug) }}" class="btn btn-primary">Sipariş Ver</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Toast Container -->
+<div class="toast-container"></div>
+@endsection
+
+@push('scripts')
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        updateCart();
+        
+        // Add to Cart Button Click
+        document.querySelectorAll('.add-to-cart-btn').forEach(button => {
+            button.addEventListener('click', function() {
+                const productId = this.dataset.productId;
+                const productName = this.dataset.productName;
+                const productPrice = parseFloat(this.dataset.productPrice);
+                
+                addToCart(productId, productName, productPrice);
+            });
+        });
+    });
+    
+    function addToCart(productId, productName, productPrice) {
+        fetch('{{ route('menu.cart.add') }}', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+            },
+            body: JSON.stringify({
+                product_id: productId,
+                quantity: 1
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                updateCart();
+                showToast('Ürün sepete eklendi');
+            }
+        });
+    }
+    
+    function updateCart() {
+        fetch('{{ route('menu.cart', $restaurant->slug) }}')
+            .then(response => response.json())
+            .then(data => {
+                const cartBadge = document.getElementById('cartBadge');
+                const cartItems = document.getElementById('cartItems');
+                const cartTotal = document.getElementById('cartTotal');
+                let html = '';
+                
+                cartBadge.textContent = data.items.reduce((sum, item) => sum + item.quantity, 0);
+                
+                if (data.items.length === 0) {
+                    html = '<p class="text-center">Sepetiniz boş</p>';
+                } else {
+                    data.items.forEach(item => {
+                        html += `
+                            <div class="cart-item">
+                                <div class="d-flex justify-content-between">
+                                    <div>
+                                        <strong>${item.name}</strong><br>
+                                        <small>${item.quantity} adet × ${item.price} ₺</small>
+                                    </div>
+                                    <div class="quantity-control">
+                                        <button onclick="updateQuantity(${item.id}, ${item.quantity - 1})">-</button>
+                                        <span>${item.quantity}</span>
+                                        <button onclick="updateQuantity(${item.id}, ${item.quantity + 1})">+</button>
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                    });
+                }
+                
+                cartItems.innerHTML = html;
+                cartTotal.textContent = data.total.toFixed(2);
+            });
+    }
+    
+    function updateQuantity(itemId, newQuantity) {
+        if (newQuantity < 0) return;
+        
+        fetch('{{ route('menu.cart.update') }}', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+            },
+            body: JSON.stringify({
+                item_id: itemId,
+                quantity: newQuantity
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                updateCart();
+            }
+        });
+    }
+    
+    function showToast(message) {
+        const toastContainer = document.querySelector('.toast-container');
+        const toast = document.createElement('div');
+        toast.className = 'toast';
+        toast.innerHTML = `
+            <div class="toast-body">
+                ${message}
+            </div>
+        `;
+        toastContainer.appendChild(toast);
+        
+        const bsToast = new bootstrap.Toast(toast, {
+            autohide: true,
+            delay: 3000
+        });
+        bsToast.show();
+        
+        toast.addEventListener('hidden.bs.toast', () => {
+            toast.remove();
+        });
+    }
+</script>
+@endpush
     <style>
         :root {
             --primary-color: #6366f1;
@@ -44,26 +239,6 @@
             bottom: 0;
             background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="pattern" x="0" y="0" width="10" height="10" patternUnits="userSpaceOnUse"><circle cx="5" cy="5" r="1" fill="rgba(255,255,255,0.1)"/></pattern></defs><rect width="100" height="100" fill="url(%23pattern)"/></svg>');
             opacity: 0.3;
-        function ensureMasaHashAtEnd() {
-            // If tableNumber exists, make sure #masaXX is at the end of the hash
-            if (tableNumber) {
-                let hash = window.location.hash;
-                let masaHash = `#masa${tableNumber}`;
-                // Remove any existing masa hash
-                hash = hash.replace(/#masa\w+/g, '');
-                // Remove trailing #
-                hash = hash.replace(/#+$/, '');
-                // Add masa hash at the end
-                window.location.hash = (hash ? hash : '') + masaHash;
-            }
-        }
-        window.addEventListener('hashchange', ensureMasaHashAtEnd);
-        document.addEventListener('DOMContentLoaded', function() {
-            loadTableNumber();
-            updateCartDisplay();
-            loadCart();
-            ensureMasaHashAtEnd();
-        });
         }
 
         .restaurant-header .container {
@@ -402,9 +577,103 @@
             from { opacity: 0; transform: translateY(10px); }
             to { opacity: 1; transform: translateY(0); }
         }
+
+        /* Welcome Screen Styles */
+        #welcomeScreen {
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            background: linear-gradient(180deg, #FFD600 0%, #000 100%);
+            padding: 1rem;
+        }
+
+        #welcomeScreen img {
+            width: 120px;
+            height: 120px;
+            object-fit: cover;
+        }
+
+        #welcomeScreen h2 {
+            font-weight: 700;
+            color: #FFD600;
+            margin: 1rem 0;
+        }
+
+        #welcomeScreen .btn {
+            max-width: 300px;
+        }
+
+        #welcomeScreen .btn-pink {
+            background: linear-gradient(135deg, #D5006D, #FF4081);
+            color: white;
+        }
+
+        #welcomeScreen .btn-success {
+            background: #25D366;
+            color: white;
+        }
+
+        #welcomeScreen .btn-dark {
+            background: #343a40;
+            color: white;
+        }
+
+        #welcomeScreen .form-select {
+            border-radius: 12px;
+            padding: 0.5rem 1rem;
+            background: #f8f9fa;
+            border: 1px solid #e5e7eb;
+        }
     </style>
 </head>
 <body>
+    <!-- Welcome Screen -->
+    <div id="welcomeScreen" class="d-flex flex-column min-vh-100" style="background: linear-gradient(180deg, {{ $restaurant->color_primary ?? '#FFD600' }} 0%, {{ $restaurant->color_secondary ?? '#000' }} 100%);">
+        <!-- Social Media Icons Sabit Üstte -->
+        <div class="d-flex gap-2 justify-content-center py-3">
+            @if($restaurant->instagram)
+            <a href="{{ $restaurant->instagram }}" target="_blank" class="btn btn-sm btn-pink"><i class="bi bi-instagram"></i></a>
+            @endif
+            @if($restaurant->whatsapp)
+            <a href="{{ $restaurant->whatsapp }}" target="_blank" class="btn btn-sm btn-success"><i class="bi bi-whatsapp"></i></a>
+            @endif
+            @if($restaurant->twitter)
+            <a href="{{ $restaurant->twitter }}" target="_blank" class="btn btn-sm btn-info"><i class="bi bi-twitter"></i></a>
+            @endif
+            @if($restaurant->facebook)
+            <a href="{{ $restaurant->facebook }}" target="_blank" class="btn btn-sm btn-primary"><i class="bi bi-facebook"></i></a>
+            @endif
+        </div>
+        <!-- Logo ve İçerik Ortalı -->
+        <div class="flex-grow-1 d-flex flex-column align-items-center justify-content-center">
+            <div class="mb-4">
+                <img src="{{ $restaurant->logo ? Storage::url($restaurant->logo) : ($restaurant->logo_url ?? '/default-logo.png') }}" alt="Logo" class="rounded shadow" style="width: 120px; height: 120px; object-fit: cover;">
+            </div>
+            <h2 class="fw-bold text-warning mb-3">{{ $restaurant->name }}</h2>
+            <div class="text-light mb-3 text-center px-3" style="max-width: 600px;">{{ $restaurant->description ?? '' }}</div>
+        @if($restaurant->wifi_password)
+        <div class="text-warning small mb-2">Wifi Şifresi: {{ $restaurant->wifi_password }}</div>
+        @endif
+        <!-- Language Selector -->
+        @if(config('app.multilanguage'))
+        <div class="mb-3" style="width: 220px;">
+            <select id="languageSelect" class="form-select">
+                <option value="tr">🇹🇷 Türkçe</option>
+                <option value="en">🇬🇧 English</option>
+                <!-- Diğer diller dinamik eklenebilir -->
+            </select>
+        </div>
+        @endif
+        <button id="welcomeMenuBtn" class="btn btn-dark w-75 mb-2" style="max-width: 300px; border: 2px solid #FFD600;">
+            Menü
+        </button>
+        <button id="welcomeRateBtn" class="btn btn-outline-light w-75" style="max-width: 300px;">
+            <i class="bi bi-chat-dots"></i> Bizi değerlendirin!
+        </button>
+    </div>
+
     <!-- Restaurant Header -->
     <div class="restaurant-header">
         <div class="container">
@@ -593,7 +862,7 @@
     </div>
 
     <!-- Cart FAB -->
-    <button class="cart-fab" id="cartFab" style="display: block;" data-bs-toggle="modal" data-bs-target="#cartModal">
+    <button class="cart-fab" id="cartFab" style="display: block; background: {{ $restaurant->color_cart ?? '#00C853' }};" data-bs-toggle="modal" data-bs-target="#cartModal">
         <i class="bi bi-cart"></i>
         <span class="cart-badge" id="cartBadge">0</span>
     </button>
@@ -1147,97 +1416,87 @@
         // İlk açılışta kategori gridini göster, menüyü gizle
         document.addEventListener('DOMContentLoaded', function() {
             loadCart();
+            const welcomeScreen = document.getElementById('welcomeScreen');
             const menuContent = document.getElementById('menuContent');
             const categoryGrid = document.getElementById('categoryGrid');
+            const backToCategoriesBtn = document.getElementById('backToCategoriesBtn');
 
             function showMenu() {
-                if (categoryGrid) categoryGrid.style.display = 'none';
-                menuContent.style.display = 'block';
-                backToCategoriesBtn.style.display = 'block'; // Menüdeyken butonu göster
-            }
-
-            function showCategoryGrid() {
+                if (welcomeScreen) welcomeScreen.style.display = 'none';
                 if (categoryGrid) categoryGrid.style.display = 'block';
-                menuContent.style.display = 'none';
-                backToCategoriesBtn.style.display = 'none'; // Kategori grid'inde butonu gizle
+                if (menuContent) menuContent.style.display = 'none';
+                if (backToCategoriesBtn) backToCategoriesBtn.style.display = 'none';
             }
 
-            // Eğer URL hash ile geldiysek menüyü göster ve o kategoriye kaydır
-            if (window.location.hash.startsWith('#category-')) {
-                showMenu();
-                const target = document.querySelector(window.location.hash);
-                if (target) {
-                    setTimeout(() => target.scrollIntoView({behavior: 'smooth'}), 300);
-                }
-            } else {
-                // Hash yoksa kategori gridini göster
-                showCategoryGrid();
+            // Karşılama ekranı ilk açılışta gösterilsin
+            if (welcomeScreen) {
+                welcomeScreen.style.display = 'flex';
+                if (menuContent) menuContent.style.display = 'none';
+                if (categoryGrid) categoryGrid.style.display = 'none';
             }
 
-            // Hash değişikliklerini dinle (tarayıcı geri butonu için)
-            window.addEventListener('hashchange', function() {
-                if (window.location.hash.startsWith('#category-')) {
+            // Menü butonuna tıklanınca kategori gridine geç
+            const welcomeMenuBtn = document.getElementById('welcomeMenuBtn');
+            if (welcomeMenuBtn) {
+                welcomeMenuBtn.addEventListener('click', function() {
                     showMenu();
-                    const target = document.querySelector(window.location.hash);
-                    if (target) {
-                        // Önce tüm kategorileri gizle
-                        document.querySelectorAll('.category-section').forEach(section => {
-                            section.style.display = 'none';
-                        });
-                        // Sadece seçilen kategoriyi göster
-                        target.style.display = 'block';
-                        setTimeout(() => target.scrollIntoView({behavior: 'smooth'}), 300);
-                    }
-                } else {
-                    showCategoryGrid();
-                }
-            });
+                });
+            }
 
-            // Grid kartlarına tıklama
+            // Değerlendirme butonu (isteğe bağlı yönlendirme)
+            const welcomeRateBtn = document.getElementById('welcomeRateBtn');
+            if (welcomeRateBtn) {
+                welcomeRateBtn.addEventListener('click', function() {
+                    window.open('{{ $restaurant->rate_url ?? "#" }}', '_blank');
+                });
+            }
+
+            // Dil seçici (isteğe bağlı, backend ile entegre edilebilir)
+            const languageSelect = document.getElementById('languageSelect');
+            if (languageSelect) {
+                languageSelect.addEventListener('change', function() {
+                    // Burada seçilen dile göre sayfa yenileme veya locale değişimi yapılabilir
+                    // window.location.search = '?lang=' + this.value;
+                });
+            }
+
+            // Kategori grid kartlarına tıklama
             document.querySelectorAll('.category-card').forEach(card => {
                 card.addEventListener('click', function(e) {
                     e.preventDefault();
                     const targetId = this.getAttribute('data-target');
                     const masaHash = extractMasaHash(window.location.hash);
-                    // Eğer "Tümü" seçeneğine tıklandıysa
                     if (targetId === 'all-products') {
-                        window.location.hash = masaHash;
-                        showMenu();
-                        // Tüm kategorileri göster
-                        document.querySelectorAll('.category-section').forEach(section => {
-                            section.style.display = 'block';
-                        });
-                        // En üste kaydır
                         menuContent.scrollIntoView({behavior: 'smooth'});
                     } else {
-                        // Belirli kategori seçildiyse
                         window.location.hash = '#' + targetId + masaHash;
-                        showMenu();
+                        if (categoryGrid) categoryGrid.style.display = 'none';
+                        if (menuContent) menuContent.style.display = 'block';
+                        if (backToCategoriesBtn) backToCategoriesBtn.style.display = 'block';
                         const target = document.getElementById(targetId);
                         if (target) {
-                            // Önce tüm kategorileri gizle
-                            document.querySelectorAll('.category-section').forEach(section => {
-                                section.style.display = 'none';
-                            });
-                            // Sadece seçilen kategoriyi göster
-                            target.style.display = 'block';
                             setTimeout(() => target.scrollIntoView({behavior: 'smooth'}), 300);
                         }
                     }
                 });
             });
-            // Sayfa açılışında ve hash değişiminde masa hash'i en sonda değilse, en sona taşı
-            function ensureMasaHashAtEnd() {
-                const hash = window.location.hash;
-                const masaHash = extractMasaHash(hash);
-                const categoryHash = extractCategoryHash(hash);
-                if (masaHash && (!hash.endsWith(masaHash) || (categoryHash && hash.indexOf(masaHash) < hash.indexOf(categoryHash)))) {
-                    // Masa hash'i en sonda değilse, düzelt
-                    window.location.hash = (categoryHash ? categoryHash : '') + masaHash;
+
+            // Hash değişikliklerini dinle (tarayıcı geri butonu için)
+            window.addEventListener('hashchange', function() {
+                if (window.location.hash.startsWith('#category-')) {
+                    if (categoryGrid) categoryGrid.style.display = 'none';
+                    if (menuContent) menuContent.style.display = 'block';
+                    if (backToCategoriesBtn) backToCategoriesBtn.style.display = 'block';
+                    const target = document.querySelector(window.location.hash);
+                    if (target) {
+                        setTimeout(() => target.scrollIntoView({behavior: 'smooth'}), 300);
+                    }
+                } else {
+                    if (categoryGrid) categoryGrid.style.display = 'block';
+                    if (menuContent) menuContent.style.display = 'none';
+                    if (backToCategoriesBtn) backToCategoriesBtn.style.display = 'none';
                 }
-            }
-            ensureMasaHashAtEnd();
-            window.addEventListener('hashchange', ensureMasaHashAtEnd);
+            });
         });
 
         // Aktif siparişleri getir ve göster
@@ -1335,4 +1594,4 @@
         }
     </script>
 </body>
-</html> 
+</html>

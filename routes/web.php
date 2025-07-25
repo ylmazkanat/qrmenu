@@ -83,6 +83,12 @@ Route::middleware(['auth'])->prefix('restaurant')->name('restaurant.')->group(fu
     Route::get('/kitchen', [RestaurantPanelController::class, 'kitchen'])->name('kitchen');
     // Menü Yönetimi (Kategori & Ürün CRUD)
     Route::get('/menu-management', [RestaurantPanelController::class, 'menuManagement'])->name('menu.management');
+
+    // Müşteri Menü Route'ları
+    Route::prefix('menu')->name('menu.')->group(function () {
+        Route::get('/{slug}', [MenuController::class, 'show'])->name('show');
+        Route::get('/{slug}/category', [MenuController::class, 'showCategories'])->name('categories');
+    });
     
     // Kategori İşlemleri
     Route::post('/categories', [RestaurantPanelController::class, 'storeCategory'])->name('categories.store');
@@ -124,6 +130,7 @@ Route::middleware(['auth'])->prefix('restaurant')->name('restaurant.')->group(fu
 // 📱 4. PUBLIC MENU ROUTES (Müşteriler)
 Route::prefix('menu')->name('menu.')->group(function () {
     Route::get('/{slug}', [MenuController::class, 'show'])->name('show');
+    Route::get('/{slug}/categories', [MenuController::class, 'showCategories'])->name('categories');
     Route::post('/cart/add', [MenuController::class, 'addToCart'])->name('cart.add');
     Route::get('/{slug}/cart', [MenuController::class, 'cart'])->name('cart');
     Route::post('/cart/update', [MenuController::class, 'updateCart'])->name('cart.update');

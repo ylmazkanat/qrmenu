@@ -24,6 +24,14 @@ class Restaurant extends Model
         'is_active',
         'custom_domain',
         'subdomain',
+        'instagram',
+        'whatsapp',
+        'twitter',
+        'facebook',
+        'color_primary',
+        'color_secondary',
+        'color_cart',
+        'wifi_password',
     ];
 
     protected $casts = [
