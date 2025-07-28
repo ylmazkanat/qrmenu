@@ -330,18 +330,25 @@ class BusinessController extends Controller
             'name' => 'required|string|max:150',
             'description' => 'nullable|string',
             'phone' => 'nullable|string|max:20',
+            'email' => 'nullable|email|max:255',
+            'website' => 'nullable|url|max:255',
+            'facebook' => 'nullable|url|max:255',
+            'instagram' => 'nullable|url|max:255',
+            'twitter' => 'nullable|url|max:255',
+            'youtube' => 'nullable|url|max:255',
+            'linkedin' => 'nullable|url|max:255',
+            'whatsapp' => 'nullable|string|max:20',
             'address' => 'nullable|string',
             'table_count' => 'required|integer|min:1|max:100',
             'restaurant_manager_id' => 'nullable|exists:users,id',
             'logo' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
-            'header_image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+            'working_hours_text' => 'nullable|string',
             'primary_color' => 'nullable|string|max:7',
             'secondary_color' => 'nullable|string|max:7',
             'remove_logo' => 'nullable|boolean',
-            'remove_header_image' => 'nullable|boolean',
         ]);
 
-        $data = $request->except(['logo', 'header_image', 'remove_logo', 'remove_header_image']);
+        $data = $request->except(['logo', 'remove_logo']);
         
         // Logo işlemleri
         if ($request->boolean('remove_logo')) {
@@ -356,18 +363,7 @@ class BusinessController extends Controller
             $data['logo'] = $request->file('logo')->store('restaurants', 'public');
         }
         
-        // Header image işlemleri
-        if ($request->boolean('remove_header_image')) {
-            if ($restaurant->header_image) {
-                Storage::disk('public')->delete($restaurant->header_image);
-                $data['header_image'] = null;
-            }
-        } elseif ($request->hasFile('header_image')) {
-            if ($restaurant->header_image) {
-                Storage::disk('public')->delete($restaurant->header_image);
-            }
-            $data['header_image'] = $request->file('header_image')->store('restaurants', 'public');
-        }
+
 
         $restaurant->update($data);
 

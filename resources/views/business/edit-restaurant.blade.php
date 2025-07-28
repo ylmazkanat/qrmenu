@@ -66,16 +66,9 @@
                                 @endif
                             </div>
                             <div class="col-md-6 mb-4">
-                                <label for="header_image" class="form-label">Header Resmi</label>
-                                <input type="file" class="form-control" id="header_image" name="header_image" accept="image/*">
-                                @if($restaurant->header_image)
-                                    <div class="mt-2">
-                                        <img src="{{ Storage::url($restaurant->header_image) }}" width="100" height="100" style="object-fit: cover; border-radius: 8px;">
-                                        <div class="mt-1">
-                                            <button type="button" class="btn btn-sm btn-outline-danger" onclick="removeHeaderImage()">Header Resmini Kaldır</button>
-                                        </div>
-                                    </div>
-                                @endif
+                                <label for="working_hours_text" class="form-label">Çalışma Saatleri</label>
+                                <textarea class="form-control" id="working_hours_text" name="working_hours_text" rows="4" placeholder="Örnek: Pazartesi - Cuma: 09:00 - 22:00&#10;Cumartesi - Pazar: 10:00 - 23:00">{{ old('working_hours_text', $restaurant->working_hours_text) }}</textarea>
+                                <small class="form-text text-muted">Her satıra bir gün yazabilirsiniz.</small>
                             </div>
                         </div>
                         <div class="row">
@@ -88,9 +81,90 @@
                                 <input type="color" class="form-control form-control-color" id="secondary_color" name="secondary_color" value="{{ old('secondary_color', $restaurant->secondary_color ?? '#8b5cf6') }}">
                             </div>
                         </div>
+
+                        <!-- İletişim Bilgileri -->
+                        <div class="card mt-4">
+                            <div class="card-header">
+                                <h6 class="card-title mb-0">
+                                    <i class="bi bi-telephone me-2"></i>
+                                    İletişim Bilgileri
+                                </h6>
+                            </div>
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <label for="email" class="form-label">E-posta</label>
+                                        <input type="email" class="form-control" id="email" name="email" value="{{ old('email', $restaurant->email) }}">
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label for="website" class="form-label">Website</label>
+                                        <input type="url" class="form-control" id="website" name="website" value="{{ old('website', $restaurant->website) }}" placeholder="https://example.com">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Sosyal Medya -->
+                        <div class="card mt-4">
+                            <div class="card-header">
+                                <h6 class="card-title mb-0">
+                                    <i class="bi bi-share me-2"></i>
+                                    Sosyal Medya Linkleri
+                                </h6>
+                            </div>
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <label for="facebook" class="form-label">
+                                            <i class="bi bi-facebook text-primary me-1"></i>
+                                            Facebook
+                                        </label>
+                                        <input type="url" class="form-control" id="facebook" name="facebook" value="{{ old('facebook', $restaurant->facebook) }}" placeholder="https://facebook.com/username">
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label for="instagram" class="form-label">
+                                            <i class="bi bi-instagram text-danger me-1"></i>
+                                            Instagram
+                                        </label>
+                                        <input type="url" class="form-control" id="instagram" name="instagram" value="{{ old('instagram', $restaurant->instagram) }}" placeholder="https://instagram.com/username">
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <label for="twitter" class="form-label">
+                                            <i class="bi bi-twitter text-info me-1"></i>
+                                            Twitter
+                                        </label>
+                                        <input type="url" class="form-control" id="twitter" name="twitter" value="{{ old('twitter', $restaurant->twitter) }}" placeholder="https://twitter.com/username">
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label for="youtube" class="form-label">
+                                            <i class="bi bi-youtube text-danger me-1"></i>
+                                            YouTube
+                                        </label>
+                                        <input type="url" class="form-control" id="youtube" name="youtube" value="{{ old('youtube', $restaurant->youtube) }}" placeholder="https://youtube.com/channel">
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <label for="linkedin" class="form-label">
+                                            <i class="bi bi-linkedin text-primary me-1"></i>
+                                            LinkedIn
+                                        </label>
+                                        <input type="url" class="form-control" id="linkedin" name="linkedin" value="{{ old('linkedin', $restaurant->linkedin) }}" placeholder="https://linkedin.com/company">
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label for="whatsapp" class="form-label">
+                                            <i class="bi bi-whatsapp text-success me-1"></i>
+                                            WhatsApp
+                                        </label>
+                                        <input type="text" class="form-control" id="whatsapp" name="whatsapp" value="{{ old('whatsapp', $restaurant->whatsapp) }}" placeholder="+90 555 123 4567">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                         <!-- Hidden inputs for remove actions -->
                         <input type="hidden" id="remove_logo" name="remove_logo" value="0">
-                        <input type="hidden" id="remove_header_image" name="remove_header_image" value="0">
                         
                         <div class="d-flex justify-content-between">
                             <a href="{{ route('business.restaurants.show', $restaurant->id) }}" class="btn btn-outline-secondary">
@@ -119,14 +193,5 @@ function removeLogo() {
     }
 }
 
-function removeHeaderImage() {
-    if (confirm('Header resmini kaldırmak istediğinizden emin misiniz?')) {
-        document.getElementById('remove_header_image').value = '1';
-        // Header image preview'ını gizle
-        const headerPreview = document.querySelector('#header_image').parentElement.querySelector('.mt-2');
-        if (headerPreview) {
-            headerPreview.style.display = 'none';
-        }
-    }
-}
+
 </script>

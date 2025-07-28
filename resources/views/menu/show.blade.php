@@ -1983,20 +1983,67 @@
                         <h4>{{ $restaurant->name }}</h4>
                         <p class="text-muted">Bizi takip edin ve paylaşın</p>
                     </div>
-                    <div class="d-grid gap-2">
-                        <button class="btn btn-outline-primary" onclick="shareOnFacebook()" style="border-color: var(--primary-color); color: var(--primary-color);">
-                            <i class="bi bi-facebook me-2"></i>Facebook'ta Paylaş
-                        </button>
-                        <button class="btn btn-outline-info" onclick="shareOnTwitter()" style="border-color: var(--primary-color); color: var(--primary-color);">
-                            <i class="bi bi-twitter me-2"></i>Twitter'da Paylaş
-                        </button>
-                        <button class="btn btn-outline-success" onclick="shareOnWhatsApp()" style="border-color: var(--primary-color); color: var(--primary-color);">
-                            <i class="bi bi-whatsapp me-2"></i>WhatsApp'ta Paylaş
-                        </button>
-                        <button class="btn btn-outline-secondary" onclick="copyLink()" style="border-color: var(--primary-color); color: var(--primary-color);">
-                            <i class="bi bi-link-45deg me-2"></i>Linki Kopyala
-                        </button>
+                    
+                    <!-- Sosyal Medya Linkleri -->
+                    <div class="row g-3 mb-4">
+                        @if($restaurant->facebook)
+                            <div class="col-6">
+                                <a href="{{ $restaurant->facebook }}" target="_blank" class="btn btn-outline-primary w-100" style="border-color: var(--primary-color); color: var(--primary-color);">
+                                    <i class="bi bi-facebook me-2"></i>Facebook
+                                </a>
+                            </div>
+                        @endif
+                        @if($restaurant->instagram)
+                            <div class="col-6">
+                                <a href="{{ $restaurant->instagram }}" target="_blank" class="btn btn-outline-danger w-100" style="border-color: var(--primary-color); color: var(--primary-color);">
+                                    <i class="bi bi-instagram me-2"></i>Instagram
+                                </a>
+                            </div>
+                        @endif
+                        @if($restaurant->twitter)
+                            <div class="col-6">
+                                <a href="{{ $restaurant->twitter }}" target="_blank" class="btn btn-outline-info w-100" style="border-color: var(--primary-color); color: var(--primary-color);">
+                                    <i class="bi bi-twitter me-2"></i>Twitter
+                                </a>
+                            </div>
+                        @endif
+                        @if($restaurant->youtube)
+                            <div class="col-6">
+                                <a href="{{ $restaurant->youtube }}" target="_blank" class="btn btn-outline-danger w-100" style="border-color: var(--primary-color); color: var(--primary-color);">
+                                    <i class="bi bi-youtube me-2"></i>YouTube
+                                </a>
+                            </div>
+                        @endif
+                        @if($restaurant->linkedin)
+                            <div class="col-6">
+                                <a href="{{ $restaurant->linkedin }}" target="_blank" class="btn btn-outline-primary w-100" style="border-color: var(--primary-color); color: var(--primary-color);">
+                                    <i class="bi bi-linkedin me-2"></i>LinkedIn
+                                </a>
+                            </div>
+                        @endif
+                        @if($restaurant->whatsapp)
+                            <div class="col-6">
+                                <a href="https://wa.me/{{ preg_replace('/[^0-9]/', '', $restaurant->whatsapp) }}" target="_blank" class="btn btn-outline-success w-100" style="border-color: var(--primary-color); color: var(--primary-color);">
+                                    <i class="bi bi-whatsapp me-2"></i>WhatsApp
+                                </a>
+                            </div>
+                        @endif
+                        @if($restaurant->website)
+                            <div class="col-6">
+                                <a href="{{ $restaurant->website }}" target="_blank" class="btn btn-outline-secondary w-100" style="border-color: var(--primary-color); color: var(--primary-color);">
+                                    <i class="bi bi-globe me-2"></i>Website
+                                </a>
+                            </div>
+                        @endif
                     </div>
+
+                    <!-- Sosyal Medya Linkleri Yoksa -->
+                    @if(!$restaurant->facebook && !$restaurant->instagram && !$restaurant->twitter && !$restaurant->youtube && !$restaurant->linkedin && !$restaurant->whatsapp && !$restaurant->website)
+                        <div class="text-center text-muted mb-4">
+                            <i class="bi bi-info-circle me-2"></i>
+                            Henüz sosyal medya linkleri eklenmemiş.
+                        </div>
+                    @endif
                 </div>
             </div>
         </div>
@@ -2026,6 +2073,24 @@
                             </div>
                         </div>
                     @endif
+                    @if($restaurant->email)
+                        <div class="d-flex align-items-center mb-3 p-3 bg-light rounded">
+                            <i class="bi bi-envelope-fill me-3" style="font-size: 1.5rem; color: var(--primary-color);"></i>
+                            <div>
+                                <h6 class="mb-0">E-posta</h6>
+                                <a href="mailto:{{ $restaurant->email }}" class="text-decoration-none">{{ $restaurant->email }}</a>
+                            </div>
+                        </div>
+                    @endif
+                    @if($restaurant->website)
+                        <div class="d-flex align-items-center mb-3 p-3 bg-light rounded">
+                            <i class="bi bi-globe me-3" style="font-size: 1.5rem; color: var(--primary-color);"></i>
+                            <div>
+                                <h6 class="mb-0">Website</h6>
+                                <a href="{{ $restaurant->website }}" target="_blank" class="text-decoration-none">{{ $restaurant->website }}</a>
+                            </div>
+                        </div>
+                    @endif
                     @if($restaurant->address)
                         <div class="d-flex align-items-center mb-3 p-3 bg-light rounded">
                             <i class="bi bi-geo-alt-fill me-3" style="font-size: 1.5rem; color: var(--primary-color);"></i>
@@ -2035,13 +2100,15 @@
                             </div>
                         </div>
                     @endif
-                    <div class="d-flex align-items-center mb-3 p-3 bg-light rounded">
-                        <i class="bi bi-clock-fill me-3" style="font-size: 1.5rem; color: var(--primary-color);"></i>
-                        <div>
-                            <h6 class="mb-0">Çalışma Saatleri</h6>
-                            <p class="mb-0 text-muted">Her gün 09:00 - 23:00</p>
+                    @if($restaurant->working_hours_text)
+                        <div class="d-flex align-items-center mb-3 p-3 bg-light rounded">
+                            <i class="bi bi-clock-fill me-3" style="font-size: 1.5rem; color: var(--primary-color);"></i>
+                            <div>
+                                <h6 class="mb-0">Çalışma Saatleri</h6>
+                                <p class="mb-0 text-muted">{!! nl2br(e($restaurant->working_hours_text)) !!}</p>
+                            </div>
                         </div>
-                    </div>
+                    @endif
                 </div>
             </div>
         </div>
