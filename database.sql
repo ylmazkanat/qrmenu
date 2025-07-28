@@ -94,6 +94,9 @@ CREATE TABLE restaurants (
     slug VARCHAR(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL UNIQUE,
     description TEXT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
     logo VARCHAR(255),
+    header_image VARCHAR(255),
+    primary_color VARCHAR(7) DEFAULT '#6366f1',
+    secondary_color VARCHAR(7) DEFAULT '#8b5cf6',
     phone VARCHAR(20),
     address TEXT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
     is_active BOOLEAN DEFAULT TRUE,
@@ -211,4 +214,4 @@ INSERT INTO products (restaurant_id, category_id, name, description, price, is_a
 (1, 1, 'Tavuk Şiş', 'Izgara tavuk şiş, pilav ve salata ile', 55.00, true),
 (1, 2, 'Çay', 'Geleneksel Türk çayı', 5.00, true),
 (1, 2, 'Ayran', 'Ev yapımı ayran', 8.00, true),
-(1, 3, 'Baklava', 'Antep fıstıklı baklava', 25.00, true); 
+(1, 3, 'Baklava', 'Antep fıstıklı baklava', 25.00, true);

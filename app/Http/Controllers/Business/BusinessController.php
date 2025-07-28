@@ -334,11 +334,39 @@ class BusinessController extends Controller
             'table_count' => 'required|integer|min:1|max:100',
             'restaurant_manager_id' => 'nullable|exists:users,id',
             'logo' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+            'header_image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+            'primary_color' => 'nullable|string|max:7',
+            'secondary_color' => 'nullable|string|max:7',
+            'remove_logo' => 'nullable|boolean',
+            'remove_header_image' => 'nullable|boolean',
         ]);
 
-        $data = $request->except('logo');
-        if ($request->hasFile('logo')) {
+        $data = $request->except(['logo', 'header_image', 'remove_logo', 'remove_header_image']);
+        
+        // Logo işlemleri
+        if ($request->boolean('remove_logo')) {
+            if ($restaurant->logo) {
+                Storage::disk('public')->delete($restaurant->logo);
+                $data['logo'] = null;
+            }
+        } elseif ($request->hasFile('logo')) {
+            if ($restaurant->logo) {
+                Storage::disk('public')->delete($restaurant->logo);
+            }
             $data['logo'] = $request->file('logo')->store('restaurants', 'public');
+        }
+        
+        // Header image işlemleri
+        if ($request->boolean('remove_header_image')) {
+            if ($restaurant->header_image) {
+                Storage::disk('public')->delete($restaurant->header_image);
+                $data['header_image'] = null;
+            }
+        } elseif ($request->hasFile('header_image')) {
+            if ($restaurant->header_image) {
+                Storage::disk('public')->delete($restaurant->header_image);
+            }
+            $data['header_image'] = $request->file('header_image')->store('restaurants', 'public');
         }
 
         $restaurant->update($data);
