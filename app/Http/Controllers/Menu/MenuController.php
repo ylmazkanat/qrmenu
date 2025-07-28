@@ -313,4 +313,32 @@ class MenuController extends Controller
         // ...
         return response()->json(['success' => true, 'message' => 'Sipariş iptal edildi.']);
     }
+
+    /**
+     * Store review
+     */
+    public function storeReview(Request $request, $restaurantId)
+    {
+        $request->validate([
+            'rating' => 'required|integer|min:1|max:5',
+            'comment' => 'nullable|string|max:1000',
+            'customer_name' => 'nullable|string|max:100',
+            'customer_email' => 'nullable|email|max:255'
+        ]);
+
+        $restaurant = Restaurant::findOrFail($restaurantId);
+
+        $review = $restaurant->reviews()->create([
+            'rating' => $request->rating,
+            'comment' => $request->comment,
+            'customer_name' => $request->customer_name,
+            'customer_email' => $request->customer_email,
+            'is_approved' => false // Varsayılan olarak onay bekliyor
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Değerlendirmeniz başarıyla gönderildi. Onaylandıktan sonra yayınlanacaktır.'
+        ]);
+    }
 }

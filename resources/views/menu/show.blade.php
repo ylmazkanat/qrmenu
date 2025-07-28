@@ -1944,7 +1944,9 @@
                         <h4>{{ $restaurant->name }}</h4>
                         <p class="text-muted">Deneyiminizi bizimle paylaşın</p>
                     </div>
-                    <form id="reviewForm">
+                    <form id="reviewForm" action="{{ route('menu.review.store', $restaurant->id) }}" method="POST">
+                        @csrf
+                        <input type="hidden" name="rating" id="selectedRating" value="0">
                         <div class="mb-3">
                             <label class="form-label">Puanınız</label>
                             <div class="rating-stars text-center">
@@ -1957,11 +1959,15 @@
                         </div>
                         <div class="mb-3">
                             <label class="form-label">Yorumunuz</label>
-                            <textarea class="form-control" rows="3" placeholder="Deneyiminizi paylaşın..."></textarea>
+                            <textarea name="comment" class="form-control" rows="3" placeholder="Deneyiminizi paylaşın..."></textarea>
                         </div>
                         <div class="mb-3">
                             <label class="form-label">İsminiz (İsteğe bağlı)</label>
-                            <input type="text" class="form-control" placeholder="Adınız">
+                            <input type="text" name="customer_name" class="form-control" placeholder="Adınız">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">E-posta (İsteğe bağlı)</label>
+                            <input type="email" name="customer_email" class="form-control" placeholder="E-posta adresiniz">
                         </div>
                         <button type="submit" class="btn w-100" style="background: var(--primary-color); border-color: var(--primary-color); color: white;">Değerlendirme Gönder</button>
                     </form>
@@ -2519,6 +2525,8 @@
         document.querySelectorAll('.star-rating').forEach(star => {
             star.addEventListener('click', function() {
                 const rating = this.dataset.rating;
+                document.getElementById('selectedRating').value = rating;
+                
                 document.querySelectorAll('.star-rating').forEach((s, index) => {
                     if (index < rating) {
                         s.classList.add('active');
@@ -2783,8 +2791,42 @@
         // Review form submission
         document.getElementById('reviewForm').addEventListener('submit', function(e) {
             e.preventDefault();
-            alert('Değerlendirmeniz için teşekkürler!');
-            bootstrap.Modal.getInstance(document.getElementById('reviewModal')).hide();
+            
+            const rating = document.getElementById('selectedRating').value;
+            if (rating == 0) {
+                alert('Lütfen bir puan seçin!');
+                return;
+            }
+            
+            // Form verilerini gönder
+            const formData = new FormData(this);
+            
+            fetch(this.action, {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert('Değerlendirmeniz için teşekkürler!');
+                    bootstrap.Modal.getInstance(document.getElementById('reviewModal')).hide();
+                    // Formu temizle
+                    this.reset();
+                    document.getElementById('selectedRating').value = 0;
+                    document.querySelectorAll('.star-rating').forEach(star => {
+                        star.classList.remove('active');
+                    });
+                } else {
+                    alert('Bir hata oluştu. Lütfen tekrar deneyin.');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Bir hata oluştu. Lütfen tekrar deneyin.');
+            });
         });
         
         // Modaldan kategori seçimi

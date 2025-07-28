@@ -46,6 +46,14 @@
                                         {{ $restaurant->table_count }} masa
                                     </div>
                                     <div class="mb-1">
+                                        <i class="bi bi-star me-2"></i>
+                                        {{ $restaurant->total_reviews }} değerlendirme
+                                    </div>
+                                    <div class="mb-1">
+                                        <i class="bi bi-star-fill me-2"></i>
+                                        {{ number_format($restaurant->average_rating, 1) }} ortalama
+                                    </div>
+                                    <div class="mb-1">
                                         @if($restaurant->is_active)
                                             <span class="badge badge-modern bg-success">
                                                 <i class="bi bi-check-circle me-1"></i>
@@ -62,8 +70,11 @@
                             </div>
                         </div>
                         <div class="col-md-4 text-end">
-                            <a href="{{ route('business.restaurants.edit', $restaurant->id) }}" class="btn btn-business-modern">
+                            <a href="{{ route('business.restaurants.edit', $restaurant->id) }}" class="btn btn-business-modern me-2">
                                 <i class="bi bi-pencil-square"></i> Düzenle
+                            </a>
+                            <a href="{{ route('business.restaurants.reviews', $restaurant->id) }}" class="btn btn-business-modern">
+                                <i class="bi bi-star"></i> Değerlendirmeler
                             </a>
                         </div>
                     </div>

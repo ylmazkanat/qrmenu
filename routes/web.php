@@ -64,6 +64,11 @@ Route::middleware(['auth', 'role:business_owner'])->prefix('business')->name('bu
     Route::post('/staff/{staff}/toggle-status', [BusinessController::class, 'toggleStaffStatus'])->name('staff.toggle-status');
     Route::delete('/staff/{staff}', [BusinessController::class, 'deleteStaff'])->name('staff.delete');
     Route::get('/analytics', [BusinessController::class, 'analytics'])->name('analytics');
+    
+    // Değerlendirme yönetimi
+    Route::get('/restaurants/{restaurant}/reviews', [BusinessController::class, 'reviews'])->name('restaurants.reviews');
+    Route::post('/reviews/{review}/approve', [BusinessController::class, 'approveReview'])->name('reviews.approve');
+    Route::delete('/reviews/{review}', [BusinessController::class, 'deleteReview'])->name('reviews.delete');
 });
 
 // 🍽️ 3. RESTAURANT PANEL (Restoran Operasyonları) - Basitleştirilmiş
@@ -129,6 +134,9 @@ Route::prefix('menu')->name('menu.')->group(function () {
     Route::post('/cart/update', [MenuController::class, 'updateCart'])->name('cart.update');
     Route::post('/{slug}/order', [MenuController::class, 'placeOrder'])->name('order.place');
     Route::get('/{slug}/order/{order}/success', [MenuController::class, 'orderSuccess'])->name('order-success');
+    
+    // Değerlendirme route'ları
+    Route::post('/{restaurant}/review', [MenuController::class, 'storeReview'])->name('review.store');
 });
 
 // 🌐 5. API ROUTES (Mobile App)

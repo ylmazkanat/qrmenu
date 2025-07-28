@@ -370,4 +370,56 @@ class BusinessController extends Controller
         return redirect()->route('business.restaurants.show', $restaurant->id)
             ->with('success', 'Restoran güncellendi');
     }
+
+    /**
+     * Show restaurant reviews
+     */
+    public function reviews(Restaurant $restaurant)
+    {
+        $user = Auth::user();
+        if (!$user->canAccessRestaurant($restaurant)) {
+            abort(403);
+        }
+
+        $reviews = $restaurant->reviews()
+            ->with('restaurant')
+            ->orderBy('created_at', 'desc')
+            ->paginate(20);
+
+        return view('business.reviews', compact('restaurant', 'reviews'));
+    }
+
+    /**
+     * Approve review
+     */
+    public function approveReview(Request $request, $reviewId)
+    {
+        $review = \App\Models\Review::findOrFail($reviewId);
+        $user = Auth::user();
+        
+        if (!$user->canAccessRestaurant($review->restaurant)) {
+            abort(403);
+        }
+
+        $review->update(['is_approved' => true]);
+
+        return response()->json(['success' => true]);
+    }
+
+    /**
+     * Delete review
+     */
+    public function deleteReview($reviewId)
+    {
+        $review = \App\Models\Review::findOrFail($reviewId);
+        $user = Auth::user();
+        
+        if (!$user->canAccessRestaurant($review->restaurant)) {
+            abort(403);
+        }
+
+        $review->delete();
+
+        return response()->json(['success' => true]);
+    }
 }
