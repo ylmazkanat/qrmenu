@@ -345,10 +345,18 @@ class BusinessController extends Controller
             'working_hours_text' => 'nullable|string',
             'primary_color' => 'nullable|string|max:7',
             'secondary_color' => 'nullable|string|max:7',
+            'translation_enabled' => 'nullable|boolean',
+            'default_language' => 'nullable|string|max:10',
+            'supported_languages' => 'nullable|array',
             'remove_logo' => 'nullable|boolean',
         ]);
 
         $data = $request->except(['logo', 'remove_logo']);
+        
+        // Çeviri ayarlarını işle
+        $data['translation_enabled'] = $request->boolean('translation_enabled');
+        $data['default_language'] = $request->default_language ?? 'tr';
+        $data['supported_languages'] = $request->supported_languages ?? ['tr'];
         
         // Logo işlemleri
         if ($request->boolean('remove_logo')) {

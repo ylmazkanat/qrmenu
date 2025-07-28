@@ -34,13 +34,18 @@ class Restaurant extends Model
         'table_count',
         'working_hours',
         'is_active',
+        'translation_enabled',
+        'default_language',
+        'supported_languages',
         'custom_domain',
         'subdomain',
     ];
 
     protected $casts = [
         'is_active' => 'boolean',
+        'translation_enabled' => 'boolean',
         'working_hours' => 'array',
+        'supported_languages' => 'array',
     ];
 
     protected static function boot()

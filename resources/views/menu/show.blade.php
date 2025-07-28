@@ -400,6 +400,105 @@
              margin: 0 auto;
          }
 
+        /* Dil Seçici Stilleri */
+        .language-selector {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            z-index: 9999;
+        }
+
+        .btn-language {
+            background: rgba(255, 255, 255, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            color: white;
+            backdrop-filter: blur(10px);
+            transition: all 0.3s ease;
+            padding: 8px 16px;
+            border-radius: 25px;
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .btn-language:hover {
+            background: rgba(255, 255, 255, 0.3);
+            border-color: rgba(255, 255, 255, 0.5);
+            transform: translateY(-1px);
+            color: white;
+        }
+
+        .language-dropdown {
+            background: white;
+            border: none;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            padding: 10px 0;
+            min-width: 200px;
+            margin-top: 5px;
+        }
+        
+        .language-dropdown .dropdown-item {
+            padding: 12px 20px;
+            border: none;
+            background: none;
+            display: flex;
+            align-items: center;
+            transition: all 0.2s ease;
+        }
+        
+        .language-dropdown .dropdown-item:hover {
+            background: #f8f9fa;
+        }
+
+        .language-option {
+            display: flex;
+            align-items: center;
+            padding: 12px 20px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            position: relative;
+        }
+
+        .language-option:hover {
+            background: #f8f9fa;
+        }
+
+        .language-option.active {
+            background: var(--primary-color);
+            color: white;
+        }
+
+        .language-flag {
+            font-size: 20px;
+            margin-right: 12px;
+            width: 24px;
+            text-align: center;
+        }
+
+        .language-name {
+            flex: 1;
+            font-weight: 500;
+        }
+
+        .language-check {
+            color: var(--primary-color);
+            font-size: 16px;
+        }
+
+        .language-option.active .language-check {
+            color: white;
+        }
+
+        /* Loading animasyonu */
+        .spin {
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
         @media (max-width: 768px) {
             .restaurant-title {
                 font-size: 2rem;
@@ -810,7 +909,45 @@
     </script>
 </head>
 <body>
-        <!-- Mobil telefon container - sadece masaüstü ve tablet için -->
+    <!-- Dil Seçici - En Üst -->
+    @if($restaurant->translation_enabled && $restaurant->supported_languages && count($restaurant->supported_languages) > 1)
+        <div class="language-selector" style="position: absolute; top: 10px; right: 10px; z-index: 9999;">
+            <div class="dropdown">
+                <button class="btn btn-language dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                    <i class="bi bi-translate me-1"></i>
+                    <span id="currentLanguage">Türkçe</span>
+                </button>
+                <ul class="dropdown-menu language-dropdown">
+                    @foreach($restaurant->supported_languages as $langCode)
+                        @php
+                            $languages = [
+                                'tr' => ['name' => 'Türkçe', 'flag' => '🇹🇷'],
+                                'en' => ['name' => 'English', 'flag' => '🇺🇸'],
+                                'de' => ['name' => 'Deutsch', 'flag' => '🇩🇪'],
+                                'fr' => ['name' => 'Français', 'flag' => '🇫🇷'],
+                                'es' => ['name' => 'Español', 'flag' => '🇪🇸'],
+                                'it' => ['name' => 'Italiano', 'flag' => '🇮🇹'],
+                                'ru' => ['name' => 'Русский', 'flag' => '🇷🇺'],
+                                'ar' => ['name' => 'العربية', 'flag' => '🇸🇦'],
+                                'zh' => ['name' => '中文', 'flag' => '🇨🇳'],
+                                'ja' => ['name' => '日本語', 'flag' => '🇯🇵']
+                            ];
+                            $langInfo = $languages[$langCode] ?? ['name' => $langCode, 'flag' => '🌐'];
+                        @endphp
+                        <li>
+                            <a class="dropdown-item language-option" href="#" data-lang="{{ $langCode }}">
+                                <span class="language-flag">{{ $langInfo['flag'] }}</span>
+                                <span class="language-name">{{ $langInfo['name'] }}</span>
+                                <i class="bi bi-check2 language-check" id="check-{{ $langCode }}" style="display: none;"></i>
+                            </a>
+                        </li>
+                    @endforeach
+                </ul>
+            </div>
+        </div>
+    @endif
+    
+    <!-- Mobil telefon container - sadece masaüstü ve tablet için -->
     <div class="mobile-container">
         <div class="bottom-indicator"></div>
         <div class="mobile-screen">
@@ -818,7 +955,9 @@
     <div class="restaurant-header" @if($restaurant->header_image) style="background-image: url('{{ Storage::url($restaurant->header_image) }}'); background-size: cover; background-position: center;" @endif>
         <div class="container">
             <div class="row align-items-center justify-content-center">
-                <div class="col-12 text-center">
+                <div class="col-12 text-center position-relative">
+
+                    
                     <div class="restaurant-logo-container mb-3">
                         @if($restaurant->logo)
                             <img src="{{ Storage::url($restaurant->logo) }}" alt="{{ $restaurant->name }}" class="restaurant-logo" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
@@ -835,7 +974,9 @@
                         {{ $restaurant->name }}
                     </h1>
                     @if($restaurant->description)
-                        <p class="restaurant-description mt-2">{{ $restaurant->description }}</p>
+                        <p class="restaurant-description mt-2" data-translate="restaurant_description">
+                            {{ $restaurant->description }}
+                        </p>
                     @endif
                 </div>
             </div>
@@ -849,13 +990,13 @@
                 <!-- Kategorilere Git Butonu -->
                 <button class="btn btn-outline-primary btn-sm flex-shrink-0" id="backToCategoriesBtn" style="display: none; font-size: 0.7rem; padding: 0.2rem 0.4rem; width: auto;" onclick="goBackToCategories()">
                     <i class="bi bi-arrow-left me-1"></i>
-                    <span class="d-none d-md-inline">Kategorilere Dön</span>
-                    <span class="d-md-none">Geri</span>
+                    <span class="d-none d-md-inline" data-translate="back_to_categories">Kategorilere Dön</span>
+                    <span class="d-md-none" data-translate="back">Geri</span>
                 </button>
                 
                 <!-- Arama Kutusu -->
                 <div class="search-box flex-grow-1">
-                    <input type="text" class="search-input" id="searchInput" placeholder="Ürün ara...">
+                    <input type="text" class="search-input" id="searchInput" placeholder="Ürün ara..." data-translate-placeholder="search_products">
                     <i class="bi bi-search search-icon"></i>
                 </div>
                 
@@ -887,7 +1028,7 @@
                                 <i class="bi bi-grid-3x3-gap-fill text-white" style="font-size: 3rem;"></i>
                             </div>
                             <div class="card-body text-center">
-                                <h6 class="mb-0">Tümü</h6>
+                                <h6 class="mb-0" data-translate="all_categories">Tümü</h6>
                             </div>
                         </div>
                     </a>
@@ -908,7 +1049,7 @@
                                     </div>
                                 @endif
                                 <div class="card-body text-center">
-                                    <h6 class="mb-0">{{ $category->name }}</h6>
+                                    <h6 class="mb-0" data-translate="category_{{ $category->id }}">{{ $category->name }}</h6>
                                 </div>
                             </div>
                         </a>
@@ -926,7 +1067,7 @@
                 <div id="category-{{ $catSlug }}" class="category-section mb-5">
                     <h3 class="mb-4">
                         <i class="bi bi-bookmark-fill me-2" style="color: var(--primary-color);"></i>
-                        {{ $category->name }}
+                        <span data-translate="category_{{ $category->id }}">{{ $category->name }}</span>
                     </h3>
                     
                     @if($category->products->count() > 0)
@@ -953,11 +1094,11 @@
                                         </div>
                                         
                                         <div class="product-content">
-                                            <h5 class="product-title">{{ $product->name }}</h5>
+                                            <h5 class="product-title" data-translate="product_{{ $product->id }}">{{ $product->name }}</h5>
                                             
-                                            @if($product->description)
-                                                <p class="product-description">{{ $product->description }}</p>
-                                            @endif
+                                                                        @if($product->description)
+                                <p class="product-description" data-translate="product_{{ $product->id }}_description">{{ $product->description }}</p>
+                            @endif
                                             
                                             <div class="product-actions">
                                                 @php
@@ -977,12 +1118,12 @@
                                                             data-product-price="{{ $product->price }}"
                                                             data-product-image="{{ $product->image ? Storage::url($product->image) : '' }}">
                                                         <i class="bi bi-cart-plus me-2"></i>
-                                                        Sepete Ekle
+                                                        <span data-translate="add_to_cart">Sepete Ekle</span>
                                                     </button>
                                                 @elseif($showAddToCart && !$product->inStock())
                                                     <button class="btn btn-secondary btn-modern" disabled>
                                                         <i class="bi bi-x-circle me-2"></i>
-                                                        Tükendi
+                                                        <span data-translate="out_of_stock">Tükendi</span>
                                                     </button>
                                                 @endif
                                                 
@@ -990,6 +1131,7 @@
                                                     <button class="btn btn-detail btn-modern" 
                                                             data-bs-toggle="modal" 
                                                             data-bs-target="#productModal"
+                                                            data-product-id="{{ $product->id }}"
                                                             data-product-name="{{ $product->name }}"
                                                             data-product-description="{{ $product->description }}"
                                                             data-product-price="{{ $product->price }}"
@@ -1008,8 +1150,8 @@
                             <div class="empty-state-icon">
                                 <i class="bi bi-box"></i>
                             </div>
-                            <h5 class="text-muted">Bu kategoride ürün bulunmuyor</h5>
-                            <p class="text-muted">Yakında yeni ürünler eklenecek.</p>
+                                                    <h5 class="text-muted" data-translate="no_products_in_category">Bu kategoride ürün bulunmuyor</h5>
+                        <p class="text-muted" data-translate="new_products_coming_soon">Yakında yeni ürünler eklenecek.</p>
                         </div>
                     @endif
                 </div>
@@ -1019,8 +1161,8 @@
                 <div class="empty-state-icon">
                     <i class="bi bi-journal-text"></i>
                 </div>
-                <h4 class="text-muted">Menü Hazırlanıyor</h4>
-                <p class="text-muted">Yakında lezzetli ürünlerimizi burada bulabileceksiniz.</p>
+                <h4 class="text-muted" data-translate="menu_preparing">Menü Hazırlanıyor</h4>
+                <p class="text-muted" data-translate="menu_coming_soon">Yakında lezzetli ürünlerimizi burada bulabileceksiniz.</p>
             </div>
         @endif
     </div>
@@ -1036,7 +1178,7 @@
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title" id="productModalTitle">Ürün Detayı</h5>
+                    <h5 class="modal-title" id="productModalTitle" data-translate="product_detail">Ürün Detayı</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body">
@@ -1045,10 +1187,10 @@
                     <h4 id="productModalPrice" style="color: var(--primary-color);"></h4>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Kapat</button>
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal" data-translate="close">Kapat</button>
                     <button type="button" class="btn" id="addFromModal" style="background: var(--primary-color); border-color: var(--primary-color); color: white;">
                         <i class="bi bi-cart-plus me-2"></i>
-                        Sepete Ekle
+                        <span data-translate="add_to_cart">Sepete Ekle</span>
                     </button>
                 </div>
             </div>
@@ -1060,10 +1202,10 @@
         <div class="modal-dialog modal-dialog-centered modal-lg">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title">
-                        <i class="bi bi-cart me-2"></i>
-                        Sepetim
-                    </h5>
+                                            <h5 class="modal-title">
+                            <i class="bi bi-cart me-2"></i>
+                            <span data-translate="my_cart">Sepetim</span>
+                        </h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body">
@@ -1072,24 +1214,24 @@
                         <div class="empty-state-icon">
                             <i class="bi bi-cart"></i>
                         </div>
-                        <h5 class="text-muted">Sepetiniz boş</h5>
-                        <p class="text-muted">Lezzetli ürünlerimizi sepete ekleyerek başlayın.</p>
+                        <h5 class="text-muted" data-translate="cart_empty">Sepetiniz boş</h5>
+                        <p class="text-muted" data-translate="start_with_products">Lezzetli ürünlerimizi sepete ekleyerek başlayın.</p>
                     </div>
                     <hr class="my-4">
                     <div id="activeOrdersArea">
-                        <h6 class="mb-3"><i class="bi bi-clock-history me-2"></i> Masadaki Aktif Siparişlerim</h6>
+                        <h6 class="mb-3"><i class="bi bi-clock-history me-2"></i> <span data-translate="active_orders">Masadaki Aktif Siparişlerim</span></h6>
                         <div id="activeOrdersList" class="mb-2" style="max-height: 200px; overflow-y: auto; border: 1px solid #e5e7eb; border-radius: 8px; padding: 10px;"></div>
                     </div>
                 </div>
                 <div class="modal-footer">
                     <div class="w-100">
                         <div class="d-flex justify-content-between align-items-center mb-3">
-                            <h5 class="mb-0">Toplam:</h5>
+                            <h5 class="mb-0" data-translate="total">Toplam:</h5>
                             <h4 class="mb-0" id="cartTotal" style="color: var(--primary-color);">0.00 ₺</h4>
                         </div>
                         <button type="button" class="btn btn-lg w-100" id="placeOrder" disabled style="background: var(--primary-color); border-color: var(--primary-color); color: white;">
                             <i class="bi bi-check-circle me-2"></i>
-                            Siparişi Tamamla
+                            <span data-translate="complete_order">Siparişi Tamamla</span>
                         </button>
                     </div>
                 </div>
@@ -1118,10 +1260,10 @@
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">İptal</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" data-translate="cancel">İptal</button>
                     <button type="button" class="btn btn-primary" id="confirmTable">
                         <i class="bi bi-check-circle me-2"></i>
-                        Devam Et
+                        <span data-translate="continue">Devam Et</span>
                     </button>
                 </div>
             </div>
@@ -1272,7 +1414,7 @@
                                                              data-product-price="${product.price}"
                                                              data-product-image="${product.image || ''}">
                                                         <i class="bi bi-cart-plus me-2"></i>
-                                                        Sepete Ekle
+                                                        <span data-translate="add_to_cart">Sepete Ekle</span>
                                                     </button>` : 
                                                     `<button class="btn btn-secondary btn-modern" disabled>
                                                         <i class="bi bi-x-circle me-2"></i>
@@ -1284,10 +1426,11 @@
                                                     `<button class="btn btn-detail btn-modern" 
                                                              data-bs-toggle="modal" 
                                                              data-bs-target="#productModal"
+                                                             data-product-id="${product.id}"
                                                              data-product-name="${product.name}"
                                                              data-product-description="${product.description}"
                                                              data-product-price="${product.price}"
-                                                             data-product-image="${product.image || ''}">
+                                                             data-product-image="${product.image ? '/storage/' + product.image : ''}">
                                                         <i class="bi bi-info-circle"></i>
                                                     </button>` : ''
                                                 }
@@ -1327,6 +1470,16 @@
                         
                         title.textContent = this.dataset.productName;
                         description.textContent = this.dataset.productDescription;
+                        
+                        // Ürün ismini ve açıklamasını çeviri sistemine ekle
+                        const productId = this.dataset.productId;
+                        if (productId) {
+                            title.setAttribute('data-translate', `product_${productId}`);
+                            title.setAttribute('data-original-text', this.dataset.productName);
+                            description.setAttribute('data-translate', `product_${productId}_description`);
+                            description.setAttribute('data-original-text', this.dataset.productDescription);
+                        }
+                        
                         price.textContent = `${parseFloat(this.dataset.productPrice).toFixed(2)} ₺`;
                         
                         if (this.dataset.productImage && this.dataset.productImage !== '') {
@@ -1341,11 +1494,18 @@
                         }
                         
                         currentProductForModal = {
-                            id: this.closest('.product-card').querySelector('.add-to-cart')?.dataset.productId,
+                            id: this.dataset.productId,
                             name: this.dataset.productName,
                             price: parseFloat(this.dataset.productPrice),
                             image: this.dataset.productImage
                         };
+                        
+                        // Modal açıldıktan sonra çeviri sistemini çalıştır
+                        setTimeout(() => {
+                            if (currentLanguage !== 'tr') {
+                                translatePageContent(currentLanguage);
+                            }
+                        }, 100);
                     });
                 });
             }, 100);
@@ -1533,6 +1693,15 @@
                 
                 title.textContent = this.dataset.productName;
                 description.textContent = this.dataset.productDescription;
+                
+                // Ürün ismini ve açıklamasını çeviri sistemine ekle
+                const productId = this.dataset.productId || this.closest('.product-card').querySelector('.add-to-cart')?.dataset.productId;
+                if (productId) {
+                    title.setAttribute('data-translate', `product_${productId}`);
+                    title.setAttribute('data-original-text', this.dataset.productName);
+                    description.setAttribute('data-translate', `product_${productId}_description`);
+                    description.setAttribute('data-original-text', this.dataset.productDescription);
+                }
                 price.textContent = `${parseFloat(this.dataset.productPrice).toFixed(2)} ₺`;
                 
                 if (this.dataset.productImage) {
@@ -1547,11 +1716,18 @@
                 }
                 
                 currentProductForModal = {
-                    id: this.closest('.product-card').querySelector('.add-to-cart')?.dataset.productId,
+                    id: this.dataset.productId,
                     name: this.dataset.productName,
                     price: parseFloat(this.dataset.productPrice),
                     image: this.dataset.productImage
                 };
+                
+                // Modal açıldıktan sonra çeviri sistemini çalıştır
+                setTimeout(() => {
+                    if (currentLanguage !== 'tr') {
+                        translatePageContent(currentLanguage);
+                    }
+                }, 100);
             });
         });
 
@@ -1788,7 +1964,7 @@
                         <div>
                             <b>#${order.id}</b> - <span class="badge bg-secondary">${statusMap[order.status] || order.status}</span>
                         </div>
-                        ${canCancel ? `<button class="btn btn-sm btn-outline-danger" onclick="cancelOrder(${order.id})"><i class='bi bi-x-circle'></i> İptal Et</button>` : ''}
+                        ${canCancel ? `<button class="btn btn-sm btn-outline-danger" onclick="cancelOrder(${order.id})"><i class='bi bi-x-circle'></i> <span data-translate="cancel">İptal Et</span></button>` : ''}
                     </div>
                     <ul class="mb-1">${items}</ul>
                     <div class="text-end small text-muted">${order.created_at}</div>
@@ -1861,7 +2037,7 @@
             @foreach($restaurant->categories as $category)
                 @php $catSlug = $category->slug ?: \Illuminate\Support\Str::slug($category->name.'-'.$category->id); @endphp
                 <div class="category-nav-item" data-category="{{ $catSlug }}">
-                    <span>{{ $category->name }}</span>
+                                            <span data-translate="category_{{ $category->id }}">{{ $category->name }}</span>
                 </div>
             @endforeach
         </div>
@@ -1871,19 +2047,19 @@
     <div class="mobile-nav-menu">
         <div class="nav-item" onclick="goToHome()">
             <i class="bi bi-journal-text"></i>
-            <span>Menü</span>
+            <span data-translate="menu">Menü</span>
         </div>
         <div class="nav-item" data-bs-toggle="modal" data-bs-target="#reviewModal">
             <i class="bi bi-star-fill"></i>
-            <span>Değerlendirme</span>
+            <span data-translate="review">Değerlendirme</span>
         </div>
         <div class="nav-item" data-bs-toggle="modal" data-bs-target="#socialModal">
             <i class="bi bi-share-fill"></i>
-            <span>Sosyal Medya</span>
+            <span data-translate="social_media">Sosyal Medya</span>
         </div>
         <div class="nav-item" data-bs-toggle="modal" data-bs-target="#contactModal">
             <i class="bi bi-telephone-fill"></i>
-            <span>İletişim</span>
+            <span data-translate="contact">İletişim</span>
         </div>
     </div>
 
@@ -1893,7 +2069,7 @@
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title"><i class="bi bi-journal-text me-2"></i>Menü Bilgileri</h5>
+                    <h5 class="modal-title"><i class="bi bi-journal-text me-2"></i><span data-translate="menu_info">Menü Bilgileri</span></h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body">
@@ -1915,14 +2091,14 @@
                             <div class="text-center p-3 bg-light rounded">
                                 <i class="bi bi-grid-3x3-gap" style="font-size: 2rem; color: var(--primary-color);"></i>
                                 <h6 class="mt-2 mb-0">{{ $restaurant->categories->count() }}</h6>
-                                <small class="text-muted">Kategori</small>
+                                <small class="text-muted" data-translate="category">Kategori</small>
                             </div>
                         </div>
                         <div class="col-6">
                             <div class="text-center p-3 bg-light rounded">
                                 <i class="bi bi-cup-hot" style="font-size: 2rem; color: var(--primary-color);"></i>
                                 <h6 class="mt-2 mb-0">{{ $restaurant->categories->sum(function($cat) { return $cat->products->count(); }) }}</h6>
-                                <small class="text-muted">Ürün</small>
+                                <small class="text-muted" data-translate="product">Ürün</small>
                             </div>
                         </div>
                     </div>
@@ -1936,19 +2112,19 @@
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title"><i class="bi bi-star-fill me-2"></i>Değerlendirme</h5>
+                    <h5 class="modal-title"><i class="bi bi-star-fill me-2"></i><span data-translate="review">Değerlendirme</span></h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body">
                     <div class="text-center mb-4">
                         <h4>{{ $restaurant->name }}</h4>
-                        <p class="text-muted">Deneyiminizi bizimle paylaşın</p>
+                        <p class="text-muted" data-translate="share_experience">Deneyiminizi bizimle paylaşın</p>
                     </div>
                     <form id="reviewForm" action="{{ route('menu.review.store', $restaurant->id) }}" method="POST">
                         @csrf
                         <input type="hidden" name="rating" id="selectedRating" value="0">
                         <div class="mb-3">
-                            <label class="form-label">Puanınız</label>
+                            <label class="form-label" data-translate="your_rating">Puanınız</label>
                             <div class="rating-stars text-center">
                                 <i class="bi bi-star star-rating" data-rating="1"></i>
                                 <i class="bi bi-star star-rating" data-rating="2"></i>
@@ -1958,18 +2134,18 @@
                             </div>
                         </div>
                         <div class="mb-3">
-                            <label class="form-label">Yorumunuz</label>
-                            <textarea name="comment" class="form-control" rows="3" placeholder="Deneyiminizi paylaşın..."></textarea>
+                            <label class="form-label" data-translate="your_comment">Yorumunuz</label>
+                            <textarea name="comment" class="form-control" rows="3" placeholder="Deneyiminizi paylaşın..." data-translate-placeholder="share_experience"></textarea>
                         </div>
                         <div class="mb-3">
-                            <label class="form-label">İsminiz (İsteğe bağlı)</label>
-                            <input type="text" name="customer_name" class="form-control" placeholder="Adınız">
+                            <label class="form-label" data-translate="your_name_optional">İsminiz (İsteğe bağlı)</label>
+                            <input type="text" name="customer_name" class="form-control" placeholder="Adınız" data-translate-placeholder="your_name">
                         </div>
                         <div class="mb-3">
-                            <label class="form-label">E-posta (İsteğe bağlı)</label>
-                            <input type="email" name="customer_email" class="form-control" placeholder="E-posta adresiniz">
+                            <label class="form-label" data-translate="email_optional">E-posta (İsteğe bağlı)</label>
+                            <input type="email" name="customer_email" class="form-control" placeholder="E-posta adresiniz" data-translate-placeholder="email_address">
                         </div>
-                        <button type="submit" class="btn w-100" style="background: var(--primary-color); border-color: var(--primary-color); color: white;">Değerlendirme Gönder</button>
+                        <button type="submit" class="btn w-100" style="background: var(--primary-color); border-color: var(--primary-color); color: white;" data-translate="send_review">Değerlendirme Gönder</button>
                     </form>
                 </div>
             </div>
@@ -1981,13 +2157,13 @@
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title"><i class="bi bi-share-fill me-2"></i>Sosyal Medya</h5>
+                    <h5 class="modal-title"><i class="bi bi-share-fill me-2"></i><span data-translate="social_media">Sosyal Medya</span></h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body">
                     <div class="text-center mb-4">
                         <h4>{{ $restaurant->name }}</h4>
-                        <p class="text-muted">Bizi takip edin ve paylaşın</p>
+                        <p class="text-muted" data-translate="follow_and_share">Bizi takip edin ve paylaşın</p>
                     </div>
                     
                     <!-- Sosyal Medya Linkleri -->
@@ -2047,7 +2223,7 @@
                     @if(!$restaurant->facebook && !$restaurant->instagram && !$restaurant->twitter && !$restaurant->youtube && !$restaurant->linkedin && !$restaurant->whatsapp && !$restaurant->website)
                         <div class="text-center text-muted mb-4">
                             <i class="bi bi-info-circle me-2"></i>
-                            Henüz sosyal medya linkleri eklenmemiş.
+                            <span data-translate="no_social_media">Henüz sosyal medya linkleri eklenmemiş.</span>
                         </div>
                     @endif
                 </div>
@@ -2060,7 +2236,7 @@
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title"><i class="bi bi-telephone-fill me-2"></i>İletişim</h5>
+                    <h5 class="modal-title"><i class="bi bi-telephone-fill me-2"></i><span data-translate="contact">İletişim</span></h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body">
@@ -2074,7 +2250,7 @@
                         <div class="d-flex align-items-center mb-3 p-3 bg-light rounded">
                             <i class="bi bi-telephone-fill me-3" style="font-size: 1.5rem; color: var(--primary-color);"></i>
                             <div>
-                                <h6 class="mb-0">Telefon</h6>
+                                <h6 class="mb-0" data-translate="phone">Telefon</h6>
                                 <a href="tel:{{ $restaurant->phone }}" class="text-decoration-none">{{ $restaurant->phone }}</a>
                             </div>
                         </div>
@@ -2083,7 +2259,7 @@
                         <div class="d-flex align-items-center mb-3 p-3 bg-light rounded">
                             <i class="bi bi-envelope-fill me-3" style="font-size: 1.5rem; color: var(--primary-color);"></i>
                             <div>
-                                <h6 class="mb-0">E-posta</h6>
+                                <h6 class="mb-0" data-translate="email">E-posta</h6>
                                 <a href="mailto:{{ $restaurant->email }}" class="text-decoration-none">{{ $restaurant->email }}</a>
                             </div>
                         </div>
@@ -2092,7 +2268,7 @@
                         <div class="d-flex align-items-center mb-3 p-3 bg-light rounded">
                             <i class="bi bi-globe me-3" style="font-size: 1.5rem; color: var(--primary-color);"></i>
                             <div>
-                                <h6 class="mb-0">Website</h6>
+                                <h6 class="mb-0" data-translate="website">Website</h6>
                                 <a href="{{ $restaurant->website }}" target="_blank" class="text-decoration-none">{{ $restaurant->website }}</a>
                             </div>
                         </div>
@@ -2101,7 +2277,7 @@
                         <div class="d-flex align-items-center mb-3 p-3 bg-light rounded">
                             <i class="bi bi-geo-alt-fill me-3" style="font-size: 1.5rem; color: var(--primary-color);"></i>
                             <div>
-                                <h6 class="mb-0">Adres</h6>
+                                <h6 class="mb-0" data-translate="address">Adres</h6>
                                 <p class="mb-0 text-muted">{{ $restaurant->address }}</p>
                             </div>
                         </div>
@@ -2110,7 +2286,7 @@
                         <div class="d-flex align-items-center mb-3 p-3 bg-light rounded">
                             <i class="bi bi-clock-fill me-3" style="font-size: 1.5rem; color: var(--primary-color);"></i>
                             <div>
-                                <h6 class="mb-0">Çalışma Saatleri</h6>
+                                <h6 class="mb-0" data-translate="working_hours">Çalışma Saatleri</h6>
                                 <p class="mb-0 text-muted">{!! nl2br(e($restaurant->working_hours_text)) !!}</p>
                             </div>
                         </div>
@@ -2581,12 +2757,17 @@
             // URL hash'i temizle
             window.location.hash = '';
             
-            // Kategori navigasyonunda "Tümü"nü aktif yap
-            document.querySelectorAll('.category-nav-item').forEach(item => {
-                item.classList.remove('active');
-            });
+            // "Tümü" kategorisini bul
             const allCategoryItem = document.querySelector('.category-nav-item[data-category="all"]');
             if (allCategoryItem) {
+                // Önce tüm kategori nav item'larından active class'ını kaldır
+                document.querySelectorAll('.category-nav-item').forEach(item => {
+                    if (item !== allCategoryItem) {
+                        item.classList.remove('active');
+                    }
+                });
+                
+                // Sonra "Tümü" kategorisine active class'ını ekle
                 allCategoryItem.classList.add('active');
             }
             
@@ -2672,22 +2853,19 @@
             
             // Kategori navigasyon item'larına click event ekle
             document.querySelectorAll('.category-nav-item').forEach(item => {
-                item.addEventListener('click', function() {
+                item.addEventListener('click', function(e) {
+                    e.preventDefault();
                     const category = this.dataset.category;
                     
-                    // Tıklama ile active class'ı verme, sadece scroll ile belirlensin
-                    // Aktif kategoriyi güncelle
+                    // Önce tüm kategori nav item'larından active class'ını kaldır
                     document.querySelectorAll('.category-nav-item').forEach(navItem => {
-                        navItem.classList.remove('active');
+                        if (navItem !== this) {
+                            navItem.classList.remove('active');
+                        }
                     });
                     
-                    // Scroll ile aktif kategori belirleme fonksiyonunu geçici olarak devre dışı bırak
-                    window.removeEventListener('scroll', requestTick);
-                    
-                    // 1 saniye sonra scroll event listener'ı tekrar ekle
-                    setTimeout(() => {
-                        window.addEventListener('scroll', requestTick);
-                    }, 1000);
+                    // Sonra tıklanan kategoriye active class'ını ekle
+                    this.classList.add('active');
                     
                     if (category === 'all') {
                         // Tümü seçilirse tüm kategorileri göster
@@ -2729,29 +2907,33 @@
                 }
             });
             
-            // Aktif kategoriyi güncelle - tüm aktif class'ları kaldır
-            document.querySelectorAll('.category-nav-item').forEach(item => {
-                item.classList.remove('active');
-            });
-            
+            // Aktif kategoriyi bul
             const activeNavItem = document.querySelector(`[data-category="${activeCategory}"]`);
             if (activeNavItem) {
+                // Önce tüm kategori nav item'larından active class'ını kaldır
+                document.querySelectorAll('.category-nav-item').forEach(item => {
+                    if (item !== activeNavItem) {
+                        item.classList.remove('active');
+                    }
+                });
+                
+                // Sonra aktif kategoriye active class'ını ekle
                 activeNavItem.classList.add('active');
                 
-                                    // Aktif kategoriyi görünür alana getir (sadece kategori nav menüsünde)
-                    const categoryNavMenu = document.querySelector('.category-nav-menu');
-                    if (categoryNavMenu) {
-                        const navContainer = categoryNavMenu.querySelector('.category-nav-container');
-                        const itemRect = activeNavItem.getBoundingClientRect();
-                        const containerRect = navContainer.getBoundingClientRect();
-                        
-                        if (itemRect.left < containerRect.left || itemRect.right > containerRect.right) {
-                            navContainer.scrollTo({
-                                left: activeNavItem.offsetLeft - (navContainer.offsetWidth / 2) + (activeNavItem.offsetWidth / 2),
-                                behavior: 'smooth'
-                            });
-                        }
+                // Aktif kategoriyi görünür alana getir (sadece kategori nav menüsünde)
+                const categoryNavMenu = document.querySelector('.category-nav-menu');
+                if (categoryNavMenu) {
+                    const navContainer = categoryNavMenu.querySelector('.category-nav-container');
+                    const itemRect = activeNavItem.getBoundingClientRect();
+                    const containerRect = navContainer.getBoundingClientRect();
+                    
+                    if (itemRect.left < containerRect.left || itemRect.right > containerRect.right) {
+                        navContainer.scrollTo({
+                            left: activeNavItem.offsetLeft - (navContainer.offsetWidth / 2) + (activeNavItem.offsetWidth / 2),
+                            behavior: 'smooth'
+                        });
                     }
+                }
             }
             
             ticking = false;
@@ -2868,7 +3050,212 @@
                 }
             }, 300);
         }
-    </script>
+        </script>
+        
+        @if($restaurant->translation_enabled)
+        <script>
+            let currentLanguage = '{{ $restaurant->default_language ?? "tr" }}';
+            const supportedLanguages = @json($restaurant->supported_languages ?? ['tr']);
+            
+            // Aktif dili güncelle
+            function updateActiveLanguage() {
+                // Tüm check işaretlerini gizle
+                document.querySelectorAll('.language-check').forEach(check => {
+                    check.style.display = 'none';
+                });
+                
+                // Aktif dilin check işaretini göster
+                const activeCheck = document.getElementById('check-' + currentLanguage);
+                if (activeCheck) {
+                    activeCheck.style.display = 'block';
+                }
+            }
+
+            // Dil değiştirme fonksiyonu
+            async function changeLanguage(targetLang) {
+                if (targetLang === currentLanguage) {
+                    return;
+                }
+
+                try {
+                    // Loading göster
+                    const currentLanguageSpan = document.getElementById('currentLanguage');
+                    if (currentLanguageSpan) {
+                        currentLanguageSpan.innerHTML = '<i class="bi bi-arrow-clockwise spin"></i> Çevriliyor...';
+                    }
+
+                    // Sayfa içeriğini çevir
+                    await translatePageContent(targetLang);
+                    
+                    // Dil seçiciyi güncelle
+                    updateLanguageSelector(targetLang);
+                    
+                    // Dil değişkenini güncelle
+                    currentLanguage = targetLang;
+                    
+                    // Aktif dil işaretini güncelle
+                    updateActiveLanguage();
+                    
+                    // LocalStorage'a kaydet
+                    localStorage.setItem('selectedLanguage', targetLang);
+                    
+                } catch (error) {
+                    console.error('Dil değiştirme hatası:', error);
+                    // Hata durumunda orijinal metni geri yükle
+                    if (currentLanguageSpan) {
+                        updateLanguageSelector(currentLanguage);
+                    }
+                }
+            }
+
+            // Sayfa içeriğini çevir
+            async function translatePageContent(targetLang = currentLanguage) {
+                const elementsToTranslate = document.querySelectorAll('[data-translate]');
+                
+                for (let element of elementsToTranslate) {
+                    const originalText = element.getAttribute('data-original-text') || element.textContent.trim();
+                    
+                    // Orijinal metni kaydet (ilk kez çeviriliyorsa)
+                    if (!element.getAttribute('data-original-text')) {
+                        element.setAttribute('data-original-text', originalText);
+                    }
+                    
+                    // Çeviri yap
+                    const translatedText = await translateText(originalText, targetLang);
+                    if (translatedText && translatedText !== originalText) {
+                        element.textContent = translatedText;
+                    }
+                }
+
+                // Placeholder'ları çevir
+                const placeholdersToTranslate = document.querySelectorAll('[data-translate-placeholder]');
+                for (let element of placeholdersToTranslate) {
+                    const originalPlaceholder = element.getAttribute('data-original-placeholder') || element.placeholder;
+                    
+                    if (!element.getAttribute('data-original-placeholder')) {
+                        element.setAttribute('data-original-placeholder', originalPlaceholder);
+                    }
+                    
+                    const translatedPlaceholder = await translateText(originalPlaceholder, targetLang);
+                    if (translatedPlaceholder && translatedPlaceholder !== originalPlaceholder) {
+                        element.placeholder = translatedPlaceholder;
+                    }
+                }
+            }
+
+            // Cache'den çevirileri yükle
+            function loadCachedTranslations(targetLang) {
+                const elementsToTranslate = document.querySelectorAll('[data-translate]');
+                elementsToTranslate.forEach(element => {
+                    const originalText = element.getAttribute('data-original-text') || element.textContent.trim();
+                    if (!element.getAttribute('data-original-text')) {
+                        element.setAttribute('data-original-text', originalText);
+                    }
+                    
+                    const cacheKey = `translation_${targetLang}_${originalText}`;
+                    const cachedTranslation = localStorage.getItem(cacheKey);
+                    if (cachedTranslation) {
+                        element.textContent = cachedTranslation;
+                    }
+                });
+
+                const placeholdersToTranslate = document.querySelectorAll('[data-translate-placeholder]');
+                placeholdersToTranslate.forEach(element => {
+                    const originalPlaceholder = element.getAttribute('data-original-placeholder') || element.placeholder;
+                    if (!element.getAttribute('data-original-placeholder')) {
+                        element.setAttribute('data-original-placeholder', originalPlaceholder);
+                    }
+                    
+                    const cacheKey = `translation_${targetLang}_${originalPlaceholder}`;
+                    const cachedTranslation = localStorage.getItem(cacheKey);
+                    if (cachedTranslation) {
+                        element.placeholder = cachedTranslation;
+                    }
+                });
+            }
+
+            // Google Translate API ile çeviri
+            async function translateText(text, targetLang) {
+                if (!text || text.trim() === '' || targetLang === 'tr') return text;
+                
+                // Önce cache'den kontrol et
+                const cacheKey = `translation_${targetLang}_${text}`;
+                const cachedTranslation = localStorage.getItem(cacheKey);
+                if (cachedTranslation) {
+                    return cachedTranslation;
+                }
+                
+                try {
+                    const response = await fetch(`https://translate.googleapis.com/translate_a/single?client=gtx&sl=tr&tl=${targetLang}&dt=t&q=${encodeURIComponent(text)}`);
+                    const data = await response.json();
+                    
+                    if (data && data[0]) {
+                        // Tüm çeviri parçalarını birleştir
+                        let translatedText = '';
+                        for (let i = 0; i < data[0].length; i++) {
+                            if (data[0][i] && data[0][i][0]) {
+                                translatedText += data[0][i][0];
+                            }
+                        }
+                        
+                        if (translatedText.trim()) {
+                            // Cache'e kaydet
+                            localStorage.setItem(cacheKey, translatedText);
+                            return translatedText;
+                        }
+                    }
+                    
+                    return text;
+                } catch (error) {
+                    console.error('Çeviri hatası:', error);
+                    return text;
+                }
+            }
+
+            // Dil seçiciyi güncelle
+            function updateLanguageSelector(targetLang) {
+                const currentLanguageSpan = document.getElementById('currentLanguage');
+                if (currentLanguageSpan) {
+                    const languages = {
+                        'tr': 'Türkçe',
+                        'en': 'English',
+                        'de': 'Deutsch',
+                        'fr': 'Français',
+                        'es': 'Español',
+                        'it': 'Italiano',
+                        'ru': 'Русский',
+                        'ar': 'العربية',
+                        'zh': '中文',
+                        'ja': '日本語'
+                    };
+                    currentLanguageSpan.textContent = languages[targetLang] || targetLang;
+                }
+            }
+
+            // Sayfa yüklendiğinde kaydedilmiş dili yükle
+            document.addEventListener('DOMContentLoaded', function() {
+                const savedLanguage = localStorage.getItem('selectedLanguage');
+                if (savedLanguage && supportedLanguages.includes(savedLanguage) && savedLanguage !== 'tr') {
+                    // Cache'den çevirileri yükle
+                    loadCachedTranslations(savedLanguage);
+                    updateLanguageSelector(savedLanguage);
+                    currentLanguage = savedLanguage;
+                    updateActiveLanguage();
+                } else {
+                    updateActiveLanguage();
+                }
+                
+                // Dil seçeneklerine event listener ekle
+                document.querySelectorAll('.language-option').forEach(option => {
+                    option.addEventListener('click', function(e) {
+                        e.preventDefault();
+                        const selectedLang = this.getAttribute('data-lang');
+                        changeLanguage(selectedLang);
+                    });
+                });
+            });
+        </script>
+        @endif
         </div>
     </div>
 </body>
