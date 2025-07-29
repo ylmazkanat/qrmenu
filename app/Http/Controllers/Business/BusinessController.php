@@ -148,21 +148,8 @@ class BusinessController extends Controller
         // Restaurant'ı business ile birlikte yükle
         $restaurant->load('business');
         
-        // Debug bilgileri
-        \Log::info('Restaurant Access Debug', [
-            'user_id' => $user->id,
-            'user_role' => $user->role,
-            'restaurant_id' => $restaurant->id,
-            'restaurant_business_id' => $restaurant->business_id,
-            'restaurant_user_id' => $restaurant->user_id ?? 'null',
-            'user_businesses' => $user->getActiveBusinesses()->pluck('id')->toArray(),
-            'restaurant_business_owner_id' => $restaurant->business ? $restaurant->business->owner_id : 'no_business',
-            'user_staff_restaurants' => $user->restaurantStaff()->where('is_active', true)->pluck('restaurant_id')->toArray(),
-            'can_access_result' => $user->canAccessRestaurant($restaurant)
-        ]);
-        
         if (!$user->canAccessRestaurant($restaurant)) {
-            abort(403, 'Bu restorana erişim yetkiniz yok. Debug: User ID: ' . $user->id . ', Restaurant ID: ' . $restaurant->id . ', Business ID: ' . ($restaurant->business_id ?? 'null') . ', Business Owner: ' . ($restaurant->business ? $restaurant->business->owner_id : 'no_business'));
+            abort(403, 'Bu restorana erişim yetkiniz yok.');
         }
 
         $stats = [
