@@ -141,6 +141,10 @@ class BusinessController extends Controller
     {
         $user = Auth::user();
         
+        if (!$user) {
+            return redirect()->route('login');
+        }
+        
         if (!$user->canAccessRestaurant($restaurant)) {
             abort(403, 'Bu restorana erişim yetkiniz yok.');
         }

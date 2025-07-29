@@ -112,8 +112,11 @@ class User extends Authenticatable
 
         // Yeni business_id yapısı
         if (!is_null($restaurant->business_id)) {
-            if ($this->isBusinessOwner() && $restaurant->business && $restaurant->business->owner_id === $this->id) {
-                return true;
+            if ($this->isBusinessOwner()) {
+                $business = $restaurant->business;
+                if ($business && $business->owner_id === $this->id) {
+                    return true;
+                }
             }
         }
 
