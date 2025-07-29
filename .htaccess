@@ -9,11 +9,6 @@
         Header always set Referrer-Policy "strict-origin-when-cross-origin"
     </IfModule>
     
-    # Force HTTPS (yayında)
-    RewriteCond %{HTTPS} off
-    RewriteCond %{HTTP_HOST} ^qrmenu\.winghost\.com\.tr$ [NC]
-    RewriteRule ^(.*)$ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
-    
     # Storage dosyalarına direkt erişim izni ver
     RewriteCond %{REQUEST_URI} ^/storage/
     RewriteRule ^(.*)$ public/$1 [L]
