@@ -398,7 +398,7 @@ class BusinessController extends Controller
         }
         
         $managers = User::where('role', 'restaurant_manager')->get();
-        return view('business.edit-restaurant', compact('restaurant','managers'));}
+        return view('business.edit-restaurant', compact('restaurant','managers'));
     }
 
     public function updateRestaurant(Request $request, Restaurant $restaurant)
