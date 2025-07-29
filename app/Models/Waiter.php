@@ -12,7 +12,6 @@ class Waiter extends Model
     protected $fillable = [
         'restaurant_id',
         'name',
-        'pin_code',
     ];
 
     /**

@@ -186,7 +186,7 @@
         
         /* Content Area */
         .content-area {
-            padding: 2rem 3rem;
+            padding: 2rem;
         }
         
         .content-card {
@@ -200,12 +200,12 @@
 
         /* Ek kenar boşlukları */
         .row {
-            margin-left: 2%;
-            margin-right: 2%;
+            margin-left: 0;
+            margin-right: 0;
         }
 
         .card-body {
-            padding: 2%;
+            padding: 1.5rem;
         }
         
         .content-card:hover {

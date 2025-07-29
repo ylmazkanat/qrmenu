@@ -11,11 +11,8 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('waiters', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('restaurant_id')->constrained()->onDelete('cascade');
-            $table->string('name', 100)->nullable();
-            $table->timestamps();
+        Schema::table('waiters', function (Blueprint $table) {
+            $table->dropColumn('pin_code');
         });
     }
 
@@ -24,6 +21,8 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('waiters');
+        Schema::table('waiters', function (Blueprint $table) {
+            $table->string('pin_code', 10)->after('name');
+        });
     }
 };

@@ -107,7 +107,6 @@
                                 <th>Personel</th>
                                 <th>Restoran</th>
                                 <th>Rol</th>
-                                <th>PIN Kodu</th>
                                 <th>Durum</th>
                                 <th>Eklenme</th>
                                 <th class="text-center">İşlemler</th>
@@ -153,13 +152,6 @@
                                                 default => 'Diğer'
                                             } }}
                                         </span>
-                                    </td>
-                                    <td>
-                                        @if($member->pin_code)
-                                            <code class="bg-light p-1 rounded">{{ $member->pin_code }}</code>
-                                        @else
-                                            <span class="text-muted">-</span>
-                                        @endif
                                     </td>
                                     <td>
                                         @if($member->is_active)
@@ -276,10 +268,10 @@
                     </div>
                     
                     <div class="mb-3">
-                        <label for="pin_code" class="form-label">PIN Kodu (Opsiyonel)</label>
-                        <input type="text" class="form-control" id="pin_code" name="pin_code" 
-                               placeholder="4 haneli PIN" maxlength="10">
-                        <div class="form-text">Hızlı giriş için kullanılabilir</div>
+                        <label for="password" class="form-label">Şifre *</label>
+                        <input type="password" class="form-control" id="password" name="password" 
+                               placeholder="En az 6 karakter" minlength="6" required>
+                        <div class="form-text">Personelin giriş yapacağı şifre</div>
                     </div>
                 </div>
                 <div class="modal-footer">

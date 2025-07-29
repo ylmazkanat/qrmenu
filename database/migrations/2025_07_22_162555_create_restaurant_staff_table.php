@@ -16,7 +16,6 @@ return new class extends Migration
             $table->foreignId('restaurant_id')->constrained()->onDelete('cascade');
             $table->foreignId('user_id')->constrained()->onDelete('cascade');
             $table->enum('role', ['restaurant_manager', 'cashier', 'waiter', 'kitchen']);
-            $table->string('pin_code', 10)->nullable();
             $table->boolean('is_active')->default(true);
             $table->timestamps();
             

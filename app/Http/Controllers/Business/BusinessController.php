@@ -88,14 +88,33 @@ class BusinessController extends Controller
             'name' => 'required|string|max:150',
             'description' => 'nullable|string',
             'phone' => 'nullable|string|max:20',
+            'email' => 'nullable|email|max:255',
+            'website' => 'nullable|url|max:255',
+            'facebook' => 'nullable|url|max:255',
+            'instagram' => 'nullable|url|max:255',
+            'twitter' => 'nullable|url|max:255',
+            'youtube' => 'nullable|url|max:255',
+            'linkedin' => 'nullable|url|max:255',
+            'whatsapp' => 'nullable|string|max:20',
             'address' => 'nullable|string',
             'table_count' => 'required|integer|min:1|max:100',
             'restaurant_manager_id' => 'nullable|exists:users,id',
             'logo' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+            'working_hours_text' => 'nullable|string',
+            'primary_color' => 'nullable|string|max:7',
+            'secondary_color' => 'nullable|string|max:7',
+            'translation_enabled' => 'nullable|boolean',
+            'default_language' => 'nullable|string|max:10',
+            'supported_languages' => 'nullable|array',
         ]);
 
-        $restaurantData = $request->except('logo');
+        $restaurantData = $request->except(['logo']);
         $restaurantData['business_id'] = $business->id;
+        
+        // Çeviri ayarlarını işle
+        $restaurantData['translation_enabled'] = $request->boolean('translation_enabled');
+        $restaurantData['default_language'] = $request->default_language ?? 'tr';
+        $restaurantData['supported_languages'] = $request->supported_languages ?? ['tr'];
 
         // Logo yükleme
         if ($request->hasFile('logo')) {
@@ -264,7 +283,7 @@ class BusinessController extends Controller
             'user_email' => 'required|email',
             'user_name'  => 'required|string|max:100',
             'role' => 'required|in:restaurant_manager,waiter,kitchen,cashier',
-            'pin_code' => 'nullable|string|max:10',
+
         ]);
 
         $restaurant = Restaurant::findOrFail($request->restaurant_id);
@@ -278,8 +297,13 @@ class BusinessController extends Controller
             $staffUser = User::create([
                 'name' => $request->user_name,
                 'email' => $request->user_email,
-                'password' => Hash::make('password'),
+                'password' => Hash::make($request->password),
                 'role' => $request->role,
+            ]);
+        } else {
+            // Mevcut kullanıcının şifresini güncelle
+            $staffUser->update([
+                'password' => Hash::make($request->password),
             ]);
         }
 
@@ -287,11 +311,10 @@ class BusinessController extends Controller
             'restaurant_id' => $restaurant->id,
             'user_id' => $staffUser->id,
             'role' => $request->role,
-            'pin_code' => $request->pin_code,
             'is_active' => true,
         ]);
 
-        return redirect()->back()->with('success', 'Personel eklendi');
+        return redirect()->back()->with('success', 'Personel başarıyla eklendi!');
     }
 
     public function toggleStaffStatus(RestaurantStaff $staff)

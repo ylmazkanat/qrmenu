@@ -5,7 +5,7 @@
 
 @section('content')
     <div class="row justify-content-center">
-        <div class="col-lg-8">
+        <div class="col-lg-10">
             <div class="content-card">
                 <div class="card-header">
                     <h5 class="card-title">

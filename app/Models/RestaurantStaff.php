@@ -15,7 +15,6 @@ class RestaurantStaff extends Model
         'restaurant_id',
         'user_id',
         'role',
-        'pin_code',
         'is_active',
     ];
 

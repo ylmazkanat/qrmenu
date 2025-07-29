@@ -57,28 +57,28 @@ class DatabaseSeeder extends Seeder
         ]);
 
         // 5. Restoran çalışanları oluştur
-        $waiter1 = User::create([
+        $garson1 = User::create([
             'name' => 'Garson Ali',
             'email' => 'garson1@restaurant.com',
             'password' => 'password',
             'role' => 'waiter',
         ]);
 
-        $waiter2 = User::create([
+        $garson2 = User::create([
             'name' => 'Garson Ayşe',
             'email' => 'garson2@restaurant.com',
             'password' => 'password',
             'role' => 'waiter',
         ]);
 
-        $kitchen1 = User::create([
+        $asci1 = User::create([
             'name' => 'Aşçı Mehmet',
             'email' => 'asci1@restaurant.com',
             'password' => 'password',
             'role' => 'kitchen',
         ]);
 
-        $cashier1 = User::create([
+        $kasiyer1 = User::create([
             'name' => 'Kasiyer Fatma',
             'email' => 'kasiyer1@restaurant.com',
             'password' => 'password',
@@ -115,35 +115,35 @@ class DatabaseSeeder extends Seeder
             'is_active' => true,
         ]);
 
+        // Garson 1
         RestaurantStaff::create([
             'restaurant_id' => $restaurant->id,
-            'user_id' => $waiter1->id,
+            'user_id' => $garson1->id,
             'role' => 'waiter',
-            'pin_code' => '1234',
             'is_active' => true,
         ]);
 
+        // Garson 2
         RestaurantStaff::create([
             'restaurant_id' => $restaurant->id,
-            'user_id' => $waiter2->id,
+            'user_id' => $garson2->id,
             'role' => 'waiter',
-            'pin_code' => '5678',
             'is_active' => true,
         ]);
 
+        // Aşçı
         RestaurantStaff::create([
             'restaurant_id' => $restaurant->id,
-            'user_id' => $kitchen1->id,
+            'user_id' => $asci1->id,
             'role' => 'kitchen',
-            'pin_code' => '9999',
             'is_active' => true,
         ]);
 
+        // Kasiyer
         RestaurantStaff::create([
             'restaurant_id' => $restaurant->id,
-            'user_id' => $cashier1->id,
+            'user_id' => $kasiyer1->id,
             'role' => 'cashier',
-            'pin_code' => '0000',
             'is_active' => true,
         ]);
 
