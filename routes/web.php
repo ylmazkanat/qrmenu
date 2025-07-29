@@ -201,3 +201,40 @@ Route::get('/debug-restaurant/{id}', function($id) {
         'can_access' => $user->canAccessRestaurant($restaurant)
     ];
 });
+
+// Test route for user 2 and restaurant 1
+Route::get('/test-access', function() {
+    $user = \App\Models\User::find(2);
+    $restaurant = \App\Models\Restaurant::with('business')->find(1);
+    
+    if (!$user || !$restaurant) {
+        return 'User or Restaurant not found';
+    }
+    
+    return [
+        'restaurant' => [
+            'id' => $restaurant->id,
+            'name' => $restaurant->name,
+            'business_id' => $restaurant->business_id,
+            'user_id' => $restaurant->user_id ?? 'null',
+            'business_owner_id' => $restaurant->business ? $restaurant->business->owner_id : 'no_business'
+        ],
+        'user' => [
+            'id' => $user->id,
+            'role' => $user->role,
+            'is_admin' => $user->isAdmin(),
+            'is_business_owner' => $user->isBusinessOwner(),
+            'businesses' => $user->getActiveBusinesses()->pluck('id')->toArray(),
+            'staff_restaurants' => $user->restaurantStaff()->where('is_active', true)->pluck('restaurant_id')->toArray()
+        ],
+        'can_access' => $user->canAccessRestaurant($restaurant),
+        'debug_steps' => [
+            'is_admin' => $user->isAdmin(),
+            'has_business_id' => !is_null($restaurant->business_id),
+            'is_business_owner' => $user->isBusinessOwner(),
+            'business_owner_match' => $restaurant->business && $restaurant->business->owner_id === $user->id,
+            'legacy_user_match' => !is_null($restaurant->user_id) && $restaurant->user_id === $user->id,
+            'is_staff' => $user->restaurantStaff()->where('restaurant_id', $restaurant->id)->where('is_active', true)->exists()
+        ]
+    ];
+});
