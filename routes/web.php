@@ -171,3 +171,33 @@ Route::get('/business', function () {
 // Menü (Müşteri) API
 Route::get('/api/menu/{slug}/active-orders', [\App\Http\Controllers\Menu\MenuController::class, 'activeOrders']);
 Route::post('/api/menu/{slug}/orders/{order}/cancel', [\App\Http\Controllers\Menu\MenuController::class, 'cancelOrderFromCustomer']);
+
+// Debug route
+Route::get('/debug-restaurant/{id}', function($id) {
+    $restaurant = \App\Models\Restaurant::with('business')->find($id);
+    if (!$restaurant) {
+        return 'Restaurant not found';
+    }
+    
+    $user = auth()->user();
+    if (!$user) {
+        return 'User not authenticated';
+    }
+    
+    return [
+        'restaurant' => [
+            'id' => $restaurant->id,
+            'name' => $restaurant->name,
+            'business_id' => $restaurant->business_id,
+            'user_id' => $restaurant->user_id ?? 'null',
+            'business_owner_id' => $restaurant->business ? $restaurant->business->owner_id : 'no_business'
+        ],
+        'user' => [
+            'id' => $user->id,
+            'role' => $user->role,
+            'businesses' => $user->getActiveBusinesses()->pluck('id')->toArray(),
+            'staff_restaurants' => $user->restaurantStaff()->where('is_active', true)->pluck('restaurant_id')->toArray()
+        ],
+        'can_access' => $user->canAccessRestaurant($restaurant)
+    ];
+});
