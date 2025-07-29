@@ -367,18 +367,71 @@ class BusinessController extends Controller
     public function editRestaurant(Restaurant $restaurant)
     {
         $user = Auth::user();
-        if (!$user->canAccessRestaurant($restaurant)) {
-            abort(403);
+        
+        // Admin her zaman erişebilir
+        if ($user->isAdmin()) {
+            // Erişim izni var, devam et
         }
+        // İşletme sahibi kontrolü - İşletmeye bağlı tüm restoranlara erişebilir
+        else if ($user->isBusinessOwner() && $restaurant->business) {
+            $businesses = $user->getActiveBusinesses();
+            if (!$businesses->contains('id', $restaurant->business->id)) {
+                abort(403, 'Bu restorana erişim yetkiniz yok.');
+            }
+        }
+        // Restoran müdürü kontrolü - Sadece kendi yönettiği restorana erişebilir
+        else if ($user->isRestaurantManager()) {
+            if ($restaurant->restaurant_manager_id !== $user->id) {
+                abort(403, 'Bu restorana erişim yetkiniz yok.');
+            }
+        }
+        // Diğer personel (garson, mutfak, kasiyer) kontrolü - Sadece çalıştığı restorana erişebilir
+        else {
+            $staffRecord = $user->restaurantStaff()
+                ->where('restaurant_id', $restaurant->id)
+                ->where('is_active', true)
+                ->exists();
+                
+            if (!$staffRecord) {
+                abort(403, 'Bu restorana erişim yetkiniz yok.');
+            }
+        }
+        
         $managers = User::where('role', 'restaurant_manager')->get();
-        return view('business.edit-restaurant', compact('restaurant','managers'));
+        return view('business.edit-restaurant', compact('restaurant','managers'));}
     }
 
     public function updateRestaurant(Request $request, Restaurant $restaurant)
     {
         $user = Auth::user();
-        if (!$user->canAccessRestaurant($restaurant)) {
-            abort(403);
+        
+        // Admin her zaman erişebilir
+        if ($user->isAdmin()) {
+            // Erişim izni var, devam et
+        }
+        // İşletme sahibi kontrolü - İşletmeye bağlı tüm restoranlara erişebilir
+        else if ($user->isBusinessOwner() && $restaurant->business) {
+            $businesses = $user->getActiveBusinesses();
+            if (!$businesses->contains('id', $restaurant->business->id)) {
+                abort(403, 'Bu restorana erişim yetkiniz yok.');
+            }
+        }
+        // Restoran müdürü kontrolü - Sadece kendi yönettiği restorana erişebilir
+        else if ($user->isRestaurantManager()) {
+            if ($restaurant->restaurant_manager_id !== $user->id) {
+                abort(403, 'Bu restorana erişim yetkiniz yok.');
+            }
+        }
+        // Diğer personel (garson, mutfak, kasiyer) kontrolü - Sadece çalıştığı restorana erişebilir
+        else {
+            $staffRecord = $user->restaurantStaff()
+                ->where('restaurant_id', $restaurant->id)
+                ->where('is_active', true)
+                ->exists();
+                
+            if (!$staffRecord) {
+                abort(403, 'Bu restorana erişim yetkiniz yok.');
+            }
         }
 
         $request->validate([
@@ -440,8 +493,34 @@ class BusinessController extends Controller
     public function reviews(Restaurant $restaurant)
     {
         $user = Auth::user();
-        if (!$user->canAccessRestaurant($restaurant)) {
-            abort(403);
+        
+        // Admin her zaman erişebilir
+        if ($user->isAdmin()) {
+            // Erişim izni var, devam et
+        }
+        // İşletme sahibi kontrolü - İşletmeye bağlı tüm restoranlara erişebilir
+        else if ($user->isBusinessOwner() && $restaurant->business) {
+            $businesses = $user->getActiveBusinesses();
+            if (!$businesses->contains('id', $restaurant->business->id)) {
+                abort(403, 'Bu restorana erişim yetkiniz yok.');
+            }
+        }
+        // Restoran müdürü kontrolü - Sadece kendi yönettiği restorana erişebilir
+        else if ($user->isRestaurantManager()) {
+            if ($restaurant->restaurant_manager_id !== $user->id) {
+                abort(403, 'Bu restorana erişim yetkiniz yok.');
+            }
+        }
+        // Diğer personel (garson, mutfak, kasiyer) kontrolü - Sadece çalıştığı restorana erişebilir
+        else {
+            $staffRecord = $user->restaurantStaff()
+                ->where('restaurant_id', $restaurant->id)
+                ->where('is_active', true)
+                ->exists();
+                
+            if (!$staffRecord) {
+                abort(403, 'Bu restorana erişim yetkiniz yok.');
+            }
         }
 
         $reviews = $restaurant->reviews()
@@ -459,9 +538,35 @@ class BusinessController extends Controller
     {
         $review = \App\Models\Review::findOrFail($reviewId);
         $user = Auth::user();
+        $restaurant = $review->restaurant;
         
-        if (!$user->canAccessRestaurant($review->restaurant)) {
-            abort(403);
+        // Admin her zaman erişebilir
+        if ($user->isAdmin()) {
+            // Erişim izni var, devam et
+        }
+        // İşletme sahibi kontrolü - İşletmeye bağlı tüm restoranlara erişebilir
+        else if ($user->isBusinessOwner() && $restaurant->business) {
+            $businesses = $user->getActiveBusinesses();
+            if (!$businesses->contains('id', $restaurant->business->id)) {
+                abort(403, 'Bu restorana erişim yetkiniz yok.');
+            }
+        }
+        // Restoran müdürü kontrolü - Sadece kendi yönettiği restorana erişebilir
+        else if ($user->isRestaurantManager()) {
+            if ($restaurant->restaurant_manager_id !== $user->id) {
+                abort(403, 'Bu restorana erişim yetkiniz yok.');
+            }
+        }
+        // Diğer personel (garson, mutfak, kasiyer) kontrolü - Sadece çalıştığı restorana erişebilir
+        else {
+            $staffRecord = $user->restaurantStaff()
+                ->where('restaurant_id', $restaurant->id)
+                ->where('is_active', true)
+                ->exists();
+                
+            if (!$staffRecord) {
+                abort(403, 'Bu restorana erişim yetkiniz yok.');
+            }
         }
 
         $review->update(['is_approved' => true]);
@@ -476,9 +581,35 @@ class BusinessController extends Controller
     {
         $review = \App\Models\Review::findOrFail($reviewId);
         $user = Auth::user();
+        $restaurant = $review->restaurant;
         
-        if (!$user->canAccessRestaurant($review->restaurant)) {
-            abort(403);
+        // Admin her zaman erişebilir
+        if ($user->isAdmin()) {
+            // Erişim izni var, devam et
+        }
+        // İşletme sahibi kontrolü - İşletmeye bağlı tüm restoranlara erişebilir
+        else if ($user->isBusinessOwner() && $restaurant->business) {
+            $businesses = $user->getActiveBusinesses();
+            if (!$businesses->contains('id', $restaurant->business->id)) {
+                abort(403, 'Bu restorana erişim yetkiniz yok.');
+            }
+        }
+        // Restoran müdürü kontrolü - Sadece kendi yönettiği restorana erişebilir
+        else if ($user->isRestaurantManager()) {
+            if ($restaurant->restaurant_manager_id !== $user->id) {
+                abort(403, 'Bu restorana erişim yetkiniz yok.');
+            }
+        }
+        // Diğer personel (garson, mutfak, kasiyer) kontrolü - Sadece çalıştığı restorana erişebilir
+        else {
+            $staffRecord = $user->restaurantStaff()
+                ->where('restaurant_id', $restaurant->id)
+                ->where('is_active', true)
+                ->exists();
+                
+            if (!$staffRecord) {
+                abort(403, 'Bu restorana erişim yetkiniz yok.');
+            }
         }
 
         $review->delete();

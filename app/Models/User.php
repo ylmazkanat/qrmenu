@@ -112,16 +112,14 @@ class User extends Authenticatable
         }
 
         // İşletme sahibi kontrolü - İşletmeye bağlı tüm restoranlara erişebilir
-        if ($this->isBusinessOwner() && !is_null($restaurant->business_id)) {
-            $business = $restaurant->business;
-            if ($business && $business->owner_id === $this->id) {
-                return true;
-            }
+        if ($this->isBusinessOwner() && $restaurant->business) {
+            $businesses = $this->getActiveBusinesses();
+            return $businesses->contains('id', $restaurant->business->id);
         }
 
         // Restoran müdürü kontrolü - Sadece kendi yönettiği restorana erişebilir
-        if ($this->isRestaurantManager() && !is_null($restaurant->restaurant_manager_id) && $restaurant->restaurant_manager_id === $this->id) {
-            return true;
+        if ($this->isRestaurantManager()) {
+            return $restaurant->restaurant_manager_id === $this->id;
         }
 
         // Diğer personel (garson, mutfak, kasiyer) kontrolü - Sadece çalıştığı restorana erişebilir
