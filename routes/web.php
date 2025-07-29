@@ -56,9 +56,9 @@ Route::middleware(['auth'])->prefix('business')->name('business.')->group(functi
     Route::get('/restaurants', [BusinessController::class, 'restaurants'])->name('restaurants');
     Route::get('/restaurants/create', [BusinessController::class, 'createRestaurant'])->name('restaurants.create');
     Route::post('/restaurants/store', [BusinessController::class, 'storeRestaurant'])->name('restaurants.store');
-    Route::get('/restaurants/{id}', [BusinessController::class, 'showRestaurant'])->name('restaurants.show');
-    Route::get('/restaurants/{id}/edit', [BusinessController::class, 'editRestaurant'])->name('restaurants.edit');
-    Route::put('/restaurants/{id}', [BusinessController::class, 'updateRestaurant'])->name('restaurants.update');
+    Route::get('/restaurants/{restaurant}', [BusinessController::class, 'showRestaurant'])->name('restaurants.show');
+    Route::get('/restaurants/{restaurant}/edit', [BusinessController::class, 'editRestaurant'])->name('restaurants.edit');
+    Route::put('/restaurants/{restaurant}', [BusinessController::class, 'updateRestaurant'])->name('restaurants.update');
     Route::get('/staff', [BusinessController::class, 'staffManagement'])->name('staff');
     Route::post('/staff/store', [BusinessController::class, 'storeStaff'])->name('staff.store');
     Route::post('/staff/{staff}/toggle-status', [BusinessController::class, 'toggleStaffStatus'])->name('staff.toggle-status');
@@ -66,7 +66,7 @@ Route::middleware(['auth'])->prefix('business')->name('business.')->group(functi
     Route::get('/analytics', [BusinessController::class, 'analytics'])->name('analytics');
     
     // Değerlendirme yönetimi
-    Route::get('/restaurants/{id}/reviews', [BusinessController::class, 'reviews'])->name('restaurants.reviews');
+    Route::get('/restaurants/{restaurant}/reviews', [BusinessController::class, 'reviews'])->name('restaurants.reviews');
     Route::post('/reviews/{review}/approve', [BusinessController::class, 'approveReview'])->name('reviews.approve');
     Route::delete('/reviews/{review}', [BusinessController::class, 'deleteReview'])->name('reviews.delete');
 });
