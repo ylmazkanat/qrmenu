@@ -110,7 +110,7 @@ class User extends Authenticatable
             return true;
         }
 
-        // Yeni business_id yapısı - business sahibi kontrolü
+        // Business sahibi kontrolü
         if (!is_null($restaurant->business_id)) {
             $business = $restaurant->business;
             if ($business && $business->owner_id === $this->id) {
@@ -118,8 +118,8 @@ class User extends Authenticatable
             }
         }
 
-        // Eski yapıda restaurant.user_id varsa kontrol et (geriye dönük uyumluluk)
-        if (!is_null($restaurant->user_id) && $restaurant->user_id === $this->id) {
+        // Restaurant manager kontrolü
+        if (!is_null($restaurant->restaurant_manager_id) && $restaurant->restaurant_manager_id === $this->id) {
             return true;
         }
 
