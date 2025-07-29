@@ -137,12 +137,19 @@ class BusinessController extends Controller
             ->with('success', 'Restoran başarıyla oluşturuldu!');
     }
 
-    public function showRestaurant(Restaurant $restaurant)
+    public function showRestaurant($id)
     {
         $user = Auth::user();
         
         if (!$user) {
             return redirect()->route('login');
+        }
+        
+        // Restoranı bul
+        $restaurant = Restaurant::find($id);
+        
+        if (!$restaurant) {
+            abort(404, 'Restoran bulunamadı.');
         }
         
         if (!$user->canAccessRestaurant($restaurant)) {
@@ -336,21 +343,36 @@ class BusinessController extends Controller
     }
 
     // Restaurant edit forms
-    public function editRestaurant(Restaurant $restaurant)
+    public function editRestaurant($id)
     {
         $user = Auth::user();
-        if (!$user->canAccessRestaurant($restaurant)) {
-            abort(403);
+        
+        $restaurant = Restaurant::find($id);
+        
+        if (!$restaurant) {
+            abort(404, 'Restoran bulunamadı.');
         }
+        
+        if (!$user->canAccessRestaurant($restaurant)) {
+            abort(403, 'Bu restorana erişim yetkiniz yok.');
+        }
+        
         $managers = User::where('role', 'restaurant_manager')->get();
         return view('business.edit-restaurant', compact('restaurant','managers'));
     }
 
-    public function updateRestaurant(Request $request, Restaurant $restaurant)
+    public function updateRestaurant(Request $request, $id)
     {
         $user = Auth::user();
+        
+        $restaurant = Restaurant::find($id);
+        
+        if (!$restaurant) {
+            abort(404, 'Restoran bulunamadı.');
+        }
+        
         if (!$user->canAccessRestaurant($restaurant)) {
-            abort(403);
+            abort(403, 'Bu restorana erişim yetkiniz yok.');
         }
 
         $request->validate([
@@ -409,11 +431,18 @@ class BusinessController extends Controller
     /**
      * Show restaurant reviews
      */
-    public function reviews(Restaurant $restaurant)
+    public function reviews($id)
     {
         $user = Auth::user();
+        
+        $restaurant = Restaurant::find($id);
+        
+        if (!$restaurant) {
+            abort(404, 'Restoran bulunamadı.');
+        }
+        
         if (!$user->canAccessRestaurant($restaurant)) {
-            abort(403);
+            abort(403, 'Bu restorana erişim yetkiniz yok.');
         }
 
         $reviews = $restaurant->reviews()
