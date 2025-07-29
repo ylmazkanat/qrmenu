@@ -855,17 +855,26 @@ class RestaurantPanelController extends Controller
             return Restaurant::first();
         }
 
-        // İşletme sahibi ise ilk restoranına erişir
+        // İşletme sahibi ise işletmesine ait restoranlardan birini getir
         if ($user->isBusinessOwner()) {
             $businesses = $user->getActiveBusinesses();
             if ($businesses->isNotEmpty()) {
-                return $businesses->first()->restaurants()->first();
+                // İşletmeye ait tüm restoranları kontrol et, en az birine erişimi varsa ilkini döndür
+                foreach ($businesses as $business) {
+                    $restaurant = $business->restaurants()->first();
+                    if ($restaurant && $user->canAccessRestaurant($restaurant)) {
+                        return $restaurant;
+                    }
+                }
             }
         }
 
         // Restoran yöneticisi ise
         if ($user->isRestaurantManager()) {
-            return $user->managedRestaurants()->first();
+            $restaurant = $user->managedRestaurants()->first();
+            if ($restaurant && $user->canAccessRestaurant($restaurant)) {
+                return $restaurant;
+            }
         }
 
         // Diğer roller için staff tablosundan kontrol et
@@ -874,7 +883,25 @@ class RestaurantPanelController extends Controller
             ->with('restaurant')
             ->first();
 
-        return $staffRecord ? $staffRecord->restaurant : null;
+        if ($staffRecord && $staffRecord->restaurant) {
+            return $staffRecord->restaurant;
+        }
+
+        return null;
+    }
+
+    // Yardımcı method - Kullanıcının erişebildiği restoranları kontrol et
+    private function canUserAccessRestaurant($user, $restaurant)
+    {
+        if ($user->isAdmin()) {
+            return true;
+        }
+
+        if ($user->canAccessRestaurant($restaurant)) {
+            return true;
+        }
+
+        return false;
     }
 
     // API - Canlı sipariş durumu
