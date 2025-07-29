@@ -49,7 +49,7 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
 });
 
 // 🏢 2. BUSINESS PANEL (İşletme Sahibi)
-Route::middleware(['auth', 'role:business_owner'])->prefix('business')->name('business.')->group(function () {
+Route::middleware(['auth'])->prefix('business')->name('business.')->group(function () {
     Route::get('/dashboard', [BusinessController::class, 'dashboard'])->name('dashboard');
     Route::get('/create', [BusinessController::class, 'create'])->name('create');
     Route::post('/store', [BusinessController::class, 'store'])->name('store');
