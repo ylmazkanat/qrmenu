@@ -148,8 +148,33 @@ class BusinessController extends Controller
         // Restaurant'ı business ile birlikte yükle
         $restaurant->load('business');
         
-        if (!$user->canAccessRestaurant($restaurant)) {
-            abort(403, 'Bu restorana erişim yetkiniz yok.');
+        // Admin her zaman erişebilir
+        if ($user->isAdmin()) {
+            // Erişim izni var, devam et
+        }
+        // İşletme sahibi kontrolü - İşletmeye bağlı tüm restoranlara erişebilir
+        else if ($user->isBusinessOwner() && $restaurant->business) {
+            $businesses = $user->getActiveBusinesses();
+            if (!$businesses->contains('id', $restaurant->business->id)) {
+                abort(403, 'Bu restorana erişim yetkiniz yok.');
+            }
+        }
+        // Restoran müdürü kontrolü - Sadece kendi yönettiği restorana erişebilir
+        else if ($user->isRestaurantManager()) {
+            if ($restaurant->restaurant_manager_id !== $user->id) {
+                abort(403, 'Bu restorana erişim yetkiniz yok.');
+            }
+        }
+        // Diğer personel (garson, mutfak, kasiyer) kontrolü - Sadece çalıştığı restorana erişebilir
+        else {
+            $staffRecord = $user->restaurantStaff()
+                ->where('restaurant_id', $restaurant->id)
+                ->where('is_active', true)
+                ->exists();
+                
+            if (!$staffRecord) {
+                abort(403, 'Bu restorana erişim yetkiniz yok.');
+            }
         }
 
         $stats = [

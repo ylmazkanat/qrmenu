@@ -848,18 +848,46 @@ class RestaurantPanelController extends Controller
     }
 
     // Yardımcı method - Kullanıcının bağlı olduğu restoranı getir
-    private function getUserRestaurant($user)
+    private function getUserRestaurant($user, $restaurantId = null)
     {
-        // Admin ise tüm restoranlara erişebilir (test için)
+        // Belirli bir restoran ID'si verilmişse, o restoranı getir ve erişim kontrolü yap
+        if ($restaurantId) {
+            $restaurant = Restaurant::find($restaurantId);
+            if ($restaurant && $user->canAccessRestaurant($restaurant)) {
+                return $restaurant;
+            }
+            return null;
+        }
+        
+        // Admin ise tüm restoranlara erişebilir
         if ($user->isAdmin()) {
+            // URL'den belirli bir restoran ID'si isteniyorsa onu getir
+            $path = request()->path();
+            if (preg_match('/\/restaurants\/([0-9]+)/', $path, $matches)) {
+                $restaurantId = $matches[1];
+                $restaurant = Restaurant::find($restaurantId);
+                if ($restaurant) {
+                    return $restaurant;
+                }
+            }
             return Restaurant::first();
         }
 
-        // İşletme sahibi ise işletmesine ait restoranlardan birini getir
+        // İşletme sahibi ise işletmesine ait restoranları kontrol et
         if ($user->isBusinessOwner()) {
             $businesses = $user->getActiveBusinesses();
             if ($businesses->isNotEmpty()) {
-                // İşletmeye ait tüm restoranları kontrol et, en az birine erişimi varsa ilkini döndür
+                // URL'den belirli bir restoran ID'si isteniyorsa onu kontrol et
+                $path = request()->path();
+                if (preg_match('/\/restaurants\/([0-9]+)/', $path, $matches)) {
+                    $restaurantId = $matches[1];
+                    $restaurant = Restaurant::find($restaurantId);
+                    if ($restaurant && $restaurant->business && $businesses->contains('id', $restaurant->business->id)) {
+                        return $restaurant;
+                    }
+                }
+                
+                // Değilse işletmeye ait ilk restoranı döndür
                 foreach ($businesses as $business) {
                     $restaurant = $business->restaurants()->first();
                     if ($restaurant && $user->canAccessRestaurant($restaurant)) {
@@ -871,6 +899,17 @@ class RestaurantPanelController extends Controller
 
         // Restoran yöneticisi ise
         if ($user->isRestaurantManager()) {
+            // URL'den belirli bir restoran ID'si isteniyorsa onu kontrol et
+            $path = request()->path();
+            if (preg_match('/\/restaurants\/([0-9]+)/', $path, $matches)) {
+                $restaurantId = $matches[1];
+                $restaurant = Restaurant::find($restaurantId);
+                if ($restaurant && $restaurant->restaurant_manager_id == $user->id) {
+                    return $restaurant;
+                }
+            }
+            
+            // Değilse yönettiği ilk restoranı döndür
             $restaurant = $user->managedRestaurants()->first();
             if ($restaurant && $user->canAccessRestaurant($restaurant)) {
                 return $restaurant;
@@ -893,14 +932,34 @@ class RestaurantPanelController extends Controller
     // Yardımcı method - Kullanıcının erişebildiği restoranları kontrol et
     private function canUserAccessRestaurant($user, $restaurant)
     {
+        // Admin her zaman erişebilir
         if ($user->isAdmin()) {
             return true;
         }
-
-        if ($user->canAccessRestaurant($restaurant)) {
+        
+        // İşletme sahibi kontrolü - İşletmeye bağlı tüm restoranlara erişebilir
+        if ($user->isBusinessOwner() && $restaurant->business) {
+            $businesses = $user->getActiveBusinesses();
+            if ($businesses->contains('id', $restaurant->business->id)) {
+                return true;
+            }
+        }
+        
+        // Restoran müdürü kontrolü - Sadece kendi yönettiği restorana erişebilir
+        if ($user->isRestaurantManager() && $restaurant->restaurant_manager_id === $user->id) {
             return true;
         }
-
+        
+        // Diğer personel (garson, mutfak, kasiyer) kontrolü - Sadece çalıştığı restorana erişebilir
+        $staffRecord = $user->restaurantStaff()
+            ->where('restaurant_id', $restaurant->id)
+            ->where('is_active', true)
+            ->exists();
+            
+        if ($staffRecord) {
+            return true;
+        }
+        
         return false;
     }
 

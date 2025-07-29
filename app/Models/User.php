@@ -106,24 +106,25 @@ class User extends Authenticatable
 
     public function canAccessRestaurant(Restaurant $restaurant): bool
     {
+        // Admin her zaman erişebilir
         if ($this->isAdmin()) {
             return true;
         }
 
-        // Business sahibi kontrolü
-        if (!is_null($restaurant->business_id)) {
+        // İşletme sahibi kontrolü - İşletmeye bağlı tüm restoranlara erişebilir
+        if ($this->isBusinessOwner() && !is_null($restaurant->business_id)) {
             $business = $restaurant->business;
             if ($business && $business->owner_id === $this->id) {
                 return true;
             }
         }
 
-        // Restaurant manager kontrolü
-        if (!is_null($restaurant->restaurant_manager_id) && $restaurant->restaurant_manager_id === $this->id) {
+        // Restoran müdürü kontrolü - Sadece kendi yönettiği restorana erişebilir
+        if ($this->isRestaurantManager() && !is_null($restaurant->restaurant_manager_id) && $restaurant->restaurant_manager_id === $this->id) {
             return true;
         }
 
-        // Aktif staff kaydı kontrolü
+        // Diğer personel (garson, mutfak, kasiyer) kontrolü - Sadece çalıştığı restorana erişebilir
         return $this->restaurantStaff()
             ->where('restaurant_id', $restaurant->id)
             ->where('is_active', true)
