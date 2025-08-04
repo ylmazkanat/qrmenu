@@ -205,8 +205,8 @@
 @endpush
     <style>
         :root {
-            --primary-color: #6366f1;
-            --secondary-color: #8b5cf6;
+            --primary-color: {{ $restaurant->primary_color ?? '#6366f1' }};
+            --secondary-color: {{ $restaurant->secondary_color ?? '#8b5cf6' }};
             --success-color: #10b981;
             --warning-color: #f59e0b;
             --danger-color: #ef4444;
@@ -221,13 +221,314 @@
             background-color: var(--light-bg);
             color: var(--dark-color);
         }
+        
+        /* Masaüstü ve tablet için iPhone 12 görünümü */
+        @media (min-width: 768px) {
+            body {
+                background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+                min-height: 100vh;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                padding: 20px;
+            }
+            
+            .mobile-container {
+                width: 390px;
+                max-width: 390px;
+                height: 844px;
+                max-height: 844px;
+                background: white;
+                border-radius: 47px;
+                box-shadow: 0 25px 80px rgba(0, 0, 0, 0.4);
+                overflow: hidden;
+                position: relative;
+                border: 8px solid #1a1a1a;
+                border-top: 30px solid #1a1a1a;
+                border-bottom: 30px solid #1a1a1a;
+            }
+            
+            .mobile-container::before {
+                content: '';
+                position: absolute;
+                top: -15px;
+                left: 50%;
+                transform: translateX(-50%);
+                width: 134px;
+                height: 30px;
+                background: #1a1a1a;
+                border-radius: 0 0 20px 20px;
+                z-index: 10;
+            }
+            
+            /* iPhone 12 notch (çentik) */
+            .mobile-container::after {
+                content: '';
+                position: absolute;
+                top: 8px;
+                left: 50%;
+                transform: translateX(-50%);
+                width: 126px;
+                height: 30px;
+                background: #1a1a1a;
+                border-radius: 0 0 20px 20px;
+                z-index: 11;
+            }
+            
+            /* iPhone 12 alt çubuk */
+            .mobile-container .bottom-indicator {
+                content: '';
+                position: absolute;
+                bottom: -15px;
+                left: 50%;
+                transform: translateX(-50%);
+                width: 134px;
+                height: 5px;
+                background: #1a1a1a;
+                border-radius: 3px;
+                z-index: 10;
+            }
+            
+            .mobile-screen {
+                width: 100%;
+                height: 100%;
+                overflow-y: auto;
+                overflow-x: hidden;
+                position: relative;
+                background: white;
+                display: flex;
+                flex-direction: column;
+            }
+            
+            /* Mobil telefon içinde tüm içeriği düzgün göster */
+            .mobile-screen .restaurant-header {
+                flex-shrink: 0;
+                position: relative;
+                z-index: 1000;
+                transition: transform 0.3s ease;
+            }
+            
+            /* Kaydırma sırasında header'ı gizle */
+            .mobile-screen .restaurant-header.header-hidden {
+                transform: translateY(-100%);
+            }
+            
+            .mobile-screen .search-section {
+                flex-shrink: 0;
+            }
+            
+            .mobile-screen .category-nav-menu {
+                flex-shrink: 0;
+            }
+            
+            .mobile-screen #categoryGrid,
+            .mobile-screen #menuContent,
+            .mobile-screen #searchResults {
+                flex: 1;
+                overflow-y: auto;
+                padding-bottom: 120px; /* Alt navigasyon menüsü için alan */
+            }
+            
+            .mobile-screen .bottom-nav {
+                flex-shrink: 0;
+                position: relative;
+                z-index: 1000;
+            }
+            
+            /* Alt navigasyon menüsü için düzeltmeler */
+            .mobile-screen .mobile-nav-menu {
+                position: absolute;
+                bottom: 0;
+                left: 0;
+                right: 0;
+                background: white;
+                border-top: 1px solid #e5e7eb;
+                z-index: 1002;
+                padding: 10px 0;
+                display: flex;
+                justify-content: space-around;
+                align-items: center;
+            }
+            
+            .mobile-screen .category-nav-menu {
+                position: absolute;
+                bottom: 70px;
+                left: 50%;
+                transform: translateX(-50%);
+                z-index: 1001;
+            }
+            
+            .mobile-screen .cart-fab {
+                position: absolute;
+                bottom: 90px;
+                right: 20px;
+                z-index: 1003;
+            }
+            
+            /* Ürün kartları için düzeltmeler */
+            .mobile-screen .product-card {
+                margin-bottom: 15px;
+                width: 100%;
+            }
+            
+            /* Grid düzenini tek sütun yap */
+            .mobile-screen .products-grid.grid-view {
+                display: flex !important;
+                flex-direction: column !important;
+                gap: 15px !important;
+            }
+            
+            .mobile-screen .products-grid.grid-view .product-card {
+                width: 100% !important;
+                max-width: 100% !important;
+            }
+            
+            .mobile-screen .product-image {
+                height: 120px;
+            }
+            
+            .mobile-screen .product-content {
+                padding: 12px;
+            }
+            
+            .mobile-screen .product-title {
+                font-size: 1rem;
+                margin-bottom: 8px;
+            }
+            
+            .mobile-screen .product-description {
+                font-size: 0.85rem;
+                margin-bottom: 12px;
+            }
+            
+            .mobile-screen .product-actions {
+                gap: 8px;
+            }
+            
+            .mobile-screen .product-actions .btn {
+                font-size: 0.8rem;
+                padding: 6px 12px;
+            }
+            
+            /* Masaüstü ve tablette kategoriler 2'şerli grid olsun */
+            .mobile-screen #categoryGrid .col-lg-4,
+            .mobile-screen #categoryGrid .col-md-6,
+            .mobile-screen #categoryGrid .col-6 {
+                width: 50% !important;
+                max-width: 50% !important;
+                flex: 0 0 50% !important;
+            }
+            
+            /* Ürünler tek sütun kalsın */
+            .mobile-screen #menuContent .col-lg-4,
+            .mobile-screen #menuContent .col-md-6,
+            .mobile-screen #menuContent .col-6 {
+                width: 100% !important;
+                max-width: 100% !important;
+                flex: 0 0 100% !important;
+            }
+            
+            /* Alt menülerin pozisyonunu sabitle */
+            .mobile-screen .mobile-nav-menu {
+                position: absolute !important;
+                bottom: 0 !important;
+                left: 0 !important;
+                right: 0 !important;
+                transform: none !important;
+            }
+            
+            .mobile-screen .category-nav-menu {
+                position: absolute !important;
+                bottom: 70px !important;
+                left: 50% !important;
+                transform: translateX(-50%) !important;
+            }
+            
+            /* Kategoriye girildiğinde alt menülerin pozisyonunu koru */
+            .mobile-screen #menuContent ~ .mobile-nav-menu,
+            .mobile-screen #menuContent ~ .category-nav-menu {
+                position: absolute !important;
+                bottom: 70px !important;
+                left: 50% !important;
+                transform: translateX(-50%) !important;
+            }
+            
+            .mobile-screen #menuContent ~ .mobile-nav-menu {
+                bottom: 0 !important;
+                left: 0 !important;
+                right: 0 !important;
+                transform: none !important;
+            }
+            
+            /* Scroll bar stilleri */
+            .mobile-screen::-webkit-scrollbar {
+                width: 6px;
+            }
+            
+            .mobile-screen::-webkit-scrollbar-track {
+                background: #f1f1f1;
+                border-radius: 3px;
+            }
+            
+            .mobile-screen::-webkit-scrollbar-thumb {
+                background: #c1c1c1;
+                border-radius: 3px;
+            }
+            
+            .mobile-screen::-webkit-scrollbar-thumb:hover {
+                background: #a8a8a8;
+            }
+            
+            /* İçerik alanları için scroll bar */
+            .mobile-screen #categoryGrid::-webkit-scrollbar,
+            .mobile-screen #menuContent::-webkit-scrollbar,
+            .mobile-screen #searchResults::-webkit-scrollbar {
+                width: 4px;
+            }
+            
+            .mobile-screen #categoryGrid::-webkit-scrollbar-track,
+            .mobile-screen #menuContent::-webkit-scrollbar-track,
+            .mobile-screen #searchResults::-webkit-scrollbar-track {
+                background: #f8f9fa;
+                border-radius: 2px;
+            }
+            
+            .mobile-screen #categoryGrid::-webkit-scrollbar-thumb,
+            .mobile-screen #menuContent::-webkit-scrollbar-thumb,
+            .mobile-screen #searchResults::-webkit-scrollbar-thumb {
+                background: #dee2e6;
+                border-radius: 2px;
+            }
+        }
+        
+        /* Mobil cihazlarda normal görünüm */
+        @media (max-width: 767px) {
+            .mobile-container {
+                width: 100%;
+                max-width: none;
+                height: auto;
+                max-height: none;
+                border-radius: 0;
+                box-shadow: none;
+                border: none;
+            }
+            
+            .mobile-screen {
+                width: 100%;
+                height: auto;
+                overflow: visible;
+            }
+        }
 
         .restaurant-header {
             background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
             color: white;
-            padding: 1.5rem 0;
+            padding: 3rem 0;
             position: relative;
             overflow: hidden;
+            min-height: 250px;
+            display: flex;
+            align-items: center;
         }
 
         .restaurant-header::before {
@@ -241,6 +542,172 @@
             opacity: 0.3;
         }
 
+        .restaurant-logo-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .restaurant-logo {
+            width: 120px;
+            height: 120px;
+            object-fit: cover;
+            border-radius: 50%;
+            border: 4px solid rgba(255, 255, 255, 0.3);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            transition: all 0.3s ease;
+        }
+
+        .restaurant-logo:hover {
+            transform: scale(1.05);
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4);
+        }
+
+        .restaurant-icon {
+            width: 120px;
+            height: 120px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 4px solid rgba(255, 255, 255, 0.3);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        }
+
+        .restaurant-icon i {
+            font-size: 3rem;
+            color: white;
+        }
+
+        .restaurant-title {
+            font-size: 2.5rem;
+            font-weight: 700;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+            margin-bottom: 0;
+        }
+
+        .restaurant-description {
+             font-size: 1.1rem;
+             opacity: 0.9;
+             text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+             max-width: 600px;
+             margin: 0 auto;
+         }
+
+        /* Dil Seçici Stilleri */
+        .language-selector {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            z-index: 9999;
+        }
+
+        .btn-language {
+            background: rgba(255, 255, 255, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            color: white;
+            backdrop-filter: blur(10px);
+            transition: all 0.3s ease;
+            padding: 8px 16px;
+            border-radius: 25px;
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .btn-language:hover {
+            background: rgba(255, 255, 255, 0.3);
+            border-color: rgba(255, 255, 255, 0.5);
+            transform: translateY(-1px);
+            color: white;
+        }
+
+        .language-dropdown {
+            background: white;
+            border: none;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            padding: 10px 0;
+            min-width: 200px;
+            margin-top: 5px;
+        }
+        
+        .language-dropdown .dropdown-item {
+            padding: 12px 20px;
+            border: none;
+            background: none;
+            display: flex;
+            align-items: center;
+            transition: all 0.2s ease;
+        }
+        
+        .language-dropdown .dropdown-item:hover {
+            background: #f8f9fa;
+        }
+
+        .language-option {
+            display: flex;
+            align-items: center;
+            padding: 12px 20px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            position: relative;
+        }
+
+        .language-option:hover {
+            background: #f8f9fa;
+        }
+
+        .language-option.active {
+            background: var(--primary-color);
+            color: white;
+        }
+
+        .language-flag {
+            font-size: 20px;
+            margin-right: 12px;
+            width: 24px;
+            text-align: center;
+        }
+
+        .language-name {
+            flex: 1;
+            font-weight: 500;
+        }
+
+        .language-check {
+            color: var(--primary-color);
+            font-size: 16px;
+        }
+
+        .language-option.active .language-check {
+            color: white;
+        }
+
+        /* Loading animasyonu */
+        .spin {
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        @media (max-width: 768px) {
+            .restaurant-title {
+                font-size: 2rem;
+            }
+            
+            .restaurant-logo, .restaurant-icon {
+                width: 80px;
+                height: 80px;
+            }
+            
+            .restaurant-icon i {
+                font-size: 2rem;
+            }
+        }
         .restaurant-header .container {
             position: relative;
             z-index: 2;
@@ -285,11 +752,11 @@
 
         .product-card {
             background: white;
-            border-radius: 16px;
+            border-radius: 12px;
             box-shadow: var(--card-shadow);
             border: 1px solid var(--border-color);
             transition: all 0.3s ease;
-            overflow: hidden;
+            
             height: 100%;
         }
 
@@ -306,6 +773,22 @@
         .category-card .card:hover {
             transform: translateY(-4px);
             box-shadow: 0 10px 25px -3px rgba(0, 0, 0, 0.15);
+        }
+        
+        /* Kategori grid için sadece 2'şerli grid düzeni */
+        #categoryGrid .row {
+            display: flex;
+            flex-wrap: wrap;
+            margin: 0 -10px;
+        }
+        
+        #categoryGrid .col-6,
+        #categoryGrid .col-md-4,
+        #categoryGrid .col-lg-3 {
+            padding: 0 10px;
+            width: 50%;
+            max-width: 50%;
+            flex: 0 0 50%;
         }
 
         #backToCategoriesBtn {
@@ -325,11 +808,11 @@
         }
 
         .product-image {
-            height: 200px;
+            height: 160px;
             background-size: cover;
             background-position: center;
             position: relative;
-            overflow: hidden;
+            overflow: visible;
         }
 
         .product-image::before {
@@ -340,18 +823,35 @@
             right: 0;
             height: 40%;
             background: linear-gradient(transparent, rgba(0, 0, 0, 0.3));
+            border-radius: 12px;
         }
 
         .product-price {
             position: absolute;
-            top: 12px;
-            right: 12px;
-            background: var(--success-color);
+            background: var(--primary-color);
             color: white;
-            padding: 6px 12px;
+            padding: 4px 8px;
             border-radius: 20px;
             font-weight: 600;
-            font-size: 14px;
+            font-size: 10px;
+            z-index: 10;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+        
+        /* Grid view için product price */
+        .products-grid.grid-view .product-price {
+            top: 12px;
+            right: 12px;
+            font-size: 12px;
+            padding: 6px 10px;
+        }
+        
+        /* List view için product price */
+        .products-grid.list-view .product-price {
+            top: -10px;
+            left: -10px;
+            font-size: 10px;
+            padding: 4px 8px;
         }
 
         .product-badge {
@@ -367,7 +867,7 @@
         }
 
         .product-content {
-            padding: 1.5rem;
+            padding: 1rem;
         }
 
         .product-title {
@@ -391,6 +891,7 @@
             display: flex;
             gap: 8px;
             align-items: center;
+            margin-bottom: 10px;
         }
 
         .btn-modern {
@@ -433,7 +934,7 @@
             position: fixed;
             bottom: 20px;
             right: 20px;
-            background: var(--success-color);
+            background: var(--primary-color);
             color: white;
             border: none;
             border-radius: 50%;
@@ -447,7 +948,7 @@
 
         .cart-fab:hover {
             transform: scale(1.1);
-            background: #059669;
+            background: var(--secondary-color);
             color: white;
         }
 
@@ -627,8 +1128,32 @@
             border: 1px solid #e5e7eb;
         }
     </style>
+    
+    <script>
+        function ensureMasaHashAtEnd() {
+            // If tableNumber exists, make sure #masaXX is at the end of the hash
+            if (tableNumber) {
+                let hash = window.location.hash;
+                let masaHash = `#masa${tableNumber}`;
+                // Remove any existing masa hash
+                hash = hash.replace(/#masa\w+/g, '');
+                // Remove trailing #
+                hash = hash.replace(/#+$/, '');
+                // Add masa hash at the end
+                window.location.hash = (hash ? hash : '') + masaHash;
+            }
+        }
+        window.addEventListener('hashchange', ensureMasaHashAtEnd);
+        document.addEventListener('DOMContentLoaded', function() {
+            loadTableNumber();
+            updateCartDisplay();
+            loadCart();
+            ensureMasaHashAtEnd();
+        });
+    </script>
 </head>
 <body>
+<<<<<<< HEAD
     <!-- Welcome Screen -->
     <div id="welcomeScreen" class="d-flex flex-column min-vh-100" style="background: linear-gradient(180deg, {{ $restaurant->color_primary ?? '#FFD600' }} 0%, {{ $restaurant->color_secondary ?? '#000' }} 100%);">
         <!-- Social Media Icons Sabit Üstte -->
@@ -674,15 +1199,77 @@
         </button>
     </div>
 
+=======
+    <!-- Dil Seçici - En Üst -->
+    @if($restaurant->translation_enabled && $restaurant->supported_languages && count($restaurant->supported_languages) > 1)
+        <div class="language-selector" style="position: absolute; top: 10px; right: 10px; z-index: 9999;">
+            <div class="dropdown">
+                <button class="btn btn-language dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                    <i class="bi bi-translate me-1"></i>
+                    <span id="currentLanguage">Türkçe</span>
+                </button>
+                <ul class="dropdown-menu language-dropdown">
+                    @foreach($restaurant->supported_languages as $langCode)
+                        @php
+                            $languages = [
+                                'tr' => ['name' => 'Türkçe', 'flag' => '🇹🇷'],
+                                'en' => ['name' => 'English', 'flag' => '🇺🇸'],
+                                'de' => ['name' => 'Deutsch', 'flag' => '🇩🇪'],
+                                'fr' => ['name' => 'Français', 'flag' => '🇫🇷'],
+                                'es' => ['name' => 'Español', 'flag' => '🇪🇸'],
+                                'it' => ['name' => 'Italiano', 'flag' => '🇮🇹'],
+                                'ru' => ['name' => 'Русский', 'flag' => '🇷🇺'],
+                                'ar' => ['name' => 'العربية', 'flag' => '🇸🇦'],
+                                'zh' => ['name' => '中文', 'flag' => '🇨🇳'],
+                                'ja' => ['name' => '日本語', 'flag' => '🇯🇵']
+                            ];
+                            $langInfo = $languages[$langCode] ?? ['name' => $langCode, 'flag' => '🌐'];
+                        @endphp
+                        <li>
+                            <a class="dropdown-item language-option" href="#" data-lang="{{ $langCode }}">
+                                <span class="language-flag">{{ $langInfo['flag'] }}</span>
+                                <span class="language-name">{{ $langInfo['name'] }}</span>
+                                <i class="bi bi-check2 language-check" id="check-{{ $langCode }}" style="display: none;"></i>
+                            </a>
+                        </li>
+                    @endforeach
+                </ul>
+            </div>
+        </div>
+    @endif
+    
+    <!-- Mobil telefon container - sadece masaüstü ve tablet için -->
+    <div class="mobile-container">
+        <div class="bottom-indicator"></div>
+        <div class="mobile-screen">
+>>>>>>> d865c73b079f592e074f76bde8eb24d8e9364b6b
     <!-- Restaurant Header -->
-    <div class="restaurant-header">
+    <div class="restaurant-header" @if($restaurant->header_image) style="background-image: url('{{ Storage::url($restaurant->header_image) }}'); background-size: cover; background-position: center;" @endif>
         <div class="container">
             <div class="row align-items-center justify-content-center">
-                <div class="col-12 text-center">
-                    <h1 class="mb-0">
-                        <i class="bi bi-shop me-2"></i>
+                <div class="col-12 text-center position-relative">
+
+                    
+                    <div class="restaurant-logo-container mb-3">
+                        @if($restaurant->logo)
+                            <img src="{{ Storage::url($restaurant->logo) }}" alt="{{ $restaurant->name }}" class="restaurant-logo" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                            <div class="restaurant-icon" style="display: none;">
+                                <i class="bi bi-shop"></i>
+                            </div>
+                        @else
+                            <div class="restaurant-icon">
+                                <i class="bi bi-shop"></i>
+                            </div>
+                        @endif
+                    </div>
+                    <h1 class="mb-0 restaurant-title">
                         {{ $restaurant->name }}
                     </h1>
+                    @if($restaurant->description)
+                        <p class="restaurant-description mt-2" data-translate="restaurant_description">
+                            {{ $restaurant->description }}
+                        </p>
+                    @endif
                 </div>
             </div>
         </div>
@@ -693,16 +1280,26 @@
         <div class="container">
             <div class="d-flex gap-2 gap-md-3 align-items-center">
                 <!-- Kategorilere Git Butonu -->
-                <button class="btn btn-outline-primary flex-shrink-0" id="backToCategoriesBtn" style="display: none;" onclick="goBackToCategories()">
-                    <i class="bi bi-arrow-left me-2"></i>
-                    <span class="d-none d-md-inline">Kategorilere Git</span>
-                    <span class="d-md-none">Kategoriler</span>
+                <button class="btn btn-outline-primary btn-sm flex-shrink-0" id="backToCategoriesBtn" style="display: none; font-size: 0.7rem; padding: 0.2rem 0.4rem; width: auto;" onclick="goBackToCategories()">
+                    <i class="bi bi-arrow-left me-1"></i>
+                    <span class="d-none d-md-inline" data-translate="back_to_categories">Kategorilere Dön</span>
+                    <span class="d-md-none" data-translate="back">Geri</span>
                 </button>
                 
                 <!-- Arama Kutusu -->
                 <div class="search-box flex-grow-1">
-                    <input type="text" class="search-input" id="searchInput" placeholder="Ürün ara... (örn: pizza, köfte, içecek)">
+                    <input type="text" class="search-input" id="searchInput" placeholder="Ürün ara..." data-translate-placeholder="search_products">
                     <i class="bi bi-search search-icon"></i>
+                </div>
+                
+                <!-- Layout Toggle Buttons -->
+                <div class="layout-toggle-container">
+                    <button class="layout-toggle-btn active" id="gridViewBtn" data-layout="grid">
+                        <i class="bi bi-grid-3x3-gap"></i>
+                    </button>
+                    <button class="layout-toggle-btn" id="listViewBtn" data-layout="list">
+                        <i class="bi bi-list"></i>
+                    </button>
                 </div>
             </div>
             
@@ -714,16 +1311,16 @@
     <!-- Category Grid -->
     @if($restaurant->categories->count() > 0)
         <div class="container py-5" id="categoryGrid">
-            <div class="row">
+            <div class="row products-grid">
                 <!-- Tümü Seçeneği -->
-                <div class="col-6 col-md-4 col-lg-3 mb-4">
+                <div class="col-6 col-md-4 col-lg-3 mb-3">
                     <a href="#all-products" class="text-decoration-none d-block category-card" data-target="all-products">
                         <div class="card h-100 shadow-sm border-0">
                             <div style="height: 160px; background: linear-gradient(135deg, var(--primary-color), var(--secondary-color)); display: flex; align-items: center; justify-content: center;">
                                 <i class="bi bi-grid-3x3-gap-fill text-white" style="font-size: 3rem;"></i>
                             </div>
                             <div class="card-body text-center">
-                                <h6 class="mb-0">Tümü</h6>
+                                <h6 class="mb-0" data-translate="all_categories">Tümü</h6>
                             </div>
                         </div>
                     </a>
@@ -733,7 +1330,7 @@
                     @php 
                         $catSlug = $category->slug ?: \Illuminate\Support\Str::slug($category->name.'-'.$category->id); 
                     @endphp
-                    <div class="col-6 col-md-4 col-lg-3 mb-4">
+                    <div class="col-6 col-md-4 col-lg-3 mb-3">
                         <a href="#category-{{ $catSlug }}" class="text-decoration-none d-block category-card" data-target="category-{{ $catSlug }}">
                             <div class="card h-100 shadow-sm border-0">
                                 @if($category->image)
@@ -744,7 +1341,7 @@
                                     </div>
                                 @endif
                                 <div class="card-body text-center">
-                                    <h6 class="mb-0">{{ $category->name }}</h6>
+                                    <h6 class="mb-0" data-translate="category_{{ $category->id }}">{{ $category->name }}</h6>
                                 </div>
                             </div>
                         </a>
@@ -761,14 +1358,14 @@
                 @php $catSlug = $category->slug ?: \Illuminate\Support\Str::slug($category->name.'-'.$category->id); @endphp
                 <div id="category-{{ $catSlug }}" class="category-section mb-5">
                     <h3 class="mb-4">
-                        <i class="bi bi-bookmark-fill text-primary me-2"></i>
-                        {{ $category->name }}
+                        <i class="bi bi-bookmark-fill me-2" style="color: var(--primary-color);"></i>
+                        <span data-translate="category_{{ $category->id }}">{{ $category->name }}</span>
                     </h3>
                     
                     @if($category->products->count() > 0)
-                        <div class="row">
+                        <div class="row products-grid grid-view">
                             @foreach($category->products as $product)
-                                <div class="col-md-6 col-lg-4 mb-4">
+                                <div class="col-md-6 col-lg-4 mb-3">
                                     <div class="product-card fade-in">
                                         <div class="product-image" 
                                              @if($product->image) 
@@ -789,11 +1386,11 @@
                                         </div>
                                         
                                         <div class="product-content">
-                                            <h5 class="product-title">{{ $product->name }}</h5>
+                                            <h5 class="product-title" data-translate="product_{{ $product->id }}">{{ $product->name }}</h5>
                                             
-                                            @if($product->description)
-                                                <p class="product-description">{{ $product->description }}</p>
-                                            @endif
+                                                                        @if($product->description)
+                                <p class="product-description" data-translate="product_{{ $product->id }}_description">{{ $product->description }}</p>
+                            @endif
                                             
                                             <div class="product-actions">
                                                 @php
@@ -813,12 +1410,12 @@
                                                             data-product-price="{{ $product->price }}"
                                                             data-product-image="{{ $product->image ? Storage::url($product->image) : '' }}">
                                                         <i class="bi bi-cart-plus me-2"></i>
-                                                        Sepete Ekle
+                                                        <span data-translate="add_to_cart">Sepete Ekle</span>
                                                     </button>
                                                 @elseif($showAddToCart && !$product->inStock())
                                                     <button class="btn btn-secondary btn-modern" disabled>
                                                         <i class="bi bi-x-circle me-2"></i>
-                                                        Tükendi
+                                                        <span data-translate="out_of_stock">Tükendi</span>
                                                     </button>
                                                 @endif
                                                 
@@ -826,6 +1423,7 @@
                                                     <button class="btn btn-detail btn-modern" 
                                                             data-bs-toggle="modal" 
                                                             data-bs-target="#productModal"
+                                                            data-product-id="{{ $product->id }}"
                                                             data-product-name="{{ $product->name }}"
                                                             data-product-description="{{ $product->description }}"
                                                             data-product-price="{{ $product->price }}"
@@ -844,8 +1442,8 @@
                             <div class="empty-state-icon">
                                 <i class="bi bi-box"></i>
                             </div>
-                            <h5 class="text-muted">Bu kategoride ürün bulunmuyor</h5>
-                            <p class="text-muted">Yakında yeni ürünler eklenecek.</p>
+                                                    <h5 class="text-muted" data-translate="no_products_in_category">Bu kategoride ürün bulunmuyor</h5>
+                        <p class="text-muted" data-translate="new_products_coming_soon">Yakında yeni ürünler eklenecek.</p>
                         </div>
                     @endif
                 </div>
@@ -855,8 +1453,8 @@
                 <div class="empty-state-icon">
                     <i class="bi bi-journal-text"></i>
                 </div>
-                <h4 class="text-muted">Menü Hazırlanıyor</h4>
-                <p class="text-muted">Yakında lezzetli ürünlerimizi burada bulabileceksiniz.</p>
+                <h4 class="text-muted" data-translate="menu_preparing">Menü Hazırlanıyor</h4>
+                <p class="text-muted" data-translate="menu_coming_soon">Yakında lezzetli ürünlerimizi burada bulabileceksiniz.</p>
             </div>
         @endif
     </div>
@@ -872,19 +1470,19 @@
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title" id="productModalTitle">Ürün Detayı</h5>
+                    <h5 class="modal-title" id="productModalTitle" data-translate="product_detail">Ürün Detayı</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body">
-                    <div id="productModalImage" class="mb-3" style="height: 200px; border-radius: 12px; background-size: cover; background-position: center;"></div>
+                    <div id="productModalImage" class="mb-3" style="height: 200px; border-radius: 12px; background-size: cover; background-position: center; background-repeat: no-repeat;"></div>
                     <p id="productModalDescription" class="text-muted"></p>
-                    <h4 id="productModalPrice" class="text-success"></h4>
+                    <h4 id="productModalPrice" style="color: var(--primary-color);"></h4>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Kapat</button>
-                    <button type="button" class="btn btn-primary" id="addFromModal">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal" data-translate="close">Kapat</button>
+                    <button type="button" class="btn" id="addFromModal" style="background: var(--primary-color); border-color: var(--primary-color); color: white;">
                         <i class="bi bi-cart-plus me-2"></i>
-                        Sepete Ekle
+                        <span data-translate="add_to_cart">Sepete Ekle</span>
                     </button>
                 </div>
             </div>
@@ -896,10 +1494,10 @@
         <div class="modal-dialog modal-dialog-centered modal-lg">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title">
-                        <i class="bi bi-cart me-2"></i>
-                        Sepetim
-                    </h5>
+                                            <h5 class="modal-title">
+                            <i class="bi bi-cart me-2"></i>
+                            <span data-translate="my_cart">Sepetim</span>
+                        </h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body">
@@ -908,24 +1506,24 @@
                         <div class="empty-state-icon">
                             <i class="bi bi-cart"></i>
                         </div>
-                        <h5 class="text-muted">Sepetiniz boş</h5>
-                        <p class="text-muted">Lezzetli ürünlerimizi sepete ekleyerek başlayın.</p>
+                        <h5 class="text-muted" data-translate="cart_empty">Sepetiniz boş</h5>
+                        <p class="text-muted" data-translate="start_with_products">Lezzetli ürünlerimizi sepete ekleyerek başlayın.</p>
                     </div>
                     <hr class="my-4">
                     <div id="activeOrdersArea">
-                        <h6 class="mb-3"><i class="bi bi-clock-history me-2"></i> Masadaki Aktif Siparişlerim</h6>
-                        <div id="activeOrdersList" class="mb-2"></div>
+                        <h6 class="mb-3"><i class="bi bi-clock-history me-2"></i> <span data-translate="active_orders">Masadaki Aktif Siparişlerim</span></h6>
+                        <div id="activeOrdersList" class="mb-2" style="max-height: 200px; overflow-y: auto; border: 1px solid #e5e7eb; border-radius: 8px; padding: 10px;"></div>
                     </div>
                 </div>
                 <div class="modal-footer">
                     <div class="w-100">
                         <div class="d-flex justify-content-between align-items-center mb-3">
-                            <h5 class="mb-0">Toplam:</h5>
-                            <h4 class="mb-0 text-success" id="cartTotal">0.00 ₺</h4>
+                            <h5 class="mb-0" data-translate="total">Toplam:</h5>
+                            <h4 class="mb-0" id="cartTotal" style="color: var(--primary-color);">0.00 ₺</h4>
                         </div>
-                        <button type="button" class="btn btn-success btn-lg w-100" id="placeOrder" disabled>
+                        <button type="button" class="btn btn-lg w-100" id="placeOrder" disabled style="background: var(--primary-color); border-color: var(--primary-color); color: white;">
                             <i class="bi bi-check-circle me-2"></i>
-                            Siparişi Tamamla
+                            <span data-translate="complete_order">Siparişi Tamamla</span>
                         </button>
                     </div>
                 </div>
@@ -954,10 +1552,10 @@
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">İptal</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" data-translate="cancel">İptal</button>
                     <button type="button" class="btn btn-primary" id="confirmTable">
                         <i class="bi bi-check-circle me-2"></i>
-                        Devam Et
+                        <span data-translate="continue">Devam Et</span>
                     </button>
                 </div>
             </div>
@@ -1034,11 +1632,25 @@
                 const description = card.querySelector('.product-description')?.textContent.toLowerCase() || '';
                 
                 if (name.includes(query) || description.includes(query)) {
+                    // Fiyat bilgisini product-price elementinden al
+                    const priceElement = card.querySelector('.product-price');
+                    const price = priceElement ? priceElement.textContent.replace('₺', '').trim() : '0';
+                    
+                    // Görsel bilgisini product-image elementinden al
+                    const imageElement = card.querySelector('.product-image');
+                    let image = '';
+                    if (imageElement && imageElement.style.backgroundImage) {
+                        const bgImage = imageElement.style.backgroundImage;
+                        if (bgImage !== 'none' && bgImage.includes('url(')) {
+                            image = bgImage.replace(/url\(['"]?(.*?)['"]?\)/g, '$1');
+                        }
+                    }
+                    
                     const productData = {
                         name: card.querySelector('.product-title').textContent,
                         description: card.querySelector('.product-description')?.textContent || '',
-                        price: card.querySelector('.add-to-cart')?.dataset.productPrice || '0',
-                        image: card.querySelector('.add-to-cart')?.dataset.productImage || '',
+                        price: price,
+                        image: image,
                         id: card.querySelector('.add-to-cart')?.dataset.productId || '',
                         inStock: !card.querySelector('.add-to-cart')?.disabled
                     };
@@ -1058,53 +1670,140 @@
                     </div>
                 `;
             } else {
-                searchResults.innerHTML = products.map(product => `
-                    <div class="search-result-item" onclick="addToCartFromSearch('${product.id}', '${product.name}', '${product.price}', '${product.image}', ${product.inStock})">
-                        <div class="d-flex align-items-center">
-                            <div class="me-3">
-                                ${product.image ? 
-                                    `<img src="${product.image}" style="width: 50px; height: 50px; border-radius: 8px; object-fit: cover;">` :
-                                    `<div style="width: 50px; height: 50px; border-radius: 8px; background: #f3f4f6; display: flex; align-items: center; justify-content: center;"><i class="bi bi-image text-muted"></i></div>`
-                                }
-                            </div>
-                            <div class="flex-grow-1">
-                                <h6 class="mb-1">${product.name}</h6>
-                                <p class="mb-1 text-muted small">${product.description.substring(0, 80)}${product.description.length > 80 ? '...' : ''}</p>
-                                <span class="text-success fw-bold">${parseFloat(product.price).toFixed(2)} ₺</span>
-                            </div>
-                            <div>
-                                ${product.inStock ? 
-                                    '<i class="bi bi-cart-plus text-primary"></i>' : 
-                                    '<i class="bi bi-x-circle text-muted"></i>'
-                                }
-                            </div>
+                searchResults.innerHTML = `
+                    <div class="container py-4">
+                        <h4 class="mb-4">
+                            <i class="bi bi-search me-2" style="color: var(--primary-color);"></i>
+                            "${query}" için ${products.length} sonuç bulundu
+                        </h4>
+                        <div class="row products-grid list-view">
+                            ${products.map(product => `
+                                <div class="col-12 mb-3">
+                                    <div class="product-card fade-in">
+                                        <div class="product-image" 
+                                             ${product.image && product.image !== '' ? 
+                                                `style="background: #f8f9fa url('${product.image}') center/cover no-repeat;"` :
+                                                `style="background: linear-gradient(135deg, #f3f4f6, #e5e7eb); display: flex; align-items: center; justify-content: center;"`
+                                             }>
+                                            
+                                            ${!product.image || product.image === '' ? '<i class="bi bi-image text-muted" style="font-size: 3rem;"></i>' : ''}
+                                            
+                                            <div class="product-price">${parseFloat(product.price).toFixed(2)} ₺</div>
+                                            
+                                            ${!product.inStock ? '<div class="product-badge bg-danger">Tükendi</div>' : ''}
+                                        </div>
+                                        
+                                        <div class="product-content">
+                                            <h5 class="product-title">${product.name}</h5>
+                                            
+                                            ${product.description ? `<p class="product-description">${product.description}</p>` : ''}
+                                            
+                                            <div class="product-actions">
+                                                ${product.inStock ? 
+                                                    `<button class="btn btn-add-cart btn-modern add-to-cart" 
+                                                             data-product-id="${product.id}"
+                                                             data-product-name="${product.name}"
+                                                             data-product-price="${product.price}"
+                                                             data-product-image="${product.image || ''}">
+                                                        <i class="bi bi-cart-plus me-2"></i>
+                                                        <span data-translate="add_to_cart">Sepete Ekle</span>
+                                                    </button>` : 
+                                                    `<button class="btn btn-secondary btn-modern" disabled>
+                                                        <i class="bi bi-x-circle me-2"></i>
+                                                        Tükendi
+                                                    </button>`
+                                                }
+                                                
+                                                ${product.description && product.description.length > 50 ? 
+                                                    `<button class="btn btn-detail btn-modern" 
+                                                             data-bs-toggle="modal" 
+                                                             data-bs-target="#productModal"
+                                                             data-product-id="${product.id}"
+                                                             data-product-name="${product.name}"
+                                                             data-product-description="${product.description}"
+                                                             data-product-price="${product.price}"
+                                                             data-product-image="${product.image ? '/storage/' + product.image : ''}">
+                                                        <i class="bi bi-info-circle"></i>
+                                                    </button>` : ''
+                                                }
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            `).join('')}
                         </div>
                     </div>
-                `).join('');
+                `;
             }
             
             searchResults.style.display = 'block';
             menuContent.style.display = 'none';
             backToCategoriesBtn.style.display = 'block';
+            
+            // Arama sonuçlarındaki butonlara event listener ekle
+            setTimeout(() => {
+                searchResults.querySelectorAll('.add-to-cart').forEach(button => {
+                    button.addEventListener('click', function(e) {
+                        e.stopPropagation();
+                        addToCartFromButton(this);
+                    });
+                });
+                
+                // Detail butonları için event listener ekle
+                searchResults.querySelectorAll('[data-bs-target="#productModal"]').forEach(button => {
+                    button.addEventListener('click', function(e) {
+                        e.stopPropagation();
+                        // Modal verilerini ayarla
+                        const modal = document.getElementById('productModal');
+                        const title = modal.querySelector('#productModalTitle');
+                        const image = modal.querySelector('#productModalImage');
+                        const description = modal.querySelector('#productModalDescription');
+                        const price = modal.querySelector('#productModalPrice');
+                        
+                        title.textContent = this.dataset.productName;
+                        description.textContent = this.dataset.productDescription;
+                        
+                        // Ürün ismini ve açıklamasını çeviri sistemine ekle
+                        const productId = this.dataset.productId;
+                        if (productId) {
+                            title.setAttribute('data-translate', `product_${productId}`);
+                            title.setAttribute('data-original-text', this.dataset.productName);
+                            description.setAttribute('data-translate', `product_${productId}_description`);
+                            description.setAttribute('data-original-text', this.dataset.productDescription);
+                        }
+                        
+                        price.textContent = `${parseFloat(this.dataset.productPrice).toFixed(2)} ₺`;
+                        
+                        if (this.dataset.productImage && this.dataset.productImage !== '') {
+                            image.style.backgroundImage = `url('${this.dataset.productImage}')`;
+                            image.style.backgroundSize = 'cover';
+                            image.style.backgroundPosition = 'center';
+                            image.innerHTML = '';
+                        } else {
+                            image.style.background = 'linear-gradient(135deg, #f3f4f6, #e5e7eb)';
+                            image.style.backgroundImage = 'none';
+                            image.innerHTML = '<i class="bi bi-image text-muted" style="font-size: 3rem; display: flex; align-items: center; justify-content: center; height: 100%;"></i>';
+                        }
+                        
+                        currentProductForModal = {
+                            id: this.dataset.productId,
+                            name: this.dataset.productName,
+                            price: parseFloat(this.dataset.productPrice),
+                            image: this.dataset.productImage
+                        };
+                        
+                        // Modal açıldıktan sonra çeviri sistemini çalıştır
+                        setTimeout(() => {
+                            if (currentLanguage !== 'tr') {
+                                translatePageContent(currentLanguage);
+                            }
+                        }, 100);
+                    });
+                });
+            }, 100);
         }
 
-        function addToCartFromSearch(productId, productName, productPrice, productImage, inStock) {
-            if (!inStock) return;
-            
-            if (!tableNumber) {
-                showTableModal(() => {
-                    addToCart(productId, productName, parseFloat(productPrice), productImage);
-                });
-            } else {
-                addToCart(productId, productName, parseFloat(productPrice), productImage);
-            }
-            
-            // Clear search
-            searchInput.value = '';
-            searchResults.style.display = 'none';
-            menuContent.style.display = 'block';
-            backToCategoriesBtn.style.display = 'none';
-        }
+
 
         // Add to cart functionality
         document.querySelectorAll('.add-to-cart').forEach(button => {
@@ -1228,7 +1927,7 @@
                         </div>
                         <div class="flex-grow-1">
                             <h6 class="mb-1">${item.name}</h6>
-                            <span class="text-success fw-bold">${item.price.toFixed(2)} ₺</span>
+                            <span class="fw-bold" style="color: var(--primary-color);">${item.price.toFixed(2)} ₺</span>
                         </div>
                         <div class="quantity-controls">
                             <button class="quantity-btn" onclick="updateQuantity('${item.id}', -1)">
@@ -1286,21 +1985,41 @@
                 
                 title.textContent = this.dataset.productName;
                 description.textContent = this.dataset.productDescription;
+                
+                // Ürün ismini ve açıklamasını çeviri sistemine ekle
+                const productId = this.dataset.productId || this.closest('.product-card').querySelector('.add-to-cart')?.dataset.productId;
+                if (productId) {
+                    title.setAttribute('data-translate', `product_${productId}`);
+                    title.setAttribute('data-original-text', this.dataset.productName);
+                    description.setAttribute('data-translate', `product_${productId}_description`);
+                    description.setAttribute('data-original-text', this.dataset.productDescription);
+                }
                 price.textContent = `${parseFloat(this.dataset.productPrice).toFixed(2)} ₺`;
                 
                 if (this.dataset.productImage) {
                     image.style.backgroundImage = `url('${this.dataset.productImage}')`;
+                    image.style.backgroundSize = 'cover';
+                    image.style.backgroundPosition = 'center';
+                    image.innerHTML = ''; // Resim varsa icon'u temizle
                 } else {
                     image.style.background = 'linear-gradient(135deg, #f3f4f6, #e5e7eb)';
+                    image.style.backgroundImage = 'none';
                     image.innerHTML = '<i class="bi bi-image text-muted" style="font-size: 3rem; display: flex; align-items: center; justify-content: center; height: 100%;"></i>';
                 }
                 
                 currentProductForModal = {
-                    id: this.closest('.product-card').querySelector('.add-to-cart')?.dataset.productId,
+                    id: this.dataset.productId,
                     name: this.dataset.productName,
                     price: parseFloat(this.dataset.productPrice),
                     image: this.dataset.productImage
                 };
+                
+                // Modal açıldıktan sonra çeviri sistemini çalıştır
+                setTimeout(() => {
+                    if (currentLanguage !== 'tr') {
+                        translatePageContent(currentLanguage);
+                    }
+                }, 100);
             });
         });
 
@@ -1440,8 +2159,23 @@
             if (welcomeMenuBtn) {
                 welcomeMenuBtn.addEventListener('click', function() {
                     showMenu();
+<<<<<<< HEAD
                 });
             }
+=======
+                    const target = document.querySelector(window.location.hash);
+                    if (target) {
+                        // Tüm kategorileri göster
+                        document.querySelectorAll('.category-section').forEach(section => {
+                            section.style.display = 'block';
+                        });
+                        setTimeout(() => target.scrollIntoView({behavior: 'smooth'}), 300);
+                    }
+                } else {
+                    showCategoryGrid();
+                }
+            });
+>>>>>>> d865c73b079f592e074f76bde8eb24d8e9364b6b
 
             // Değerlendirme butonu (isteğe bağlı yönlendirme)
             const welcomeRateBtn = document.getElementById('welcomeRateBtn');
@@ -1475,6 +2209,14 @@
                         if (backToCategoriesBtn) backToCategoriesBtn.style.display = 'block';
                         const target = document.getElementById(targetId);
                         if (target) {
+<<<<<<< HEAD
+=======
+                            // Tüm kategorileri göster
+                            document.querySelectorAll('.category-section').forEach(section => {
+                                section.style.display = 'block';
+                            });
+                            // Seçilen kategoriye scroll et
+>>>>>>> d865c73b079f592e074f76bde8eb24d8e9364b6b
                             setTimeout(() => target.scrollIntoView({behavior: 'smooth'}), 300);
                         }
                     }
@@ -1530,7 +2272,7 @@
                         <div>
                             <b>#${order.id}</b> - <span class="badge bg-secondary">${statusMap[order.status] || order.status}</span>
                         </div>
-                        ${canCancel ? `<button class="btn btn-sm btn-outline-danger" onclick="cancelOrder(${order.id})"><i class='bi bi-x-circle'></i> İptal Et</button>` : ''}
+                        ${canCancel ? `<button class="btn btn-sm btn-outline-danger" onclick="cancelOrder(${order.id})"><i class='bi bi-x-circle'></i> <span data-translate="cancel">İptal Et</span></button>` : ''}
                     </div>
                     <ul class="mb-1">${items}</ul>
                     <div class="text-end small text-muted">${order.created_at}</div>
@@ -1593,5 +2335,1236 @@
             });
         }
     </script>
+
+    <!-- Category Navigation Menu -->
+    <div class="category-nav-menu">
+        <div class="category-nav-container">
+            <div class="category-nav-item active" data-category="all">
+                <span>Tümü</span>
+            </div>
+            @foreach($restaurant->categories as $category)
+                @php $catSlug = $category->slug ?: \Illuminate\Support\Str::slug($category->name.'-'.$category->id); @endphp
+                <div class="category-nav-item" data-category="{{ $catSlug }}">
+                                            <span data-translate="category_{{ $category->id }}">{{ $category->name }}</span>
+                </div>
+            @endforeach
+        </div>
+    </div>
+
+    <!-- Mobile Navigation Menu -->
+    <div class="mobile-nav-menu">
+        <div class="nav-item" onclick="goToHome()">
+            <i class="bi bi-journal-text"></i>
+            <span data-translate="menu">Menü</span>
+        </div>
+        <div class="nav-item" data-bs-toggle="modal" data-bs-target="#reviewModal">
+            <i class="bi bi-star-fill"></i>
+            <span data-translate="review">Değerlendirme</span>
+        </div>
+        <div class="nav-item" data-bs-toggle="modal" data-bs-target="#socialModal">
+            <i class="bi bi-share-fill"></i>
+            <span data-translate="social_media">Sosyal Medya</span>
+        </div>
+        <div class="nav-item" data-bs-toggle="modal" data-bs-target="#contactModal">
+            <i class="bi bi-telephone-fill"></i>
+            <span data-translate="contact">İletişim</span>
+        </div>
+    </div>
+
+    <!-- Modals -->
+    <!-- Menu Info Modal -->
+    <div class="modal fade" id="menuInfoModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title"><i class="bi bi-journal-text me-2"></i><span data-translate="menu_info">Menü Bilgileri</span></h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="text-center mb-3">
+                        @if($restaurant->logo)
+                            <img src="{{ Storage::url($restaurant->logo) }}" alt="{{ $restaurant->name }}" class="rounded-circle" style="width: 80px; height: 80px; object-fit: cover;">
+                        @else
+                            <div class="rounded-circle d-inline-flex align-items-center justify-content-center" style="width: 80px; height: 80px; background: var(--primary-color);">
+                                <i class="bi bi-shop text-white" style="font-size: 2rem;"></i>
+                            </div>
+                        @endif
+                        <h4 class="mt-2">{{ $restaurant->name }}</h4>
+                        @if($restaurant->description)
+                            <p class="text-muted">{{ $restaurant->description }}</p>
+                        @endif
+                    </div>
+                    <div class="row">
+                        <div class="col-6">
+                            <div class="text-center p-3 bg-light rounded">
+                                <i class="bi bi-grid-3x3-gap" style="font-size: 2rem; color: var(--primary-color);"></i>
+                                <h6 class="mt-2 mb-0">{{ $restaurant->categories->count() }}</h6>
+                                <small class="text-muted" data-translate="category">Kategori</small>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="text-center p-3 bg-light rounded">
+                                <i class="bi bi-cup-hot" style="font-size: 2rem; color: var(--primary-color);"></i>
+                                <h6 class="mt-2 mb-0">{{ $restaurant->categories->sum(function($cat) { return $cat->products->count(); }) }}</h6>
+                                <small class="text-muted" data-translate="product">Ürün</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Review Modal -->
+    <div class="modal fade" id="reviewModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title"><i class="bi bi-star-fill me-2"></i><span data-translate="review">Değerlendirme</span></h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="text-center mb-4">
+                        <h4>{{ $restaurant->name }}</h4>
+                        <p class="text-muted" data-translate="share_experience">Deneyiminizi bizimle paylaşın</p>
+                    </div>
+                    <form id="reviewForm" action="{{ route('menu.review.store', $restaurant->id) }}" method="POST">
+                        @csrf
+                        <input type="hidden" name="rating" id="selectedRating" value="0">
+                        <div class="mb-3">
+                            <label class="form-label" data-translate="your_rating">Puanınız</label>
+                            <div class="rating-stars text-center">
+                                <i class="bi bi-star star-rating" data-rating="1"></i>
+                                <i class="bi bi-star star-rating" data-rating="2"></i>
+                                <i class="bi bi-star star-rating" data-rating="3"></i>
+                                <i class="bi bi-star star-rating" data-rating="4"></i>
+                                <i class="bi bi-star star-rating" data-rating="5"></i>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label" data-translate="your_comment">Yorumunuz</label>
+                            <textarea name="comment" class="form-control" rows="3" placeholder="Deneyiminizi paylaşın..." data-translate-placeholder="share_experience"></textarea>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label" data-translate="your_name_optional">İsminiz (İsteğe bağlı)</label>
+                            <input type="text" name="customer_name" class="form-control" placeholder="Adınız" data-translate-placeholder="your_name">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label" data-translate="email_optional">E-posta (İsteğe bağlı)</label>
+                            <input type="email" name="customer_email" class="form-control" placeholder="E-posta adresiniz" data-translate-placeholder="email_address">
+                        </div>
+                        <button type="submit" class="btn w-100" style="background: var(--primary-color); border-color: var(--primary-color); color: white;" data-translate="send_review">Değerlendirme Gönder</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Social Media Modal -->
+    <div class="modal fade" id="socialModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title"><i class="bi bi-share-fill me-2"></i><span data-translate="social_media">Sosyal Medya</span></h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="text-center mb-4">
+                        <h4>{{ $restaurant->name }}</h4>
+                        <p class="text-muted" data-translate="follow_and_share">Bizi takip edin ve paylaşın</p>
+                    </div>
+                    
+                    <!-- Sosyal Medya Linkleri -->
+                    <div class="row g-3 mb-4">
+                        @if($restaurant->facebook)
+                            <div class="col-6">
+                                <a href="{{ $restaurant->facebook }}" target="_blank" class="btn btn-outline-primary w-100" style="border-color: var(--primary-color); color: var(--primary-color);">
+                                    <i class="bi bi-facebook me-2"></i>Facebook
+                                </a>
+                            </div>
+                        @endif
+                        @if($restaurant->instagram)
+                            <div class="col-6">
+                                <a href="{{ $restaurant->instagram }}" target="_blank" class="btn btn-outline-danger w-100" style="border-color: var(--primary-color); color: var(--primary-color);">
+                                    <i class="bi bi-instagram me-2"></i>Instagram
+                                </a>
+                            </div>
+                        @endif
+                        @if($restaurant->twitter)
+                            <div class="col-6">
+                                <a href="{{ $restaurant->twitter }}" target="_blank" class="btn btn-outline-info w-100" style="border-color: var(--primary-color); color: var(--primary-color);">
+                                    <i class="bi bi-twitter me-2"></i>Twitter
+                                </a>
+                            </div>
+                        @endif
+                        @if($restaurant->youtube)
+                            <div class="col-6">
+                                <a href="{{ $restaurant->youtube }}" target="_blank" class="btn btn-outline-danger w-100" style="border-color: var(--primary-color); color: var(--primary-color);">
+                                    <i class="bi bi-youtube me-2"></i>YouTube
+                                </a>
+                            </div>
+                        @endif
+                        @if($restaurant->linkedin)
+                            <div class="col-6">
+                                <a href="{{ $restaurant->linkedin }}" target="_blank" class="btn btn-outline-primary w-100" style="border-color: var(--primary-color); color: var(--primary-color);">
+                                    <i class="bi bi-linkedin me-2"></i>LinkedIn
+                                </a>
+                            </div>
+                        @endif
+                        @if($restaurant->whatsapp)
+                            <div class="col-6">
+                                <a href="https://wa.me/{{ preg_replace('/[^0-9]/', '', $restaurant->whatsapp) }}" target="_blank" class="btn btn-outline-success w-100" style="border-color: var(--primary-color); color: var(--primary-color);">
+                                    <i class="bi bi-whatsapp me-2"></i>WhatsApp
+                                </a>
+                            </div>
+                        @endif
+                        @if($restaurant->website)
+                            <div class="col-6">
+                                <a href="{{ $restaurant->website }}" target="_blank" class="btn btn-outline-secondary w-100" style="border-color: var(--primary-color); color: var(--primary-color);">
+                                    <i class="bi bi-globe me-2"></i>Website
+                                </a>
+                            </div>
+                        @endif
+                    </div>
+
+                    <!-- Sosyal Medya Linkleri Yoksa -->
+                    @if(!$restaurant->facebook && !$restaurant->instagram && !$restaurant->twitter && !$restaurant->youtube && !$restaurant->linkedin && !$restaurant->whatsapp && !$restaurant->website)
+                        <div class="text-center text-muted mb-4">
+                            <i class="bi bi-info-circle me-2"></i>
+                            <span data-translate="no_social_media">Henüz sosyal medya linkleri eklenmemiş.</span>
+                        </div>
+                    @endif
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Contact Modal -->
+    <div class="modal fade" id="contactModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title"><i class="bi bi-telephone-fill me-2"></i><span data-translate="contact">İletişim</span></h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="text-center mb-4">
+                        @if($restaurant->logo)
+                            <img src="{{ Storage::url($restaurant->logo) }}" alt="{{ $restaurant->name }}" class="rounded-circle" style="width: 60px; height: 60px; object-fit: cover;">
+                        @endif
+                        <h4 class="mt-2">{{ $restaurant->name }}</h4>
+                    </div>
+                    @if($restaurant->phone)
+                        <div class="d-flex align-items-center mb-3 p-3 bg-light rounded">
+                            <i class="bi bi-telephone-fill me-3" style="font-size: 1.5rem; color: var(--primary-color);"></i>
+                            <div>
+                                <h6 class="mb-0" data-translate="phone">Telefon</h6>
+                                <a href="tel:{{ $restaurant->phone }}" class="text-decoration-none">{{ $restaurant->phone }}</a>
+                            </div>
+                        </div>
+                    @endif
+                    @if($restaurant->email)
+                        <div class="d-flex align-items-center mb-3 p-3 bg-light rounded">
+                            <i class="bi bi-envelope-fill me-3" style="font-size: 1.5rem; color: var(--primary-color);"></i>
+                            <div>
+                                <h6 class="mb-0" data-translate="email">E-posta</h6>
+                                <a href="mailto:{{ $restaurant->email }}" class="text-decoration-none">{{ $restaurant->email }}</a>
+                            </div>
+                        </div>
+                    @endif
+                    @if($restaurant->website)
+                        <div class="d-flex align-items-center mb-3 p-3 bg-light rounded">
+                            <i class="bi bi-globe me-3" style="font-size: 1.5rem; color: var(--primary-color);"></i>
+                            <div>
+                                <h6 class="mb-0" data-translate="website">Website</h6>
+                                <a href="{{ $restaurant->website }}" target="_blank" class="text-decoration-none">{{ $restaurant->website }}</a>
+                            </div>
+                        </div>
+                    @endif
+                    @if($restaurant->address)
+                        <div class="d-flex align-items-center mb-3 p-3 bg-light rounded">
+                            <i class="bi bi-geo-alt-fill me-3" style="font-size: 1.5rem; color: var(--primary-color);"></i>
+                            <div>
+                                <h6 class="mb-0" data-translate="address">Adres</h6>
+                                <p class="mb-0 text-muted">{{ $restaurant->address }}</p>
+                            </div>
+                        </div>
+                    @endif
+                    @if($restaurant->working_hours_text)
+                        <div class="d-flex align-items-center mb-3 p-3 bg-light rounded">
+                            <i class="bi bi-clock-fill me-3" style="font-size: 1.5rem; color: var(--primary-color);"></i>
+                            <div>
+                                <h6 class="mb-0" data-translate="working_hours">Çalışma Saatleri</h6>
+                                <p class="mb-0 text-muted">{!! nl2br(e($restaurant->working_hours_text)) !!}</p>
+                            </div>
+                        </div>
+                    @endif
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+
+    <style>
+     
+
+        .category-nav-container {
+            display: flex;
+            overflow-x: auto;
+            padding: 0 15px;
+            gap: 15px;
+            scrollbar-width: none;
+            -ms-overflow-style: none;
+        }
+
+        .category-nav-container::-webkit-scrollbar {
+            display: none;
+        }
+
+        .category-nav-item {
+            flex-shrink: 0;
+            padding: 8px 16px;
+            background: #f8f9fa;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+            white-space: nowrap;
+        }
+
+        .category-nav-item:hover {
+            background: var(--primary-color);
+            color: white;
+        }
+
+        .category-nav-item.active {
+            background: var(--primary-color);
+            color: white;
+            border-color: var(--secondary-color);
+        }
+
+        .category-nav-item span {
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+
+        .mobile-nav-menu {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: white;
+            border-top: 1px solid #e5e7eb;
+            display: flex;
+            justify-content: space-around;
+            padding: 6px 0;
+            z-index: 1002;
+            box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 6px 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border-radius: 8px;
+            min-width: 50px;
+        }
+
+        .nav-item:hover {
+            background: var(--primary-color);
+            color: white;
+            transform: translateY(-2px);
+        }
+        
+        .nav-item.active {
+            background: var(--primary-color);
+            color: white;
+        }
+
+        .nav-item i {
+            font-size: 1rem;
+            margin-bottom: 2px;
+        }
+
+        .nav-item span {
+            font-size: 0.6rem;
+            font-weight: 500;
+            text-align: center;
+        }
+
+        .rating-stars {
+            font-size: 2rem;
+            margin: 1rem 0;
+        }
+
+        .star-rating {
+            color: #ddd;
+            cursor: pointer;
+            transition: color 0.2s ease;
+            margin: 0 2px;
+        }
+
+        .star-rating:hover,
+        .star-rating.active {
+            color: #ffc107;
+        }
+
+        /* Sepet butonunu mobile nav için yukarı taşı */
+        .cart-fab {
+            bottom: 135px !important;
+        }
+
+        /* Sayfa içeriğine padding ekle */
+        body {
+            padding-bottom: 160px;
+            overflow-y: auto !important;
+        }
+        
+        /* Restaurant header'ı daha kompakt yap */
+        .restaurant-header {
+            margin-top: 0;
+            padding: 15px 0;
+            border-radius: 0 0 20px 20px;
+            overflow: hidden;
+        }
+        
+        .restaurant-logo {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 2px solid var(--primary-color);
+        }
+        
+        .restaurant-icon {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: var(--primary-color);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 20px;
+            border: 2px solid var(--primary-color);
+            overflow: hidden;
+        }
+        
+        .restaurant-title {
+            font-size: 1.5rem;
+            margin-bottom: 5px;
+        }
+        
+        .restaurant-description {
+            font-size: 0.9rem;
+            margin-top: 5px;
+        }
+        
+        /* Search section'ı göster */
+        .search-section {
+            display: block;
+            padding: 10px 0;
+            background: #f8f9fa;
+        }
+        
+        /* Arama inputunu incelt */
+        .search-input {
+            height: 40px !important;
+            font-size: 14px !important;
+            padding: 8px 12px !important;
+        }
+        
+        /* Category Navigation Menu - Fixed Bottom */
+        .category-nav-menu {
+            position: fixed;
+            bottom: 65px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-top: 1px solid #e5e7eb;
+            z-index: 1001;
+            padding: 8px;
+            height: auto;
+            max-height: 50px;
+            max-width: 85%;
+            width: 100%;
+            border-radius: 25px 25px 0 0;
+            overflow: hidden;
+            box-shadow: 0 -2px 8px rgba(0,0,0,0.1);
+        }
+        
+        /* Scroll indicator */
+        .category-nav-menu::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 50px;
+            height: 4px;
+            background: var(--primary-color);
+            border-radius: 2px;
+            opacity: 0.8;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+        }
+        
+
+         
+         /* Layout Toggle Buttons */
+         .layout-toggle-container {
+             display: flex;
+             background: rgba(255, 255, 255, 0.95);
+             border: 1px solid #e5e7eb;
+             border-radius: 8px;
+             padding: 2px;
+             gap: 2px;
+         }
+         
+         .layout-toggle-btn {
+             width: 24px;
+             height: 24px;
+             border: none;
+             background: transparent;
+             border-radius: 4px;
+             display: flex;
+             align-items: center;
+             justify-content: center;
+             cursor: pointer;
+             transition: all 0.2s ease;
+             color: #6b7280;
+             font-size: 12px;
+         }
+         
+         .layout-toggle-btn:hover {
+             background: #f3f4f6;
+             color: var(--primary-color);
+         }
+         
+         .layout-toggle-btn.active {
+             background: var(--primary-color);
+             color: white;
+         }
+         
+         /* Product Grid Layouts */
+         .products-grid.grid-view {
+             display: grid;
+             grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+             gap: 15px;
+         }
+         
+         .products-grid.list-view {
+             display: flex;
+             flex-direction: column;
+             gap: 10px;
+         }
+         
+         .products-grid.list-view .product-card {
+             display: flex;
+             flex-direction: row;
+             align-items: center;
+             padding: 0px 12px 0px 0px;
+         }
+         
+         .products-grid.list-view .product-image {
+             width: 30%;
+             height: 130px;
+             margin-right: 15px;
+             flex-shrink: 0;
+             border-radius: 12px;
+         }
+         
+         .products-grid.list-view .product-content {
+             width: 70%;
+             padding: 0;
+             
+         }
+         
+         .products-grid.list-view .product-title {
+             font-size: 1rem;
+             margin-bottom: 0.3rem;
+             margin-top: 10px;
+         }
+         
+         .products-grid.list-view .product-description {
+             font-size: 0.8rem;
+             margin-bottom: 0.5rem;
+             -webkit-line-clamp: 2;
+         }
+         
+         /* List view'da butonları küçült */
+         .products-grid.list-view .product-actions .btn {
+             font-size: 0.75rem;
+             padding: 0.25rem 0.5rem;
+             margin-right: 0.25rem;
+         }
+         
+         .products-grid.list-view .product-actions .btn i {
+             font-size: 0.8rem;
+         }
+         
+         /* Modal butonları için hover efekti */
+         #addFromModal:hover {
+             background: var(--secondary-color) !important;
+             border-color: var(--secondary-color) !important;
+             transform: translateY(-1px);
+             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+         }
+         
+                 /* Modal iyileştirmeleri */
+        .cursor-pointer {
+            cursor: pointer;
+        }
+        
+        .hover-bg-light:hover {
+            background-color: #f8f9fa !important;
+        }
+        
+        /* Aktif siparişler scroll alanı */
+        #activeOrdersList {
+            scrollbar-width: thin;
+            scrollbar-color: var(--primary-color) #f1f1f1;
+        }
+        
+        #activeOrdersList::-webkit-scrollbar {
+            width: 6px;
+        }
+        
+        #activeOrdersList::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 3px;
+        }
+        
+        #activeOrdersList::-webkit-scrollbar-thumb {
+            background: var(--primary-color);
+            border-radius: 3px;
+        }
+        
+        #activeOrdersList::-webkit-scrollbar-thumb:hover {
+            background: var(--secondary-color);
+        }
+
+        
+        .category-nav-container {
+            display: flex;
+            overflow-x: auto;
+            padding: 0 10px;
+            gap: 8px;
+            scrollbar-width: none;
+            -ms-overflow-style: none;
+            height: 100%;
+            align-items: center;
+            scroll-behavior: smooth;
+            white-space: nowrap;
+        }
+        
+        .category-nav-container::-webkit-scrollbar {
+            display: none;
+        }
+        
+        .category-nav-item {
+            flex-shrink: 0;
+            padding: 6px 12px;
+            background: #f8f9fa;
+            border-radius: 15px;
+            font-size: 12px;
+            font-weight: 500;
+            color: #6b7280;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            border: 1px solid transparent;
+            white-space: nowrap;
+            min-height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            user-select: none;
+        }
+        
+        .category-nav-item:hover {
+            background: var(--primary-color);
+            color: white;
+            transform: translateY(-1px);
+        }
+        
+        .category-nav-item.active {
+            background: var(--primary-color);
+            color: white;
+            border-color: var(--primary-color);
+            box-shadow: 0 2px 8px rgba(99, 102, 241, 0.3);
+        }
+        
+        .category-nav-item span {
+            font-size: 12px;
+            font-weight: 500;
+        }
+    </style>
+
+    <script>
+        // Rating stars functionality
+        document.querySelectorAll('.star-rating').forEach(star => {
+            star.addEventListener('click', function() {
+                const rating = this.dataset.rating;
+                document.getElementById('selectedRating').value = rating;
+                
+                document.querySelectorAll('.star-rating').forEach((s, index) => {
+                    if (index < rating) {
+                        s.classList.add('active');
+                        s.classList.remove('bi-star');
+                        s.classList.add('bi-star-fill');
+                    } else {
+                        s.classList.remove('active');
+                        s.classList.remove('bi-star-fill');
+                        s.classList.add('bi-star');
+                    }
+                });
+            });
+        });
+
+        // Social sharing functions
+        function shareOnFacebook() {
+            const url = encodeURIComponent(window.location.href);
+            window.open(`https://www.facebook.com/sharer/sharer.php?u=${url}`, '_blank');
+        }
+
+        function shareOnTwitter() {
+            const url = encodeURIComponent(window.location.href);
+            const text = encodeURIComponent(`{{ $restaurant->name }} menüsüne göz atın!`);
+            window.open(`https://twitter.com/intent/tweet?url=${url}&text=${text}`, '_blank');
+        }
+
+        function shareOnWhatsApp() {
+            const url = encodeURIComponent(window.location.href);
+            const text = encodeURIComponent(`{{ $restaurant->name }} menüsüne göz atın! ${window.location.href}`);
+            window.open(`https://wa.me/?text=${text}`, '_blank');
+        }
+
+        function copyLink() {
+            navigator.clipboard.writeText(window.location.href).then(() => {
+                alert('Link kopyalandı!');
+            });
+        }
+
+        function scrollToTop() {
+            window.scrollTo({ 
+                top: 0, 
+                behavior: 'smooth' 
+            });
+        }
+
+        function goToHome() {
+            // Ana sayfaya git (kategorileri göster)
+            document.getElementById('categoryGrid').style.display = 'block';
+            document.getElementById('menuContent').style.display = 'none';
+            document.getElementById('backToCategoriesBtn').style.display = 'none';
+            
+            // URL hash'i temizle
+            window.location.hash = '';
+            
+            // "Tümü" kategorisini bul
+            const allCategoryItem = document.querySelector('.category-nav-item[data-category="all"]');
+            if (allCategoryItem) {
+                // Önce tüm kategori nav item'larından active class'ını kaldır
+                document.querySelectorAll('.category-nav-item').forEach(item => {
+                    if (item !== allCategoryItem) {
+                        item.classList.remove('active');
+                    }
+                });
+                
+                // Sonra "Tümü" kategorisine active class'ını ekle
+                allCategoryItem.classList.add('active');
+            }
+            
+            // Sayfanın en üstüne git
+            scrollToTop();
+        }
+        
+        function showCategory(categorySlug) {
+            // Kategori gridini gizle, menüyü göster
+            document.getElementById('categoryGrid').style.display = 'none';
+            document.getElementById('menuContent').style.display = 'block';
+            document.getElementById('backToCategoriesBtn').style.display = 'block';
+            
+            // URL hash'i güncelle
+            window.location.hash = '#category-' + categorySlug;
+        }
+        
+        function showAllCategories() {
+            // Kategori gridini gizle, menüyü göster
+            document.getElementById('categoryGrid').style.display = 'none';
+            document.getElementById('menuContent').style.display = 'block';
+            document.getElementById('backToCategoriesBtn').style.display = 'block';
+            
+            // Tüm kategorileri göster
+            document.querySelectorAll('.category-section').forEach(section => {
+                section.style.display = 'block';
+            });
+            
+            // URL hash'i temizle
+            window.location.hash = '';
+            
+            // Sayfanın en üstüne git
+            window.scrollTo({
+                top: 0,
+                behavior: 'smooth'
+            });
+        }
+
+        // Layout toggle functions - sadece ürünler için
+        function toggleLayout(layoutType) {
+            const productGrids = document.querySelectorAll('.products-grid:not(#categoryGrid .products-grid)');
+            const toggleButtons = document.querySelectorAll('.layout-toggle-btn');
+            
+            // Remove active class from all buttons
+            toggleButtons.forEach(btn => btn.classList.remove('active'));
+            
+            productGrids.forEach(grid => {
+                if (layoutType === 'grid') {
+                    grid.classList.remove('list-view');
+                    grid.classList.add('grid-view');
+                } else {
+                    grid.classList.remove('grid-view');
+                    grid.classList.add('list-view');
+                }
+            });
+            
+            document.querySelector('[data-layout="' + layoutType + '"]').classList.add('active');
+            localStorage.setItem('qrmenu_layout', layoutType);
+        }
+        
+        // Load saved layout
+        function loadSavedLayout() {
+            const savedLayout = localStorage.getItem('qrmenu_layout') || 'grid';
+            toggleLayout(savedLayout);
+        }
+        
+
+
+        // Kategori navigasyon fonksiyonları
+        document.addEventListener('DOMContentLoaded', function() {
+            // Load saved layout
+            loadSavedLayout();
+            
+            // Layout toggle buttons event listeners
+            document.querySelectorAll('.layout-toggle-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const layout = this.dataset.layout;
+                    toggleLayout(layout);
+                });
+            });
+            
+
+            
+            // Kategori navigasyon item'larına click event ekle
+            document.querySelectorAll('.category-nav-item').forEach(item => {
+                item.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    const category = this.dataset.category;
+                    
+                    // Önce tüm kategori nav item'larından active class'ını kaldır
+                    document.querySelectorAll('.category-nav-item').forEach(navItem => {
+                        if (navItem !== this) {
+                            navItem.classList.remove('active');
+                        }
+                    });
+                    
+                    // Sonra tıklanan kategoriye active class'ını ekle
+                    this.classList.add('active');
+                    
+                    if (category === 'all') {
+                        // Tümü seçilirse tüm kategorileri göster
+                        showAllCategories();
+                    } else {
+                        // Belirli kategori seçilirse o kategoriye git
+                        showCategory(category);
+                        
+                        // Kategorinin bulunduğu yere scroll et
+                        const categoryElement = document.getElementById('category-' + category);
+                        if (categoryElement) {
+                            const offset = 100; // Category nav menu yüksekliği
+                            const elementPosition = categoryElement.offsetTop;
+                            const offsetPosition = elementPosition - offset;
+                            
+                            window.scrollTo({
+                                top: offsetPosition,
+                                behavior: 'smooth'
+                            });
+                        }
+                    }
+                });
+            });
+            
+                    // Scroll ile aktif kategoriyi belirle
+        let ticking = false;
+        
+        function updateActiveCategory() {
+            const scrollPosition = window.scrollY + 150; // Category nav offset - biraz daha yukarıdan başla
+            const categories = document.querySelectorAll('.category-section');
+            let activeCategory = 'all';
+            
+            categories.forEach(category => {
+                const categoryTop = category.offsetTop;
+                const categoryBottom = categoryTop + category.offsetHeight;
+                
+                if (scrollPosition >= categoryTop && scrollPosition < categoryBottom) {
+                    activeCategory = category.id.replace('category-', '');
+                }
+            });
+            
+            // Aktif kategoriyi bul
+            const activeNavItem = document.querySelector(`[data-category="${activeCategory}"]`);
+            if (activeNavItem) {
+                // Önce tüm kategori nav item'larından active class'ını kaldır
+                document.querySelectorAll('.category-nav-item').forEach(item => {
+                    if (item !== activeNavItem) {
+                        item.classList.remove('active');
+                    }
+                });
+                
+                // Sonra aktif kategoriye active class'ını ekle
+                activeNavItem.classList.add('active');
+                
+                // Aktif kategoriyi görünür alana getir (sadece kategori nav menüsünde)
+                const categoryNavMenu = document.querySelector('.category-nav-menu');
+                if (categoryNavMenu) {
+                    const navContainer = categoryNavMenu.querySelector('.category-nav-container');
+                    const itemRect = activeNavItem.getBoundingClientRect();
+                    const containerRect = navContainer.getBoundingClientRect();
+                    
+                    if (itemRect.left < containerRect.left || itemRect.right > containerRect.right) {
+                        navContainer.scrollTo({
+                            left: activeNavItem.offsetLeft - (navContainer.offsetWidth / 2) + (activeNavItem.offsetWidth / 2),
+                            behavior: 'smooth'
+                        });
+                    }
+                }
+            }
+            
+            ticking = false;
+        }
+        
+        function requestTick() {
+            if (!ticking) {
+                requestAnimationFrame(updateActiveCategory);
+                ticking = true;
+            }
+        }
+        
+        window.addEventListener('scroll', requestTick);
+        
+        // Masaüstü ve tablette header'ı kaydırma sırasında gizle
+        if (window.innerWidth >= 768) {
+            let lastScrollTop = 0;
+            const header = document.querySelector('.mobile-screen .restaurant-header');
+            const mobileScreen = document.querySelector('.mobile-screen');
+            
+            mobileScreen.addEventListener('scroll', function() {
+                const scrollTop = mobileScreen.scrollTop;
+                
+                if (scrollTop > lastScrollTop && scrollTop > 50) {
+                    // Aşağı kaydırma - header'ı gizle
+                    header.classList.add('header-hidden');
+                } else if (scrollTop < lastScrollTop) {
+                    // Yukarı kaydırma - header'ı göster
+                    header.classList.remove('header-hidden');
+                }
+                
+                lastScrollTop = scrollTop;
+            });
+        }
+        });
+
+        // Review form submission
+        document.getElementById('reviewForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const rating = document.getElementById('selectedRating').value;
+            if (rating == 0) {
+                alert('Lütfen bir puan seçin!');
+                return;
+            }
+            
+            // Form verilerini gönder
+            const formData = new FormData(this);
+            
+            fetch(this.action, {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert('Değerlendirmeniz için teşekkürler!');
+                    bootstrap.Modal.getInstance(document.getElementById('reviewModal')).hide();
+                    // Formu temizle
+                    this.reset();
+                    document.getElementById('selectedRating').value = 0;
+                    document.querySelectorAll('.star-rating').forEach(star => {
+                        star.classList.remove('active');
+                    });
+                } else {
+                    alert('Bir hata oluştu. Lütfen tekrar deneyin.');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Bir hata oluştu. Lütfen tekrar deneyin.');
+            });
+        });
+        
+        // Modaldan kategori seçimi
+        function scrollToCategoryFromModal(categorySlug) {
+            // Modalı kapat
+            bootstrap.Modal.getInstance(document.getElementById('categoriesModal')).hide();
+            
+            // Kategori gridini gizle, menüyü göster
+            document.getElementById('categoryGrid').style.display = 'none';
+            document.getElementById('menuContent').style.display = 'block';
+            document.getElementById('backToCategoriesBtn').style.display = 'block';
+            
+            // Tüm kategorileri göster
+            document.querySelectorAll('.category-section').forEach(section => {
+                section.style.display = 'block';
+            });
+            
+            // Kategori navigasyonunda ilgili kategoriyi aktif yap
+            document.querySelectorAll('.category-nav-item').forEach(item => {
+                item.classList.remove('active');
+            });
+            const categoryNavItem = document.querySelector(`[data-category="${categorySlug}"]`);
+            if (categoryNavItem) {
+                categoryNavItem.classList.add('active');
+            }
+            
+            // Kategorinin bulunduğu yere scroll et
+            setTimeout(() => {
+                const categoryElement = document.getElementById('category-' + categorySlug);
+                if (categoryElement) {
+                    const offset = 120;
+                    const elementPosition = categoryElement.offsetTop;
+                    const offsetPosition = elementPosition - offset;
+                    
+                    window.scrollTo({
+                        top: offsetPosition,
+                        behavior: 'smooth'
+                    });
+                }
+            }, 300);
+        }
+        </script>
+        
+        @if($restaurant->translation_enabled)
+        <script>
+            let currentLanguage = '{{ $restaurant->default_language ?? "tr" }}';
+            const supportedLanguages = @json($restaurant->supported_languages ?? ['tr']);
+            
+            // Aktif dili güncelle
+            function updateActiveLanguage() {
+                // Tüm check işaretlerini gizle
+                document.querySelectorAll('.language-check').forEach(check => {
+                    check.style.display = 'none';
+                });
+                
+                // Aktif dilin check işaretini göster
+                const activeCheck = document.getElementById('check-' + currentLanguage);
+                if (activeCheck) {
+                    activeCheck.style.display = 'block';
+                }
+            }
+
+            // Dil değiştirme fonksiyonu
+            async function changeLanguage(targetLang) {
+                if (targetLang === currentLanguage) {
+                    return;
+                }
+
+                try {
+                    // Loading göster
+                    const currentLanguageSpan = document.getElementById('currentLanguage');
+                    if (currentLanguageSpan) {
+                        currentLanguageSpan.innerHTML = '<i class="bi bi-arrow-clockwise spin"></i> Çevriliyor...';
+                    }
+
+                    // Sayfa içeriğini çevir
+                    await translatePageContent(targetLang);
+                    
+                    // Dil seçiciyi güncelle
+                    updateLanguageSelector(targetLang);
+                    
+                    // Dil değişkenini güncelle
+                    currentLanguage = targetLang;
+                    
+                    // Aktif dil işaretini güncelle
+                    updateActiveLanguage();
+                    
+                    // LocalStorage'a kaydet
+                    localStorage.setItem('selectedLanguage', targetLang);
+                    
+                } catch (error) {
+                    console.error('Dil değiştirme hatası:', error);
+                    // Hata durumunda orijinal metni geri yükle
+                    if (currentLanguageSpan) {
+                        updateLanguageSelector(currentLanguage);
+                    }
+                }
+            }
+
+            // Sayfa içeriğini çevir
+            async function translatePageContent(targetLang = currentLanguage) {
+                const elementsToTranslate = document.querySelectorAll('[data-translate]');
+                
+                for (let element of elementsToTranslate) {
+                    const originalText = element.getAttribute('data-original-text') || element.textContent.trim();
+                    
+                    // Orijinal metni kaydet (ilk kez çeviriliyorsa)
+                    if (!element.getAttribute('data-original-text')) {
+                        element.setAttribute('data-original-text', originalText);
+                    }
+                    
+                    // Çeviri yap
+                    const translatedText = await translateText(originalText, targetLang);
+                    if (translatedText && translatedText !== originalText) {
+                        element.textContent = translatedText;
+                    }
+                }
+
+                // Placeholder'ları çevir
+                const placeholdersToTranslate = document.querySelectorAll('[data-translate-placeholder]');
+                for (let element of placeholdersToTranslate) {
+                    const originalPlaceholder = element.getAttribute('data-original-placeholder') || element.placeholder;
+                    
+                    if (!element.getAttribute('data-original-placeholder')) {
+                        element.setAttribute('data-original-placeholder', originalPlaceholder);
+                    }
+                    
+                    const translatedPlaceholder = await translateText(originalPlaceholder, targetLang);
+                    if (translatedPlaceholder && translatedPlaceholder !== originalPlaceholder) {
+                        element.placeholder = translatedPlaceholder;
+                    }
+                }
+            }
+
+            // Cache'den çevirileri yükle
+            function loadCachedTranslations(targetLang) {
+                const elementsToTranslate = document.querySelectorAll('[data-translate]');
+                elementsToTranslate.forEach(element => {
+                    const originalText = element.getAttribute('data-original-text') || element.textContent.trim();
+                    if (!element.getAttribute('data-original-text')) {
+                        element.setAttribute('data-original-text', originalText);
+                    }
+                    
+                    const cacheKey = `translation_${targetLang}_${originalText}`;
+                    const cachedTranslation = localStorage.getItem(cacheKey);
+                    if (cachedTranslation) {
+                        element.textContent = cachedTranslation;
+                    }
+                });
+
+                const placeholdersToTranslate = document.querySelectorAll('[data-translate-placeholder]');
+                placeholdersToTranslate.forEach(element => {
+                    const originalPlaceholder = element.getAttribute('data-original-placeholder') || element.placeholder;
+                    if (!element.getAttribute('data-original-placeholder')) {
+                        element.setAttribute('data-original-placeholder', originalPlaceholder);
+                    }
+                    
+                    const cacheKey = `translation_${targetLang}_${originalPlaceholder}`;
+                    const cachedTranslation = localStorage.getItem(cacheKey);
+                    if (cachedTranslation) {
+                        element.placeholder = cachedTranslation;
+                    }
+                });
+            }
+
+            // Google Translate API ile çeviri
+            async function translateText(text, targetLang) {
+                if (!text || text.trim() === '' || targetLang === 'tr') return text;
+                
+                // Önce cache'den kontrol et
+                const cacheKey = `translation_${targetLang}_${text}`;
+                const cachedTranslation = localStorage.getItem(cacheKey);
+                if (cachedTranslation) {
+                    return cachedTranslation;
+                }
+                
+                try {
+                    const response = await fetch(`https://translate.googleapis.com/translate_a/single?client=gtx&sl=tr&tl=${targetLang}&dt=t&q=${encodeURIComponent(text)}`);
+                    const data = await response.json();
+                    
+                    if (data && data[0]) {
+                        // Tüm çeviri parçalarını birleştir
+                        let translatedText = '';
+                        for (let i = 0; i < data[0].length; i++) {
+                            if (data[0][i] && data[0][i][0]) {
+                                translatedText += data[0][i][0];
+                            }
+                        }
+                        
+                        if (translatedText.trim()) {
+                            // Cache'e kaydet
+                            localStorage.setItem(cacheKey, translatedText);
+                            return translatedText;
+                        }
+                    }
+                    
+                    return text;
+                } catch (error) {
+                    console.error('Çeviri hatası:', error);
+                    return text;
+                }
+            }
+
+            // Dil seçiciyi güncelle
+            function updateLanguageSelector(targetLang) {
+                const currentLanguageSpan = document.getElementById('currentLanguage');
+                if (currentLanguageSpan) {
+                    const languages = {
+                        'tr': 'Türkçe',
+                        'en': 'English',
+                        'de': 'Deutsch',
+                        'fr': 'Français',
+                        'es': 'Español',
+                        'it': 'Italiano',
+                        'ru': 'Русский',
+                        'ar': 'العربية',
+                        'zh': '中文',
+                        'ja': '日本語'
+                    };
+                    currentLanguageSpan.textContent = languages[targetLang] || targetLang;
+                }
+            }
+
+            // Sayfa yüklendiğinde kaydedilmiş dili yükle
+            document.addEventListener('DOMContentLoaded', function() {
+                const savedLanguage = localStorage.getItem('selectedLanguage');
+                if (savedLanguage && supportedLanguages.includes(savedLanguage) && savedLanguage !== 'tr') {
+                    // Cache'den çevirileri yükle
+                    loadCachedTranslations(savedLanguage);
+                    updateLanguageSelector(savedLanguage);
+                    currentLanguage = savedLanguage;
+                    updateActiveLanguage();
+                } else {
+                    updateActiveLanguage();
+                }
+                
+                // Dil seçeneklerine event listener ekle
+                document.querySelectorAll('.language-option').forEach(option => {
+                    option.addEventListener('click', function(e) {
+                        e.preventDefault();
+                        const selectedLang = this.getAttribute('data-lang');
+                        changeLanguage(selectedLang);
+                    });
+                });
+            });
+        </script>
+        @endif
+        </div>
+    </div>
 </body>
 </html>

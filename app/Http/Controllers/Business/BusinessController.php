@@ -330,20 +330,104 @@ class BusinessController extends Controller
             'name' => 'required|string|max:150',
             'description' => 'nullable|string',
             'phone' => 'nullable|string|max:20',
+            'email' => 'nullable|email|max:255',
+            'website' => 'nullable|url|max:255',
+            'facebook' => 'nullable|url|max:255',
+            'instagram' => 'nullable|url|max:255',
+            'twitter' => 'nullable|url|max:255',
+            'youtube' => 'nullable|url|max:255',
+            'linkedin' => 'nullable|url|max:255',
+            'whatsapp' => 'nullable|string|max:20',
             'address' => 'nullable|string',
             'table_count' => 'required|integer|min:1|max:100',
             'restaurant_manager_id' => 'nullable|exists:users,id',
             'logo' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+            'working_hours_text' => 'nullable|string',
+            'primary_color' => 'nullable|string|max:7',
+            'secondary_color' => 'nullable|string|max:7',
+            'translation_enabled' => 'nullable|boolean',
+            'default_language' => 'nullable|string|max:10',
+            'supported_languages' => 'nullable|array',
+            'remove_logo' => 'nullable|boolean',
         ]);
 
-        $data = $request->except('logo');
-        if ($request->hasFile('logo')) {
+        $data = $request->except(['logo', 'remove_logo']);
+        
+        // Çeviri ayarlarını işle
+        $data['translation_enabled'] = $request->boolean('translation_enabled');
+        $data['default_language'] = $request->default_language ?? 'tr';
+        $data['supported_languages'] = $request->supported_languages ?? ['tr'];
+        
+        // Logo işlemleri
+        if ($request->boolean('remove_logo')) {
+            if ($restaurant->logo) {
+                Storage::disk('public')->delete($restaurant->logo);
+                $data['logo'] = null;
+            }
+        } elseif ($request->hasFile('logo')) {
+            if ($restaurant->logo) {
+                Storage::disk('public')->delete($restaurant->logo);
+            }
             $data['logo'] = $request->file('logo')->store('restaurants', 'public');
         }
+        
+
 
         $restaurant->update($data);
 
         return redirect()->route('business.restaurants.show', $restaurant->id)
             ->with('success', 'Restoran güncellendi');
+    }
+
+    /**
+     * Show restaurant reviews
+     */
+    public function reviews(Restaurant $restaurant)
+    {
+        $user = Auth::user();
+        if (!$user->canAccessRestaurant($restaurant)) {
+            abort(403);
+        }
+
+        $reviews = $restaurant->reviews()
+            ->with('restaurant')
+            ->orderBy('created_at', 'desc')
+            ->paginate(20);
+
+        return view('business.reviews', compact('restaurant', 'reviews'));
+    }
+
+    /**
+     * Approve review
+     */
+    public function approveReview(Request $request, $reviewId)
+    {
+        $review = \App\Models\Review::findOrFail($reviewId);
+        $user = Auth::user();
+        
+        if (!$user->canAccessRestaurant($review->restaurant)) {
+            abort(403);
+        }
+
+        $review->update(['is_approved' => true]);
+
+        return response()->json(['success' => true]);
+    }
+
+    /**
+     * Delete review
+     */
+    public function deleteReview($reviewId)
+    {
+        $review = \App\Models\Review::findOrFail($reviewId);
+        $user = Auth::user();
+        
+        if (!$user->canAccessRestaurant($review->restaurant)) {
+            abort(403);
+        }
+
+        $review->delete();
+
+        return response()->json(['success' => true]);
     }
 }

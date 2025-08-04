@@ -17,11 +17,26 @@ class Restaurant extends Model
         'slug',
         'description',
         'logo',
+        'header_image',
+        'primary_color',
+        'secondary_color',
         'phone',
+        'email',
+        'website',
+        'facebook',
+        'instagram',
+        'twitter',
+        'youtube',
+        'linkedin',
+        'whatsapp',
+        'working_hours_text',
         'address',
         'table_count',
         'working_hours',
         'is_active',
+        'translation_enabled',
+        'default_language',
+        'supported_languages',
         'custom_domain',
         'subdomain',
         'instagram',
@@ -36,7 +51,9 @@ class Restaurant extends Model
 
     protected $casts = [
         'is_active' => 'boolean',
+        'translation_enabled' => 'boolean',
         'working_hours' => 'array',
+        'supported_languages' => 'array',
     ];
 
     protected static function boot()
@@ -102,6 +119,26 @@ class Restaurant extends Model
     public function orderSettings()
     {
         return $this->hasOne(RestaurantOrderSettings::class);
+    }
+
+    public function reviews()
+    {
+        return $this->hasMany(Review::class);
+    }
+
+    public function approvedReviews()
+    {
+        return $this->hasMany(Review::class)->where('is_approved', true);
+    }
+
+    public function getAverageRatingAttribute()
+    {
+        return $this->approvedReviews()->avg('rating') ?? 0;
+    }
+
+    public function getTotalReviewsAttribute()
+    {
+        return $this->approvedReviews()->count();
     }
 
     public function kitchenViews()
