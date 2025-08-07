@@ -127,18 +127,17 @@
 <script>
 // Arama ve sıralama sistemi
 document.addEventListener('DOMContentLoaded', function() {
-    console.log('JavaScript yüklendi');
+
     
     const searchInput = document.getElementById('searchInput');
     const sortSelect = document.getElementById('sortSelect');
     
-    console.log('Search input bulundu:', searchInput);
-    console.log('Sort select bulundu:', sortSelect);
+   
     
     // Arama fonksiyonu
     if (searchInput) {
         searchInput.addEventListener('input', function() {
-            console.log('Arama yapılıyor:', this.value);
+
             const searchTerm = this.value.toLowerCase();
             const rows = document.querySelectorAll('tbody tr');
             
@@ -162,7 +161,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // Sıralama fonksiyonu
     if (sortSelect) {
         sortSelect.addEventListener('change', function() {
-            console.log('Sıralama değişti:', this.value);
+
             const sortOrder = this.value;
             const tbody = document.querySelector('tbody');
             const rows = Array.from(tbody.querySelectorAll('tr'));
@@ -194,4 +193,4 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 });
-</script> 
+</script>

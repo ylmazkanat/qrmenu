@@ -87,14 +87,7 @@ class RestaurantPanelController extends Controller
             ->latest()
             ->get();
 
-        // Debug için
-        \Log::info('Waiter Panel Debug', [
-            'user_id' => $user->id,
-            'restaurant_id' => $restaurant->id,
-            'total_orders' => $restaurant->orders()->count(),
-            'my_orders_count' => $myOrders->count(),
-            'my_orders_ids' => $myOrders->pluck('id')->toArray(),
-        ]);
+
 
         return view('restaurant.waiter', compact('restaurant', 'categories', 'products', 'tables', 'activeOrders', 'readyOrders', 'myOrders'));
     }

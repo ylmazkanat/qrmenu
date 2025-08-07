@@ -1003,7 +1003,7 @@ document.querySelectorAll('.category-checkbox').forEach(checkbox => {
 
 // QR Kod Modal'ı göster - Basit ve güvenilir yöntem
 function showTableQR(tableNumber, tableUrl) {
-    console.log('showTableQR çağrıldı:', tableNumber, tableUrl);
+    
     
     try {
         // Modal elementlerini kontrol et
@@ -1034,7 +1034,7 @@ function showTableQR(tableNumber, tableUrl) {
 
 // Basit ve güvenilir QR kod oluşturma
 function generateSimpleQR(qrContainer, tableUrl, tableNumber) {
-    console.log('Basit QR kod oluşturuluyor:', tableUrl);
+    
     
     // Loading göster
     qrContainer.innerHTML = '<div class="text-center py-4"><div class="spinner-border text-primary" role="status"></div><br><small class="text-muted mt-2">QR kod oluşturuluyor...</small></div>';
@@ -1050,7 +1050,7 @@ function generateSimpleQR(qrContainer, tableUrl, tableNumber) {
     img.crossOrigin = 'anonymous';
     
     img.onload = () => {
-        console.log('QR kod başarıyla yüklendi');
+        
         
         // QR kod konteynerini temizle ve resmi ekle
         qrContainer.innerHTML = '';
@@ -1100,7 +1100,7 @@ function tryAlternativeQR(qrContainer, tableUrl, tableNumber) {
         img.crossOrigin = 'anonymous';
         
         img.onload = () => {
-            console.log('Alternatif QR API başarılı:', alternativeUrls[currentIndex]);
+            
             qrContainer.innerHTML = '';
             qrContainer.appendChild(img);
             setupSimpleDownload(img, tableNumber);
@@ -1167,7 +1167,7 @@ function setupSimpleDownload(img, tableNumber) {
                 link.click();
                 document.body.removeChild(link);
                 
-                console.log('QR kod indirildi:', link.download);
+        
                 
             } catch (error) {
                 console.error('Download hatası:', error);
@@ -1262,4 +1262,4 @@ function showCopySuccess() {
 <!-- QR kod için harici kütüphane gerekmez - API tabanlı sistem -->
 
 @endsection
-@endsection 
+@endsection

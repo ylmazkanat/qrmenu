@@ -679,14 +679,12 @@
         // Polling başlat (sayfa görünürlüğüne göre ayarlanacak)
         pollingInterval = setInterval(checkReadyOrders, 8000); // 8 saniye başlangıç
         
-        console.log('🚀 Gelişmiş garson bildirim sistemi başlatıldı');
-        console.log('📱 Arka plan bildirimleri aktif');
-        console.log('🔊 Sesli uyarılar hazır');
+
         
         // Test bildirimi (sadece geliştirme için)
         if (window.location.hostname === '127.0.0.1') {
             setTimeout(() => {
-                console.log('Test modu: Bildirim sistemi çalışıyor ✅');
+    
             }, 3000);
         }
     });
@@ -703,7 +701,7 @@
 
     // Ses test fonksiyonu
     function testNotificationSound() {
-        console.log('🧪 Ses test edildi');
+        
         playNotificationSound();
         
         // Test toast göster
@@ -741,7 +739,7 @@
             // İlk kullanıcı etkileşiminde test et
             document.addEventListener('click', function testAudioOnce() {
                 setTimeout(() => {
-                    console.log('🔧 Ses sistemi test ediliyor...');
+            
                     
                     // Sessiz test (volume 0)
                     const originalVolume = notificationAudio.volume;
@@ -754,7 +752,7 @@
                             .then(() => {
                                 notificationAudio.pause();
                                 notificationAudio.volume = originalVolume;
-                                console.log('✅ Ses sistemi hazır ve test edildi');
+                        
                             })
                             .catch((error) => {
                                 notificationAudio.volume = originalVolume;
@@ -851,4 +849,4 @@ document.getElementById('quickTableForm').addEventListener('submit', function(e)
 });
 </script>
 
-@endsection 
+@endsection

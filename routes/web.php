@@ -2,7 +2,9 @@
 
 use App\Http\Controllers\Auth\AuthController;
 use App\Http\Controllers\Admin\AdminController;
+use App\Http\Controllers\Admin\PackageController as AdminPackageController;
 use App\Http\Controllers\Business\BusinessController;
+use App\Http\Controllers\Business\PackageController as BusinessPackageController;
 use App\Http\Controllers\Restaurant\RestaurantPanelController;
 use App\Http\Controllers\Menu\MenuController;
 use Illuminate\Support\Facades\Route;
@@ -46,6 +48,9 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     Route::get('/users', [AdminController::class, 'users'])->name('users');
     Route::get('/users/{user}/impersonate', [AdminController::class, 'impersonate'])->name('users.impersonate');
     Route::get('/analytics', [AdminController::class, 'analytics'])->name('analytics');
+    
+    // Paket Yönetimi
+    Route::resource('packages', AdminPackageController::class);
 });
 
 // 🏢 2. BUSINESS PANEL (İşletme Sahibi)
@@ -69,6 +74,14 @@ Route::middleware(['auth', 'role:business_owner'])->prefix('business')->name('bu
     Route::get('/restaurants/{restaurant}/reviews', [BusinessController::class, 'reviews'])->name('restaurants.reviews');
     Route::post('/reviews/{review}/approve', [BusinessController::class, 'approveReview'])->name('reviews.approve');
     Route::delete('/reviews/{review}', [BusinessController::class, 'deleteReview'])->name('reviews.delete');
+    
+    // Paket Yönetimi
+    Route::get('/packages', [BusinessPackageController::class, 'index'])->name('packages.index');
+    Route::post('/packages/{package}/subscribe', [BusinessPackageController::class, 'subscribe'])->name('packages.subscribe');
+    Route::post('/packages/{package}/upgrade', [BusinessPackageController::class, 'upgrade'])->name('packages.upgrade');
+    Route::post('/packages/cancel', [BusinessPackageController::class, 'cancel'])->name('packages.cancel');
+    Route::get('/packages/payment/{subscription}/{amount}', [BusinessPackageController::class, 'showPaymentForm'])->name('packages.payment.form');
+    Route::post('/packages/payment/{subscription}/{amount}', [BusinessPackageController::class, 'processPayment'])->name('packages.payment');
 });
 
 // 🍽️ 3. RESTAURANT PANEL (Restoran Operasyonları) - Basitleştirilmiş

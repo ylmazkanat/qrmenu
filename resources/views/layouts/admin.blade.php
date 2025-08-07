@@ -31,6 +31,12 @@
         </a>
     </div>
     <div class="nav-item">
+        <a href="{{ route('admin.packages.index') }}" class="nav-link">
+            <i class="bi bi-box-seam"></i>
+            Paket Yönetimi
+        </a>
+    </div>
+    <div class="nav-item">
         <a href="{{ route('admin.analytics') }}" class="nav-link">
             <i class="bi bi-graph-up"></i>
             Sistem İstatistikleri

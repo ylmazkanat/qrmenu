@@ -31,6 +31,12 @@
         </a>
     </div>
     <div class="nav-item">
+        <a href="{{ route('business.packages.index') }}" class="nav-link">
+            <i class="bi bi-box-seam"></i>
+            Paketim
+        </a>
+    </div>
+    <div class="nav-item">
         <a href="{{ route('business.analytics') }}" class="nav-link">
             <i class="bi bi-graph-up"></i>
             İstatistikler
