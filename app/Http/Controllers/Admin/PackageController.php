@@ -8,6 +8,7 @@ use App\Models\PackageFeature;
 use App\Models\BusinessSubscription;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
+use Illuminate\Support\Facades\DB;
 
 class PackageController extends Controller
 {
@@ -26,12 +27,26 @@ class PackageController extends Controller
             ->orderBy('sort_order')
             ->get();
         
-        // Ek veriler
+        // Ek veriler - Her işletmenin sadece son aktif aboneliğini göster
+        $activeSubscriptions = BusinessSubscription::with(['business', 'package'])
+            ->whereIn('id', function($query) {
+                $query->select(DB::raw('MAX(id)'))
+                    ->from('business_subscriptions')
+                    ->where('status', 'active')
+                    ->groupBy('business_id');
+            })
+            ->orderBy('created_at', 'desc')
+            ->get();
+            
+        // Tüm abonelik logları (silme işlemi için)
         $subscriptions = BusinessSubscription::with(['business', 'package'])->orderBy('created_at', 'desc')->get();
+        $businesses = \App\Models\Business::orderBy('name')->get();
         
-        // Günlük kazançlar
+        // Günlük kazançlar - iptal edilenler ve ödeme bekleyenler hariç
         $dailyEarnings = BusinessSubscription::selectRaw('DATE(payment_date) as date, SUM(amount_paid) as total')
             ->whereNotNull('payment_date')
+            ->where('is_paid', true)
+            ->whereNotIn('status', ['cancelled', 'pending_payment'])
             ->where('payment_date', '>=', now()->subDays(30))
             ->groupBy('date')
             ->orderBy('date', 'desc')
@@ -39,16 +54,23 @@ class PackageController extends Controller
         
         $monthlyEarnings = BusinessSubscription::selectRaw('YEAR(payment_date) as year, MONTH(payment_date) as month, SUM(amount_paid) as total')
             ->whereNotNull('payment_date')
+            ->where('is_paid', true)
+            ->whereNotIn('status', ['cancelled', 'pending_payment'])
             ->groupBy('year', 'month')
             ->orderBy('year', 'desc')
             ->orderBy('month', 'desc')
             ->get();
         $annualEarnings = BusinessSubscription::selectRaw('YEAR(payment_date) as year, SUM(amount_paid) as total')
             ->whereNotNull('payment_date')
+            ->where('is_paid', true)
+            ->whereNotIn('status', ['cancelled', 'pending_payment'])
             ->groupBy('year')
             ->orderBy('year', 'desc')
             ->get();
-        $totalEarnings = BusinessSubscription::whereNotNull('payment_date')->sum('amount_paid');
+        $totalEarnings = BusinessSubscription::whereNotNull('payment_date')
+            ->where('is_paid', true)
+            ->whereNotIn('status', ['cancelled', 'pending_payment'])
+            ->sum('amount_paid');
         
         // Grafik verileri
         $chartData = [
@@ -65,7 +87,13 @@ class PackageController extends Controller
         
         
         
-        return view('admin.packages.index', compact('packages', 'subscriptions', 'monthlyEarnings', 'annualEarnings', 'totalEarnings', 'chartData'));
+        // Dashboard istatistikleri için ek hesaplamalar
+        $activeSubscriptionsCount = BusinessSubscription::where('status', '!=', 'cancelled')->count();
+        $pendingPaymentsCount = BusinessSubscription::where('status', '!=', 'cancelled')
+            ->where('is_paid', false)
+            ->count();
+        
+        return view('admin.packages.index', compact('packages', 'subscriptions', 'activeSubscriptions', 'businesses', 'monthlyEarnings', 'annualEarnings', 'totalEarnings', 'chartData', 'activeSubscriptionsCount', 'pendingPaymentsCount'));
     }
 
     public function create()
@@ -87,12 +115,12 @@ class PackageController extends Controller
                 'type' => 'number'
             ],
             'max_products' => [
-                'name' => 'Maksimum Ürün Sayısı',
+                'name' => 'Restoran Maksimum Ürün Limiti',
                 'description' => 'Her restoran için maksimum ürün sayısı',
                 'type' => 'number'
             ],
             'max_categories' => [
-                'name' => 'Maksimum Kategori Sayısı',
+                'name' => 'Restoran Maksimum Kategori Limiti',
                 'description' => 'Her restoran için maksimum kategori sayısı',
                 'type' => 'number'
             ],
@@ -184,8 +212,8 @@ class PackageController extends Controller
                 'max_restaurants' => 'Maksimum Restoran Sayısı',
                 'max_managers' => 'Maksimum Müdür Hesabı',
                 'max_staff' => 'Maksimum Çalışan Sayısı',
-                'max_products' => 'Maksimum Ürün Sayısı',
-                'max_categories' => 'Maksimum Kategori Sayısı',
+                'max_products' => 'Restoran Maksimum Ürün Limiti',
+                'max_categories' => 'Restoran Maksimum Kategori Limiti',
                 'custom_domain' => 'Özel Domain Desteği',
                 'analytics' => 'Analitik Raporları',
                 'multi_language' => 'Çoklu Dil Desteği',
@@ -257,12 +285,12 @@ class PackageController extends Controller
                 'type' => 'number'
             ],
             'max_products' => [
-                'name' => 'Maksimum Ürün Sayısı',
+                'name' => 'Restoran Maksimum Ürün Limiti',
                 'description' => 'Her restoran için maksimum ürün sayısı',
                 'type' => 'number'
             ],
             'max_categories' => [
-                'name' => 'Maksimum Kategori Sayısı',
+                'name' => 'Restoran Maksimum Kategori Limiti',
                 'description' => 'Her restoran için maksimum kategori sayısı',
                 'type' => 'number'
             ],
@@ -411,5 +439,73 @@ class PackageController extends Controller
 
         $package->delete();
         return redirect()->route('admin.packages.index')->with('success', 'Paket başarıyla silindi.');
+    }
+    
+    public function addSubscription(Request $request)
+    {
+        $request->validate([
+            'business_id' => 'required|exists:businesses,id',
+            'package_id' => 'required|exists:packages,id',
+            'expires_at' => 'required|date|after:today',
+            'amount_paid' => 'required|numeric|min:0',
+            'payment_date' => 'nullable|date',
+            'status' => 'required|in:active,inactive,expired'
+        ]);
+        
+        DB::transaction(function () use ($request) {
+            // Bu işletmenin TÜM aktif aboneliklerini iptal et
+            BusinessSubscription::where('business_id', $request->business_id)
+                ->whereIn('status', ['active', 'pending_cancellation'])
+                ->update([
+                    'status' => 'cancelled',
+                    'cancelled_at' => now()
+                ]);
+            
+            // Yeni abonelik oluştur
+            BusinessSubscription::create([
+                'business_id' => $request->business_id,
+                'package_id' => $request->package_id,
+                'status' => $request->status,
+                'started_at' => now(),
+                'expires_at' => $request->expires_at,
+                'amount_paid' => $request->amount_paid,
+                'payment_date' => $request->payment_date,
+                'payment_method' => 'admin_manual',
+                'transaction_id' => 'ADMIN_' . time(),
+                'is_paid' => $request->payment_date ? true : false
+            ]);
+        });
+        
+        return back()->with('success', 'Abonelik başarıyla oluşturuldu. Eski abonelikler iptal edildi.');
+    }
+    
+    public function updateSubscription(Request $request, $id)
+    {
+        $request->validate([
+            'expires_at' => 'required|date',
+            'amount_paid' => 'required|numeric|min:0',
+            'payment_date' => 'nullable|date',
+            'status' => 'required|in:active,inactive,expired,pending_cancellation'
+        ]);
+        
+        $subscription = BusinessSubscription::findOrFail($id);
+        
+        $subscription->update([
+            'expires_at' => $request->expires_at,
+            'amount_paid' => $request->amount_paid,
+            'payment_date' => $request->payment_date,
+            'status' => $request->status,
+            'is_paid' => $request->payment_date ? true : false
+        ]);
+        
+        return back()->with('success', 'Abonelik başarıyla güncellendi.');
+    }
+    
+    public function deleteSubscription($id)
+    {
+        $subscription = BusinessSubscription::findOrFail($id);
+        $subscription->delete();
+        
+        return back()->with('success', 'Abonelik logu başarıyla silindi.');
     }
 }

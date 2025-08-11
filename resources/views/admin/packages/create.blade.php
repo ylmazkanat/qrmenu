@@ -134,7 +134,7 @@
                             </div>
                             <div class="col-md-6">
                                 <div class="form-group">
-                                    <label for="feature_max_products">Maksimum Ürün Sayısı</label>
+                                    <label for="feature_max_products">Restoran Maksimum Ürün Limiti</label>
                                     <input type="number" class="form-control" id="feature_max_products" 
                                            name="feature_max_products" value="{{ old('feature_max_products', 0) }}" min="0">
                                     <small class="form-text text-muted">0 = Sınırsız</small>
@@ -144,7 +144,7 @@
                         <div class="row">
                             <div class="col-md-6">
                                 <div class="form-group">
-                                    <label for="feature_max_categories">Maksimum Kategori Sayısı</label>
+                                    <label for="feature_max_categories">Restoran Maksimum Kategori Limiti</label>
                                     <input type="number" class="form-control" id="feature_max_categories" 
                                            name="feature_max_categories" value="{{ old('feature_max_categories', 0) }}" min="0">
                                     <small class="form-text text-muted">0 = Sınırsız</small>
@@ -270,4 +270,4 @@ $(document).ready(function() {
     updateSummary();
 });
 </script>
-@endsection 
+@endsection

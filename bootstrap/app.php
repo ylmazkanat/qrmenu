@@ -14,6 +14,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'role' => \App\Http\Middleware\RoleMiddleware::class,
             'package.limits' => \App\Http\Middleware\CheckPackageLimits::class,
+            'resource.limits' => \App\Http\Middleware\CheckResourceLimits::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

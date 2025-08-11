@@ -4,8 +4,9 @@
 @section('page-title', 'Restoran Düzenle')
 
 @section('content')
-    <div class="row justify-content-center">
-        <div class="col-lg-8">
+    <div class="container-fluid px-4 py-3">
+        <div class="row justify-content-center">
+        <div class="col-lg-12">
             <div class="content-card">
                 <div class="card-header">
                     <h5 class="card-title">
@@ -264,48 +265,42 @@
                             </div>
                         </div>
 
+                        <!-- Ek Ayarlar -->
+                        <div class="card mt-4">
+                            <div class="card-header">
+                                <h6 class="card-title mb-0">
+                                    <i class="bi bi-gear me-2"></i>
+                                    Ek Ayarlar
+                                </h6>
+                            </div>
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col-md-4 mb-3">
+                                        <label for="color_primary" class="form-label">Ana Renk</label>
+                                        <input type="color" class="form-control form-control-color" id="color_primary" name="color_primary" value="{{ old('color_primary', $restaurant->color_primary ?? '#FFD600') }}">
+                                    </div>
+                                    <div class="col-md-4 mb-3">
+                                        <label for="color_secondary" class="form-label">İkincil Renk</label>
+                                        <input type="color" class="form-control form-control-color" id="color_secondary" name="color_secondary" value="{{ old('color_secondary', $restaurant->color_secondary ?? '#000000') }}">
+                                    </div>
+                                    <div class="col-md-4 mb-3">
+                                        <label for="color_cart" class="form-label">Sepet Rengi</label>
+                                        <input type="color" class="form-control form-control-color" id="color_cart" name="color_cart" value="{{ old('color_cart', $restaurant->color_cart ?? '#00C853') }}">
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-12 mb-3">
+                                        <label for="wifi_password" class="form-label">Wifi Şifresi</label>
+                                        <input type="text" class="form-control" id="wifi_password" name="wifi_password" value="{{ old('wifi_password', $restaurant->wifi_password) }}" placeholder="Wifi Şifresi">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
                         <!-- Hidden inputs for remove actions -->
                         <input type="hidden" id="remove_logo" name="remove_logo" value="0">
                         
-                        <div class="d-flex justify-content-between">
-                        <div class="row mb-3">
-                            <div class="col-md-6 mb-3">
-                                <label for="instagram" class="form-label">Instagram</label>
-                                <input type="text" class="form-control" id="instagram" name="instagram" value="{{ old('instagram', $restaurant->instagram) }}" placeholder="Instagram URL">
-                            </div>
-                            <div class="col-md-6 mb-3">
-                                <label for="whatsapp" class="form-label">WhatsApp</label>
-                                <input type="text" class="form-control" id="whatsapp" name="whatsapp" value="{{ old('whatsapp', $restaurant->whatsapp) }}" placeholder="WhatsApp URL">
-                            </div>
-                        </div>
-                        <div class="row mb-3">
-                            <div class="col-md-6 mb-3">
-                                <label for="twitter" class="form-label">Twitter</label>
-                                <input type="text" class="form-control" id="twitter" name="twitter" value="{{ old('twitter', $restaurant->twitter) }}" placeholder="Twitter URL">
-                            </div>
-                            <div class="col-md-6 mb-3">
-                                <label for="facebook" class="form-label">Facebook</label>
-                                <input type="text" class="form-control" id="facebook" name="facebook" value="{{ old('facebook', $restaurant->facebook) }}" placeholder="Facebook URL">
-                            </div>
-                        </div>
-                        <div class="row mb-3">
-                            <div class="col-md-4 mb-3">
-                                <label for="color_primary" class="form-label">1. Renk (Üst)</label>
-                                <input type="color" class="form-control form-control-color" id="color_primary" name="color_primary" value="{{ old('color_primary', $restaurant->color_primary ?? '#FFD600') }}">
-                            </div>
-                            <div class="col-md-4 mb-3">
-                                <label for="color_secondary" class="form-label">2. Renk (Alt)</label>
-                                <input type="color" class="form-control form-control-color" id="color_secondary" name="color_secondary" value="{{ old('color_secondary', $restaurant->color_secondary ?? '#000000') }}">
-                            </div>
-                            <div class="col-md-4 mb-3">
-                                <label for="color_cart" class="form-label">Sepet Rengi</label>
-                                <input type="color" class="form-control form-control-color" id="color_cart" name="color_cart" value="{{ old('color_cart', $restaurant->color_cart ?? '#00C853') }}">
-                            </div>
-                        </div>
-                        <div class="mb-3">
-                            <label for="wifi_password" class="form-label">Wifi Şifresi</label>
-                            <input type="text" class="form-control" id="wifi_password" name="wifi_password" value="{{ old('wifi_password', $restaurant->wifi_password) }}" placeholder="Wifi Şifresi">
-                        </div>
+                        <div class="d-flex justify-content-between mt-4">
                             <a href="{{ route('business.restaurants.show', $restaurant->id) }}" class="btn btn-outline-secondary">
                                 <i class="bi bi-arrow-left"></i> Geri Dön
                             </a>
@@ -317,6 +312,7 @@
                 </div>
             </div>
         </div>
+    </div>
     </div>
 @endsection
 

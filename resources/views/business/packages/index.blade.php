@@ -1,7 +1,35 @@
 @extends('layouts.business')
 
 @section('content')
-<div class="container py-5">
+<style>
+    .packages-container {
+        max-width: 100%;
+        margin: 0;
+        padding: 0;
+    }
+    
+    .packages-row {
+        margin-left: 0;
+        margin-right: 0;
+    }
+    
+    .package-col {
+        padding-left: 0.75rem;
+        padding-right: 0.75rem;
+    }
+    
+    .current-subscription-card {
+        margin-left: 0;
+        margin-right: 0;
+        margin-bottom: 2rem;
+    }
+    
+    .subscription-history-table {
+        margin-left: 0;
+        margin-right: 0;
+    }
+</style>
+<div class="container-fluid px-4 py-5">
     <h1 class="mb-4">Kullanılabilir Paketler</h1>
     
     @if(session('warning'))
@@ -22,12 +50,12 @@
         </div>
     @endif
     @if($currentSubscription)
-        <div class="card mb-5 shadow">
+        <div class="card mb-5 shadow current-subscription-card">
             <div class="card-header bg-success text-white">
                 <h4 class="mb-0">Mevcut Paketiniz: {{ $currentSubscription->package->name }}</h4>
             </div>
             <div class="card-body">
-                <div class="row">
+                <div class="row packages-row">
                     <div class="col-md-3">
                         <p><strong>Açıklama:</strong> {{ $currentSubscription->package->description ?? 'Standart özellikler' }}</p>
                     </div>
@@ -56,32 +84,92 @@
                     </div>
                 </div>
                 <h5 class="mt-4">Özellik Kullanım Durumu</h5>
-                <div class="row">
-                    @foreach($currentSubscription->package->packageFeatures->where('is_enabled', true) as $feature)
-                        <div class="col-md-4 mb-2">
-                            <span class="badge bg-success">
-                                <i class="fas fa-check me-1"></i>
-                                {{ $feature->feature_name }} :
-                                @if($feature->limit_value && $feature->limit_value > 0)
+                <div class="row packages-row">
+                    @foreach($currentSubscription->package->packageFeatures as $feature)
+                        @php
+                            // Sayısal limitler (max_ ile başlayanlar)
+                            $isNumericLimit = in_array($feature->feature_key, ['max_restaurants', 'max_managers', 'max_staff', 'max_products', 'max_categories']);
+                            
+                            // Sayısal limitler için mevcut koşulları koru
+                            if($isNumericLimit) {
+                                $shouldShow = $feature->is_enabled;
+                            } else {
+                                // Diğer özellikler için tümünü göster (0 ve 1 dahil)
+                                $shouldShow = true;
+                            }
+                        @endphp
+                        
+                        @if($shouldShow)
+                            <div class="col-md-4 mb-2">
+                                @if($feature->is_coming_soon)
+                                    <span class="badge bg-secondary">
+                                        <i class="fas fa-clock me-1"></i>
+                                        {{ $feature->feature_name }} (Yakında)
+                                    </span>
+                                @else
                                     @php
                                         $usage = 0;
+                                        $displayText = '';
+                                        $featureName = '';
+                                        
                                         switch($feature->feature_key) {
-                                            case 'max_restaurants': $usage = $business->restaurant_count; break;
-                                            case 'max_managers': $usage = $business->manager_count; break;
-                                            case 'max_staff': $usage = $business->staff_count; break;
-                                            case 'max_products': $usage = $business->product_count; break;
-                                            case 'max_categories': $usage = $business->category_count; break;
-                                            // Ek kullanım hesaplamaları eklenebilir
+                                            case 'max_restaurants': 
+                                                $featureName = 'Maksimum Restoran Sayısı';
+                                                $usage = $business->restaurant_count; 
+                                                break;
+                                            case 'max_managers': 
+                                                $featureName = 'Maksimum Müdür Hesabı';
+                                                $usage = $business->manager_count; 
+                                                break;
+                                            case 'max_staff': 
+                                                $featureName = 'Maksimum Çalışan Sayısı';
+                                                $usage = $business->staff_count; 
+                                                break;
+                                            case 'max_products': 
+                                                $featureName = 'Restoran Maksimum Ürün Limiti';
+                                                break;
+                                            case 'max_categories': 
+                                                $featureName = 'Restoran Maksimum Kategori Limiti';
+                                                break;
+                                            default:
+                                                $featureName = $feature->feature_name;
+                                        }
+                                        
+                                        if($isNumericLimit) {
+                                            // Sayısal limitler için yeşil badge ve mevcut gösterim
+                                            $badgeClass = 'bg-success';
+                                            $iconClass = 'fas fa-check';
+                                            if($feature->limit_value && $feature->limit_value > 0) {
+                                                if(in_array($feature->feature_key, ['max_restaurants', 'max_managers', 'max_staff'])) {
+                                                    $displayText = $featureName . ': ' . $usage . ' / ' . $feature->limit_value;
+                                                } else {
+                                                    $displayText = $featureName . ': ' . $feature->limit_value;
+                                                }
+                                            } elseif($feature->limit_value == 0 || $feature->isUnlimited()) {
+                                                $displayText = $featureName . ': Sınırsız';
+                                            } else {
+                                                $displayText = $featureName . ': Etkin';
+                                            }
+                                        } else {
+                                            // Diğer özellikler için renk ve ikon belirleme
+                                            if($feature->limit_value == 1) {
+                                                $badgeClass = 'bg-success';
+                                                $iconClass = 'fas fa-check';
+                                            } else {
+                                                $badgeClass = 'bg-danger';
+                                                $iconClass = 'fas fa-times';
+                                            }
+                                            $displayText = $featureName;
                                         }
                                     @endphp
-                                    {{ $usage }} / {{ $feature->limit_value }}
-                                @elseif($feature->isUnlimited())
-                                    Sınırsız
-                                @else
-                                    Etkin
+                                    
+                                    <span class="badge {{ $badgeClass }}">
+                                        <i class="{{ $iconClass }} me-1"></i>
+                                        {{ $displayText }}
+                                    </span>
                                 @endif
-                            </span>
-                        </div>
+                            </div>
+                        @endif
                     @endforeach
                 </div>
             </div>
@@ -89,7 +177,7 @@
     @endif
     <div class="row">
         @foreach($packages as $package)
-            <div class="col-md-6 mb-4">
+            <div class="col-md-6 mb-4 package-col">
                 <div class="card h-100 shadow @if($currentSubscription && $currentSubscription->package_id == $package->id) border-success @else border-success @endif">
                     <div class="card-header bg-success text-white text-center">
                         <h5 class="mb-0">{{ $package->name }} @if($package->is_popular)<span class="badge bg-warning text-dark">Popüler</span>@endif</h5>
@@ -101,19 +189,83 @@
                         </div>
                         <div class="row">
                             @foreach($package->packageFeatures as $feature)
-                                @if($feature->is_enabled)
+                                @php
+                                    // Sayısal limitler (max_ ile başlayanlar)
+                                    $isNumericLimit = in_array($feature->feature_key, ['max_restaurants', 'max_managers', 'max_staff', 'max_products', 'max_categories']);
+                                    
+                                    // Sayısal limitler için mevcut koşulları koru
+                                    if($isNumericLimit) {
+                                        $shouldShow = $feature->is_enabled || $feature->limit_value == 0 || $feature->isUnlimited();
+                                    } else {
+                                        // Diğer özellikler için tümünü göster (0 ve 1 dahil)
+                                        $shouldShow = true;
+                                    }
+                                @endphp
+                                
+                                @if($shouldShow)
                                     <div class="col-6 mb-2">
-                                        <span class="badge bg-success">
-                                            <i class="fas fa-check me-1"></i>
-                                            {{ $feature->feature_name }} :
-                                            @if($feature->limit_value && $feature->limit_value > 0)
-                                                {{ $feature->limit_value }}
-                                            @elseif($feature->isUnlimited())
-                                                Sınırsız
-                                            @else
-                                                Etkin
-                                            @endif
-                                        </span>
+                                        @if($feature->is_coming_soon)
+                                            <span class="badge bg-secondary">
+                                                <i class="fas fa-clock me-1"></i>
+                                                {{ $feature->feature_name }}
+                                            </span>
+                                        @else
+                                            @php
+                                                switch($feature->feature_key) {
+                                                    case 'max_restaurants': 
+                                                        $displayText = 'Maksimum Restoran Sayısı';
+                                                        break;
+                                                    case 'max_managers': 
+                                                        $displayText = 'Maksimum Müdür Hesabı';
+                                                        break;
+                                                    case 'max_staff': 
+                                                        $displayText = 'Maksimum Çalışan Sayısı';
+                                                        break;
+                                                    case 'max_products': 
+                                                        $displayText = 'Restoran Maksimum Ürün Limiti';
+                                                        break;
+                                                    case 'max_categories': 
+                                                        $displayText = 'Restoran Maksimum Kategori Limiti';
+                                                        break;
+                                                    default:
+                                                        $displayText = $feature->feature_name;
+                                                }
+                                                
+                                                if($isNumericLimit) {
+                                                    // Sayısal limitler için yeşil badge ve mevcut gösterim
+                                                    $badgeClass = 'bg-success';
+                                                    $iconClass = 'fas fa-check';
+                                                } else {
+                                                    // Diğer özellikler için renk ve ikon belirleme
+                                                    if($feature->limit_value == 1) {
+                                                        $badgeClass = 'bg-success';
+                                                        $iconClass = 'fas fa-check';
+                                                    } else {
+                                                        $badgeClass = 'bg-danger';
+                                                        $iconClass = 'fas fa-times';
+                                                    }
+                                                }
+                                            @endphp
+                                            
+                                            <span class="badge {{ $badgeClass }}">
+                                                <i class="{{ $iconClass }} me-1"></i>
+                                                
+                                                @if($isNumericLimit)
+                                                    {{-- Sayısal limitler için mevcut gösterim --}}
+                                                    {{ $displayText }} :
+                                                    @if($feature->limit_value && $feature->limit_value > 0)
+                                                        {{ $feature->limit_value }}
+                                                    @elseif($feature->limit_value == 0 || $feature->isUnlimited())
+                                                        Sınırsız
+                                                    @else
+                                                        Etkin
+                                                    @endif
+                                                @else
+                                                    {{-- Diğer özellikler için sadece başlık --}}
+                                                    {{ $displayText }}
+                                                @endif
+                                            </span>
+                                        @endif
                                     </div>
                                 @endif
                             @endforeach
@@ -143,7 +295,7 @@
 
     @if($subscriptionHistory->count() > 0)
         <h2 class="mt-5">Eski Paket Hareketleri</h2>
-        <table class="table table-bordered">
+        <table class="table table-bordered subscription-history-table">
             <thead>
                 <tr>
                     <th>Paket</th>

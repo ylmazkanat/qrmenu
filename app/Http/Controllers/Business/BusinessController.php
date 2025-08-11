@@ -84,6 +84,21 @@ class BusinessController extends Controller
         $user = Auth::user();
         $business = $user->getActiveBusinesses()->first();
         
+        // Paket limitlerini kontrol et
+        if (!$business->hasActiveSubscription()) {
+            return redirect()->route('business.packages.index')
+                ->with('error', 'Restoran oluşturmak için aktif bir paket aboneliğiniz olması gerekiyor.');
+        }
+        
+        // Restoran sayısı limitini kontrol et
+        $maxRestaurants = $business->getFeatureLimit('max_restaurants');
+        $currentRestaurantCount = $business->restaurant_count;
+        
+        if ($maxRestaurants !== null && $maxRestaurants !== 0 && $currentRestaurantCount >= $maxRestaurants) {
+            return redirect()->route('business.packages.index')
+                ->with('error', 'Maksimum restoran sayısına ulaştınız. Daha fazla restoran eklemek için paketinizi yükseltmelisiniz.');
+        }
+        
         $request->validate([
             'name' => 'required|string|max:150',
             'description' => 'nullable|string',
@@ -106,6 +121,17 @@ class BusinessController extends Controller
 
         // Restoran yöneticisini staff olarak ekle
         if ($request->restaurant_manager_id) {
+            // Müdür sayısı limitini kontrol et
+            $maxManagers = $business->getFeatureLimit('max_managers');
+            $currentManagerCount = $business->manager_count;
+            
+            if ($maxManagers !== null && $maxManagers !== 0 && $currentManagerCount >= $maxManagers) {
+                // Restoranı sil ve hata mesajı göster
+                $restaurant->delete();
+                return redirect()->route('business.packages.index')
+                    ->with('error', 'Maksimum müdür sayısına ulaştınız. Daha fazla müdür eklemek için paketinizi yükseltmelisiniz.');
+            }
+            
             RestaurantStaff::create([
                 'restaurant_id' => $restaurant->id,
                 'user_id' => $request->restaurant_manager_id,
@@ -270,6 +296,25 @@ class BusinessController extends Controller
         $restaurant = Restaurant::findOrFail($request->restaurant_id);
         if ($restaurant->business_id !== $business->id) {
             return redirect()->back()->with('error', 'Restoran bu işletmeye ait değil');
+        }
+        
+        // Paket limitlerini kontrol et
+        if ($request->role === 'restaurant_manager') {
+            $maxManagers = $business->getFeatureLimit('max_managers');
+            $currentManagerCount = $business->manager_count;
+            
+            if ($maxManagers !== null && $maxManagers !== 0 && $currentManagerCount >= $maxManagers) {
+                return redirect()->back()
+                    ->with('error', 'Maksimum müdür sayısına ulaştınız. Daha fazla müdür eklemek için paketinizi yükseltmelisiniz.');
+            }
+        } elseif ($request->role === 'waiter' || $request->role === 'kitchen' || $request->role === 'cashier') {
+            $maxStaff = $business->getFeatureLimit('max_staff');
+            $currentStaffCount = $business->staff_count;
+            
+            if ($maxStaff !== null && $maxStaff !== 0 && $currentStaffCount >= $maxStaff) {
+                return redirect()->back()
+                    ->with('error', 'Maksimum personel sayısına ulaştınız. Daha fazla personel eklemek için paketinizi yükseltmelisiniz.');
+            }
         }
 
         // Kullanıcıyı bul veya oluştur

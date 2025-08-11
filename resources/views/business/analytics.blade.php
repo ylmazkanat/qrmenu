@@ -4,6 +4,7 @@
 @section('page-title', 'İstatistikler')
 
 @section('content')
+<div class="container-fluid px-4 py-3">
     <!-- İstatistik Kartları -->
     <div class="row mb-4">
         <div class="col-lg-3 col-md-6 mb-4">
@@ -190,7 +191,7 @@
                         <div class="d-flex justify-content-between align-items-center mb-2">
                             <span class="text-muted">Ortalama Sipariş Tutarı:</span>
                             <strong class="text-info">
-                                @if($stats['total_orders'] > 0)
+                                @if($stats['monthly_orders'] > 0)
                                     ₺{{ number_format($stats['monthly_revenue'] / $stats['monthly_orders'], 2) }}
                                 @else
                                     ₺0.00
@@ -227,6 +228,7 @@
             </div>
         </div>
     </div>
+</div>
 @endsection
 
 @section('scripts')
@@ -306,4 +308,4 @@
         }
     });
 </script>
-@endsection 
+@endsection

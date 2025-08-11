@@ -14,12 +14,14 @@ class PackageFeature extends Model
         'description',
         'limit_value',
         'is_enabled',
-        'sort_order'
+        'sort_order',
+        'is_coming_soon'
     ];
 
     protected $casts = [
         'limit_value' => 'integer',
-        'is_enabled' => 'boolean'
+        'is_enabled' => 'boolean',
+        'is_coming_soon' => 'boolean'
     ];
 
     public function package(): BelongsTo

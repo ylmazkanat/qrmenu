@@ -51,6 +51,9 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     
     // Paket Yönetimi
     Route::resource('packages', AdminPackageController::class);
+    Route::post('/packages/add-subscription', [AdminPackageController::class, 'addSubscription'])->name('packages.add-subscription');
+    Route::put('/packages/subscriptions/{id}', [AdminPackageController::class, 'updateSubscription'])->name('packages.update-subscription');
+    Route::delete('/packages/subscriptions/{id}', [AdminPackageController::class, 'deleteSubscription'])->name('packages.delete-subscription');
 });
 
 // 🏢 2. BUSINESS PANEL (İşletme Sahibi)

@@ -70,7 +70,10 @@ class Business extends Model
 
     public function activeSubscription(): HasOne
     {
-        return $this->hasOne(BusinessSubscription::class)->where('status', 'active');
+        return $this->hasOne(BusinessSubscription::class)
+            ->where('status', 'active')
+            ->where('expires_at', '>', now())
+            ->orderBy('created_at', 'desc');
     }
 
     // Yardımcı metodlar

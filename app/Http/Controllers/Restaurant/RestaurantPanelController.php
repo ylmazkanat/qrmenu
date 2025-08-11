@@ -578,12 +578,50 @@ class RestaurantPanelController extends Controller
         if (!$restaurant) {
             return response()->json(['success' => false, 'message' => 'Bu restorana erişim yetkiniz yok.'], 403);
         }
+        
+        // İşletmenin paket limitlerini kontrol et
+        $business = $restaurant->business;
+        if (!$business->hasActiveSubscription()) {
+            return response()->json(['success' => false, 'message' => 'Kategori eklemek için aktif bir paket aboneliğiniz olması gerekiyor.'], 403);
+        }
+        
+        // Kategori sayısı limitini kontrol et - Restoran bazında
+        $maxCategories = $business->getFeatureLimit('max_categories');
+        $currentCategoryCount = $restaurant->categories()->count();
+        
+        if ($maxCategories !== null && $maxCategories !== 0 && $currentCategoryCount >= $maxCategories) {
+            return response()->json([
+                'success' => false, 
+                'message' => 'Paket limitine ulaştınız lütfen işletmeniz ile görüşünüz'
+            ], 403);
+        }
+        
+        // Aynı isimli kategori kontrolü
+        $categoryExists = $restaurant->categories()->where('name', $request->name)->exists();
+        if ($categoryExists) {
+            return response()->json([
+                'success' => false, 
+                'message' => 'Bu isimde bir kategori zaten mevcut!'
+            ], 400);
+        }
 
         $request->validate([
             'name' => 'required|string|max:100',
             'sort_order' => 'nullable|integer|min:0',
             'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
         ]);
+
+        // Aynı isimli kategori kontrolü (kendi hariç)
+        $categoryExists = $restaurant->categories()
+            ->where('name', $request->name)
+            ->where('id', '!=', $category->id)
+            ->exists();
+        if ($categoryExists) {
+            return response()->json([
+                'success' => false, 
+                'message' => 'Bu isimde bir kategori zaten mevcut!'
+            ], 400);
+        }
 
         $data = [
             'name' => $request->name,
@@ -704,6 +742,23 @@ class RestaurantPanelController extends Controller
 
         if (!$restaurant) {
             return response()->json(['success' => false, 'message' => 'Bu restorana erişim yetkiniz yok.'], 403);
+        }
+        
+        // İşletmenin paket limitlerini kontrol et
+        $business = $restaurant->business;
+        if (!$business->hasActiveSubscription()) {
+            return response()->json(['success' => false, 'message' => 'Ürün eklemek için aktif bir paket aboneliğiniz olması gerekiyor.'], 403);
+        }
+        
+        // Ürün sayısı limitini kontrol et - Restoran bazında
+        $maxProducts = $business->getFeatureLimit('max_products');
+        $currentProductCount = $restaurant->products()->count();
+        
+        if ($maxProducts !== null && $maxProducts !== 0 && $currentProductCount >= $maxProducts) {
+            return response()->json([
+                'success' => false, 
+                'message' => 'Paket limitine ulaştınız lütfen işletmeniz ile görüşünüz'
+            ], 403);
         }
 
         $request->validate([

@@ -4,8 +4,9 @@
 @section('page-title', 'Yeni Restoran Oluştur')
 
 @section('content')
+<div class="container-fluid px-4 py-3">
     <div class="row justify-content-center">
-        <div class="col-lg-8">
+        <div class="col-lg-12">
             <div class="content-card">
                 <div class="card-header">
                     <h5 class="card-title">
@@ -108,4 +109,5 @@
             </div>
         </div>
     </div>
-@endsection 
+</div>
+@endsection

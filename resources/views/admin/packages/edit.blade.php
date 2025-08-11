@@ -138,7 +138,7 @@
                             </div>
                             <div class="col-md-6">
                                 <div class="form-group">
-                                    <label for="feature_max_products">Maksimum Ürün Sayısı</label>
+                                    <label for="feature_max_products">Restoran Maksimum Ürün Limiti</label>
                                     <input type="number" class="form-control" id="feature_max_products" 
                                            name="feature_max_products" 
                                            value="{{ old('feature_max_products', $features->get('max_products') ? $features->get('max_products')->limit_value : 0) }}" min="0">
@@ -149,7 +149,7 @@
                         <div class="row">
                             <div class="col-md-6">
                                 <div class="form-group">
-                                    <label for="feature_max_categories">Maksimum Kategori Sayısı</label>
+                                    <label for="feature_max_categories">Restoran Maksimum Kategori Limiti</label>
                                     <input type="number" class="form-control" id="feature_max_categories" 
                                            name="feature_max_categories" 
                                            value="{{ old('feature_max_categories', $features->get('max_categories') ? $features->get('max_categories')->limit_value : 0) }}" min="0">
@@ -281,4 +281,4 @@ $(document).ready(function() {
     updateSummary();
 });
 </script>
-@endsection 
+@endsection

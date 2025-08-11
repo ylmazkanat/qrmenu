@@ -55,18 +55,13 @@ class PackageSeeder extends Seeder
             ['feature_key' => 'max_restaurants', 'feature_name' => 'Maksimum Restoran Sayısı', 'limit_value' => 1],
             ['feature_key' => 'max_managers', 'feature_name' => 'Maksimum Müdür Hesabı', 'limit_value' => 1],
             ['feature_key' => 'max_staff', 'feature_name' => 'Maksimum Çalışan Sayısı', 'limit_value' => 5],
-            ['feature_key' => 'max_products', 'feature_name' => 'Maksimum Ürün Sayısı', 'limit_value' => 50],
-            ['feature_key' => 'max_categories', 'feature_name' => 'Maksimum Kategori Sayısı', 'limit_value' => 5],
+            ['feature_key' => 'max_products', 'feature_name' => 'Restoran Maksimum Ürün Limiti', 'limit_value' => 50],
+            ['feature_key' => 'max_categories', 'feature_name' => 'Restoran Maksimum Kategori Limiti', 'limit_value' => 5],
             ['feature_key' => 'custom_domain', 'feature_name' => 'Özel Domain', 'limit_value' => 0],
-            ['feature_key' => 'analytics', 'feature_name' => 'Analitik Raporları', 'limit_value' => 0],
             ['feature_key' => 'multi_language', 'feature_name' => 'Çoklu Dil Desteği', 'limit_value' => 0],
-            ['feature_key' => 'priority_support', 'feature_name' => 'Öncelikli Destek', 'limit_value' => 0],
-            ['feature_key' => 'advanced_menu_editor', 'feature_name' => 'Gelişmiş Menü Editörü', 'limit_value' => 0],
-            ['feature_key' => 'order_management', 'feature_name' => 'Sipariş Yönetimi', 'limit_value' => 0],
             ['feature_key' => 'customer_reviews', 'feature_name' => 'Müşteri Değerlendirmeleri', 'limit_value' => 0],
-            ['feature_key' => 'loyalty_program', 'feature_name' => 'Sadakat Programı', 'limit_value' => 0],
-            ['feature_key' => 'marketing_tools', 'feature_name' => 'Pazarlama Araçları', 'limit_value' => 0],
-            ['feature_key' => 'api_access', 'feature_name' => 'API Erişimi', 'limit_value' => 0],
+            ['feature_key' => 'loyalty_program', 'feature_name' => 'Sadakat Programı (Yakında)', 'limit_value' => 0, 'is_coming_soon' => true],
+            ['feature_key' => 'api_access', 'feature_name' => 'API Erişimi (Yakında)', 'limit_value' => 0, 'is_coming_soon' => true],
         ];
 
         // Standart Paket Özellikleri
@@ -74,18 +69,13 @@ class PackageSeeder extends Seeder
             ['feature_key' => 'max_restaurants', 'feature_name' => 'Maksimum Restoran Sayısı', 'limit_value' => 3],
             ['feature_key' => 'max_managers', 'feature_name' => 'Maksimum Müdür Hesabı', 'limit_value' => 3],
             ['feature_key' => 'max_staff', 'feature_name' => 'Maksimum Çalışan Sayısı', 'limit_value' => 15],
-            ['feature_key' => 'max_products', 'feature_name' => 'Maksimum Ürün Sayısı', 'limit_value' => 200],
-            ['feature_key' => 'max_categories', 'feature_name' => 'Maksimum Kategori Sayısı', 'limit_value' => 15],
+            ['feature_key' => 'max_products', 'feature_name' => 'Restoran Maksimum Ürün Limiti', 'limit_value' => 200],
+            ['feature_key' => 'max_categories', 'feature_name' => 'Restoran Maksimum Kategori Limiti', 'limit_value' => 15],
             ['feature_key' => 'custom_domain', 'feature_name' => 'Özel Domain', 'limit_value' => 1],
-            ['feature_key' => 'analytics', 'feature_name' => 'Analitik Raporları', 'limit_value' => 1],
             ['feature_key' => 'multi_language', 'feature_name' => 'Çoklu Dil Desteği', 'limit_value' => 1],
-            ['feature_key' => 'priority_support', 'feature_name' => 'Öncelikli Destek', 'limit_value' => 0],
-            ['feature_key' => 'advanced_menu_editor', 'feature_name' => 'Gelişmiş Menü Editörü', 'limit_value' => 1],
-            ['feature_key' => 'order_management', 'feature_name' => 'Sipariş Yönetimi', 'limit_value' => 1],
             ['feature_key' => 'customer_reviews', 'feature_name' => 'Müşteri Değerlendirmeleri', 'limit_value' => 1],
-            ['feature_key' => 'loyalty_program', 'feature_name' => 'Sadakat Programı', 'limit_value' => 0],
-            ['feature_key' => 'marketing_tools', 'feature_name' => 'Pazarlama Araçları', 'limit_value' => 0],
-            ['feature_key' => 'api_access', 'feature_name' => 'API Erişimi', 'limit_value' => 0],
+            ['feature_key' => 'loyalty_program', 'feature_name' => 'Sadakat Programı (Yakında)', 'limit_value' => 0, 'is_coming_soon' => true],
+            ['feature_key' => 'api_access', 'feature_name' => 'API Erişimi (Yakında)', 'limit_value' => 0, 'is_coming_soon' => true],
         ];
 
         // Sınırsız Paket Özellikleri
@@ -93,18 +83,13 @@ class PackageSeeder extends Seeder
             ['feature_key' => 'max_restaurants', 'feature_name' => 'Maksimum Restoran Sayısı', 'limit_value' => null],
             ['feature_key' => 'max_managers', 'feature_name' => 'Maksimum Müdür Hesabı', 'limit_value' => null],
             ['feature_key' => 'max_staff', 'feature_name' => 'Maksimum Çalışan Sayısı', 'limit_value' => null],
-            ['feature_key' => 'max_products', 'feature_name' => 'Maksimum Ürün Sayısı', 'limit_value' => null],
-            ['feature_key' => 'max_categories', 'feature_name' => 'Maksimum Kategori Sayısı', 'limit_value' => null],
-            ['feature_key' => 'custom_domain', 'feature_name' => 'Özel Domain', 'limit_value' => null],
-            ['feature_key' => 'analytics', 'feature_name' => 'Analitik Raporları', 'limit_value' => 1],
+            ['feature_key' => 'max_products', 'feature_name' => 'Restoran Maksimum Ürün Limiti', 'limit_value' => null],
+            ['feature_key' => 'max_categories', 'feature_name' => 'Restoran Maksimum Kategori Limiti', 'limit_value' => null],
+            ['feature_key' => 'custom_domain', 'feature_name' => 'Özel Domain', 'limit_value' => 1],
             ['feature_key' => 'multi_language', 'feature_name' => 'Çoklu Dil Desteği', 'limit_value' => 1],
-            ['feature_key' => 'priority_support', 'feature_name' => 'Öncelikli Destek', 'limit_value' => 1],
-            ['feature_key' => 'advanced_menu_editor', 'feature_name' => 'Gelişmiş Menü Editörü', 'limit_value' => 1],
-            ['feature_key' => 'order_management', 'feature_name' => 'Sipariş Yönetimi', 'limit_value' => 1],
             ['feature_key' => 'customer_reviews', 'feature_name' => 'Müşteri Değerlendirmeleri', 'limit_value' => 1],
-            ['feature_key' => 'loyalty_program', 'feature_name' => 'Sadakat Programı', 'limit_value' => 1],
-            ['feature_key' => 'marketing_tools', 'feature_name' => 'Pazarlama Araçları', 'limit_value' => 1],
-            ['feature_key' => 'api_access', 'feature_name' => 'API Erişimi', 'limit_value' => 1],
+            ['feature_key' => 'loyalty_program', 'feature_name' => 'Sadakat Programı (Yakında)', 'limit_value' => 0, 'is_coming_soon' => true],
+            ['feature_key' => 'api_access', 'feature_name' => 'API Erişimi (Yakında)', 'limit_value' => 0, 'is_coming_soon' => true],
         ];
 
         // Özellikleri ekle
@@ -117,6 +102,7 @@ class PackageSeeder extends Seeder
                 'limit_value' => $feature['limit_value'],
                 'is_enabled' => true,
                 'sort_order' => $index + 1,
+                'is_coming_soon' => $feature['is_coming_soon'] ?? false,
             ]);
         }
 
@@ -129,6 +115,7 @@ class PackageSeeder extends Seeder
                 'limit_value' => $feature['limit_value'],
                 'is_enabled' => true,
                 'sort_order' => $index + 1,
+                'is_coming_soon' => $feature['is_coming_soon'] ?? false,
             ]);
         }
 
@@ -141,6 +128,7 @@ class PackageSeeder extends Seeder
                 'limit_value' => $feature['limit_value'],
                 'is_enabled' => true,
                 'sort_order' => $index + 1,
+                'is_coming_soon' => $feature['is_coming_soon'] ?? false,
             ]);
         }
     }
