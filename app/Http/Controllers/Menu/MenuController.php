@@ -19,9 +19,14 @@ class MenuController extends Controller
     {
         $restaurant = Restaurant::where('slug', $slug)
             ->where('is_active', true)
+            ->with(['categories' => function($query) {
+                $query->orderBy('sort_order');
+            }, 'categories.products' => function($query) {
+                $query->where('is_available', true)->orderBy('sort_order');
+            }, 'orderSettings'])
             ->firstOrFail();
 
-        return view('menu.welcome', compact('restaurant'));
+        return view('menu.show', compact('restaurant'));
     }
 
     public function showCategories($slug)

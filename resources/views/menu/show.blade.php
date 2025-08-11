@@ -1153,7 +1153,6 @@
     </script>
 </head>
 <body>
-<<<<<<< HEAD
     <!-- Welcome Screen -->
     <div id="welcomeScreen" class="d-flex flex-column min-vh-100" style="background: linear-gradient(180deg, {{ $restaurant->color_primary ?? '#FFD600' }} 0%, {{ $restaurant->color_secondary ?? '#000' }} 100%);">
         <!-- Social Media Icons Sabit Üstte -->
@@ -1182,27 +1181,8 @@
         <div class="text-warning small mb-2">Wifi Şifresi: {{ $restaurant->wifi_password }}</div>
         @endif
         <!-- Language Selector -->
-        @if(config('app.multilanguage'))
+        @if($restaurant->translation_enabled && $restaurant->supported_languages && count($restaurant->supported_languages) > 1)
         <div class="mb-3" style="width: 220px;">
-            <select id="languageSelect" class="form-select">
-                <option value="tr">🇹🇷 Türkçe</option>
-                <option value="en">🇬🇧 English</option>
-                <!-- Diğer diller dinamik eklenebilir -->
-            </select>
-        </div>
-        @endif
-        <button id="welcomeMenuBtn" class="btn btn-dark w-75 mb-2" style="max-width: 300px; border: 2px solid #FFD600;">
-            Menü
-        </button>
-        <button id="welcomeRateBtn" class="btn btn-outline-light w-75" style="max-width: 300px;">
-            <i class="bi bi-chat-dots"></i> Bizi değerlendirin!
-        </button>
-    </div>
-
-=======
-    <!-- Dil Seçici - En Üst -->
-    @if($restaurant->translation_enabled && $restaurant->supported_languages && count($restaurant->supported_languages) > 1)
-        <div class="language-selector" style="position: absolute; top: 10px; right: 10px; z-index: 9999;">
             <div class="dropdown">
                 <button class="btn btn-language dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
                     <i class="bi bi-translate me-1"></i>
@@ -1236,13 +1216,21 @@
                 </ul>
             </div>
         </div>
-    @endif
+        @endif
+        <button id="welcomeMenuBtn" class="btn btn-dark w-75 mb-2" style="max-width: 300px; border: 2px solid #FFD600;">
+            Menü
+        </button>
+        <button id="welcomeRateBtn" class="btn btn-outline-light w-75" style="max-width: 300px;">
+            <i class="bi bi-chat-dots"></i> Bizi değerlendirin!
+        </button>
+    </div>
+
+
     
     <!-- Mobil telefon container - sadece masaüstü ve tablet için -->
     <div class="mobile-container">
         <div class="bottom-indicator"></div>
         <div class="mobile-screen">
->>>>>>> d865c73b079f592e074f76bde8eb24d8e9364b6b
     <!-- Restaurant Header -->
     <div class="restaurant-header" @if($restaurant->header_image) style="background-image: url('{{ Storage::url($restaurant->header_image) }}'); background-size: cover; background-position: center;" @endif>
         <div class="container">
@@ -2159,10 +2147,6 @@
             if (welcomeMenuBtn) {
                 welcomeMenuBtn.addEventListener('click', function() {
                     showMenu();
-<<<<<<< HEAD
-                });
-            }
-=======
                     const target = document.querySelector(window.location.hash);
                     if (target) {
                         // Tüm kategorileri göster
@@ -2171,11 +2155,8 @@
                         });
                         setTimeout(() => target.scrollIntoView({behavior: 'smooth'}), 300);
                     }
-                } else {
-                    showCategoryGrid();
-                }
-            });
->>>>>>> d865c73b079f592e074f76bde8eb24d8e9364b6b
+                });
+            }
 
             // Değerlendirme butonu (isteğe bağlı yönlendirme)
             const welcomeRateBtn = document.getElementById('welcomeRateBtn');
@@ -2185,14 +2166,7 @@
                 });
             }
 
-            // Dil seçici (isteğe bağlı, backend ile entegre edilebilir)
-            const languageSelect = document.getElementById('languageSelect');
-            if (languageSelect) {
-                languageSelect.addEventListener('change', function() {
-                    // Burada seçilen dile göre sayfa yenileme veya locale değişimi yapılabilir
-                    // window.location.search = '?lang=' + this.value;
-                });
-            }
+
 
             // Kategori grid kartlarına tıklama
             document.querySelectorAll('.category-card').forEach(card => {
@@ -2209,14 +2183,11 @@
                         if (backToCategoriesBtn) backToCategoriesBtn.style.display = 'block';
                         const target = document.getElementById(targetId);
                         if (target) {
-<<<<<<< HEAD
-=======
                             // Tüm kategorileri göster
                             document.querySelectorAll('.category-section').forEach(section => {
                                 section.style.display = 'block';
                             });
                             // Seçilen kategoriye scroll et
->>>>>>> d865c73b079f592e074f76bde8eb24d8e9364b6b
                             setTimeout(() => target.scrollIntoView({behavior: 'smooth'}), 300);
                         }
                     }
