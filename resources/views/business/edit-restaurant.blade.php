@@ -166,27 +166,51 @@
                         </div>
 
                         <!-- Çeviri Ayarları -->
+                        @php
+                            $business = $restaurant->business;
+                            $hasMultiLanguageFeature = $business->canAccessFeature('multi_language');
+                        @endphp
                         <div class="card mt-4">
                             <div class="card-header">
                                 <h6 class="card-title mb-0">
                                     <i class="bi bi-translate me-2"></i>
                                     Çeviri Ayarları
+                                    @if(!$hasMultiLanguageFeature)
+                                        <span class="badge bg-warning ms-2">Paket Özelliği Gerekli</span>
+                                    @endif
                                 </h6>
                             </div>
                             <div class="card-body">
+                                @if(!$hasMultiLanguageFeature)
+                                    <div class="alert alert-warning" role="alert">
+                                        <i class="bi bi-exclamation-triangle me-2"></i>
+                                        <strong>Çoklu Dil Desteği</strong> özelliği mevcut paketinizde bulunmamaktadır. Bu özelliği kullanmak için paketinizi yükseltmeniz gerekmektedir.
+                                        <br><br>
+                                        <a href="{{ route('business.packages.index') }}" class="btn btn-warning btn-sm">
+                                            <i class="bi bi-arrow-up-circle me-1"></i>
+                                            Paketi Yükselt
+                                        </a>
+                                    </div>
+                                @endif
+                                
                                 <div class="row">
                                     <div class="col-md-6 mb-3">
                                         <div class="form-check form-switch">
-                                            <input class="form-check-input" type="checkbox" id="translation_enabled" name="translation_enabled" value="1" {{ old('translation_enabled', $restaurant->translation_enabled) ? 'checked' : '' }}>
+                                            <input class="form-check-input" type="checkbox" id="translation_enabled" name="translation_enabled" value="1" 
+                                                {{ old('translation_enabled', $restaurant->translation_enabled) ? 'checked' : '' }}
+                                                {{ !$hasMultiLanguageFeature ? 'disabled' : '' }}>
                                             <label class="form-check-label" for="translation_enabled">
                                                 <strong>Çeviri Özelliğini Etkinleştir</strong>
+                                                @if(!$hasMultiLanguageFeature)
+                                                    <small class="text-muted">(Paket özelliği gerekli)</small>
+                                                @endif
                                             </label>
                                             <div class="form-text">Menüde dil seçeneği göster ve otomatik çeviri yap</div>
                                         </div>
                                     </div>
                                     <div class="col-md-6 mb-3">
                                         <label for="default_language" class="form-label">Varsayılan Dil</label>
-                                        <select class="form-control" id="default_language" name="default_language">
+                                        <select class="form-control" id="default_language" name="default_language" {{ !$hasMultiLanguageFeature ? 'disabled' : '' }}>
                                             <option value="tr" {{ old('default_language', $restaurant->default_language ?? 'tr') == 'tr' ? 'selected' : '' }}>Türkçe</option>
                                             <option value="en" {{ old('default_language', $restaurant->default_language ?? 'tr') == 'en' ? 'selected' : '' }}>English</option>
                                             <option value="de" {{ old('default_language', $restaurant->default_language ?? 'tr') == 'de' ? 'selected' : '' }}>Deutsch</option>
@@ -212,49 +236,49 @@
                                             @endphp
                                             <div class="col-md-3 mb-2">
                                                 <div class="form-check">
-                                                    <input class="form-check-input" type="checkbox" name="supported_languages[]" value="tr" id="lang_tr" {{ in_array('tr', $supportedLanguages) ? 'checked' : '' }}>
+                                                    <input class="form-check-input" type="checkbox" name="supported_languages[]" value="tr" id="lang_tr" {{ in_array('tr', $supportedLanguages) ? 'checked' : '' }} {{ !$hasMultiLanguageFeature ? 'disabled' : '' }}>
                                                     <label class="form-check-label" for="lang_tr">Türkçe</label>
                                                 </div>
                                             </div>
                                             <div class="col-md-3 mb-2">
                                                 <div class="form-check">
-                                                    <input class="form-check-input" type="checkbox" name="supported_languages[]" value="en" id="lang_en" {{ in_array('en', $supportedLanguages) ? 'checked' : '' }}>
+                                                    <input class="form-check-input" type="checkbox" name="supported_languages[]" value="en" id="lang_en" {{ in_array('en', $supportedLanguages) ? 'checked' : '' }} {{ !$hasMultiLanguageFeature ? 'disabled' : '' }}>
                                                     <label class="form-check-label" for="lang_en">English</label>
                                                 </div>
                                             </div>
                                             <div class="col-md-3 mb-2">
                                                 <div class="form-check">
-                                                    <input class="form-check-input" type="checkbox" name="supported_languages[]" value="de" id="lang_de" {{ in_array('de', $supportedLanguages) ? 'checked' : '' }}>
+                                                    <input class="form-check-input" type="checkbox" name="supported_languages[]" value="de" id="lang_de" {{ in_array('de', $supportedLanguages) ? 'checked' : '' }} {{ !$hasMultiLanguageFeature ? 'disabled' : '' }}>
                                                     <label class="form-check-label" for="lang_de">Deutsch</label>
                                                 </div>
                                             </div>
                                             <div class="col-md-3 mb-2">
                                                 <div class="form-check">
-                                                    <input class="form-check-input" type="checkbox" name="supported_languages[]" value="fr" id="lang_fr" {{ in_array('fr', $supportedLanguages) ? 'checked' : '' }}>
+                                                    <input class="form-check-input" type="checkbox" name="supported_languages[]" value="fr" id="lang_fr" {{ in_array('fr', $supportedLanguages) ? 'checked' : '' }} {{ !$hasMultiLanguageFeature ? 'disabled' : '' }}>
                                                     <label class="form-check-label" for="lang_fr">Français</label>
                                                 </div>
                                             </div>
                                             <div class="col-md-3 mb-2">
                                                 <div class="form-check">
-                                                    <input class="form-check-input" type="checkbox" name="supported_languages[]" value="es" id="lang_es" {{ in_array('es', $supportedLanguages) ? 'checked' : '' }}>
+                                                    <input class="form-check-input" type="checkbox" name="supported_languages[]" value="es" id="lang_es" {{ in_array('es', $supportedLanguages) ? 'checked' : '' }} {{ !$hasMultiLanguageFeature ? 'disabled' : '' }}>
                                                     <label class="form-check-label" for="lang_es">Español</label>
                                                 </div>
                                             </div>
                                             <div class="col-md-3 mb-2">
                                                 <div class="form-check">
-                                                    <input class="form-check-input" type="checkbox" name="supported_languages[]" value="it" id="lang_it" {{ in_array('it', $supportedLanguages) ? 'checked' : '' }}>
+                                                    <input class="form-check-input" type="checkbox" name="supported_languages[]" value="it" id="lang_it" {{ in_array('it', $supportedLanguages) ? 'checked' : '' }} {{ !$hasMultiLanguageFeature ? 'disabled' : '' }}>
                                                     <label class="form-check-label" for="lang_it">Italiano</label>
                                                 </div>
                                             </div>
                                             <div class="col-md-3 mb-2">
                                                 <div class="form-check">
-                                                    <input class="form-check-input" type="checkbox" name="supported_languages[]" value="ru" id="lang_ru" {{ in_array('ru', $supportedLanguages) ? 'checked' : '' }}>
+                                                    <input class="form-check-input" type="checkbox" name="supported_languages[]" value="ru" id="lang_ru" {{ in_array('ru', $supportedLanguages) ? 'checked' : '' }} {{ !$hasMultiLanguageFeature ? 'disabled' : '' }}>
                                                     <label class="form-check-label" for="lang_ru">Русский</label>
                                                 </div>
                                             </div>
                                             <div class="col-md-3 mb-2">
                                                 <div class="form-check">
-                                                    <input class="form-check-input" type="checkbox" name="supported_languages[]" value="ar" id="lang_ar" {{ in_array('ar', $supportedLanguages) ? 'checked' : '' }}>
+                                                    <input class="form-check-input" type="checkbox" name="supported_languages[]" value="ar" id="lang_ar" {{ in_array('ar', $supportedLanguages) ? 'checked' : '' }} {{ !$hasMultiLanguageFeature ? 'disabled' : '' }}>
                                                     <label class="form-check-label" for="lang_ar">العربية</label>
                                                 </div>
                                             </div>

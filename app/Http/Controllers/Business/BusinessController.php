@@ -398,10 +398,20 @@ class BusinessController extends Controller
 
         $data = $request->except(['logo', 'remove_logo']);
         
-        // Çeviri ayarlarını işle
-        $data['translation_enabled'] = $request->boolean('translation_enabled');
-        $data['default_language'] = $request->default_language ?? 'tr';
-        $data['supported_languages'] = $request->supported_languages ?? ['tr'];
+        // Çeviri ayarlarını işle - Paket özelliği kontrolü
+        $business = $restaurant->business;
+        $hasMultiLanguageFeature = $business->canAccessFeature('multi_language');
+        
+        if (!$hasMultiLanguageFeature && $request->boolean('translation_enabled')) {
+            // Paket özelliği yoksa çeviri ayarlarını devre dışı bırak
+            $data['translation_enabled'] = false;
+            $data['default_language'] = 'tr';
+            $data['supported_languages'] = ['tr'];
+        } else {
+            $data['translation_enabled'] = $request->boolean('translation_enabled');
+            $data['default_language'] = $request->default_language ?? 'tr';
+            $data['supported_languages'] = $request->supported_languages ?? ['tr'];
+        }
         
         // Logo işlemleri
         if ($request->boolean('remove_logo')) {
