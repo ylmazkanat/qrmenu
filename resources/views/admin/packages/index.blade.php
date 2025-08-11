@@ -1,7 +1,28 @@
 @extends('layouts.admin')
 
+@section('additional-css')
+<style>
+    /* Bootstrap container gutter düzeltmesi */
+    .container, .container-fluid, .container-lg, .container-md, .container-sm, .container-xl, .container-xxl {
+        --bs-gutter-x: 0rem;
+    }
+    
+    
+    /* Row ve col padding ayarları */
+    .row {
+        margin-left: 0 !important;
+        margin-right: 0 !important;
+    }
+    
+    .col, .col-md-3, .col-md-6, .col-md-12 {
+        padding-left: 0.75rem;
+        padding-right: 0.75rem;
+    }
+</style>
+@endsection
+
 @section('content')
-<div class="container-fluid">
+<div class="container-fluid px-3">
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h1 class="h3 mb-0 text-gray-800">Paket Yönetimi</h1>
         <a href="{{ route('admin.packages.create') }}" class="btn btn-primary">

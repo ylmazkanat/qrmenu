@@ -1,92 +1,130 @@
 @extends('layouts.admin')
 
-@section('title', 'İstatistikler - QR Menu Admin')
-@section('page-title', 'Sistem İstatistikleri')
+@section('title', 'Admin İstatistikleri - QR Menu Admin')
+@section('page-title', 'Admin İstatistikleri')
 
 @section('breadcrumb')
     <li class="breadcrumb-item"><a href="{{ route('admin.dashboard') }}">Dashboard</a></li>
-    <li class="breadcrumb-item active">İstatistikler</li>
+    <li class="breadcrumb-item active">Admin İstatistikleri</li>
 @endsection
 
 @push('styles')
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<style>
+.stats-card {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border: none;
+    border-radius: 15px;
+    color: white;
+    transition: transform 0.3s ease;
+}
+.stats-card:hover {
+    transform: translateY(-5px);
+}
+.stats-icon {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+    margin-bottom: 15px;
+}
+.gradient-primary { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
+.gradient-success { background: linear-gradient(135deg, #56ab2f 0%, #a8e6cf 100%); }
+.gradient-info { background: linear-gradient(135deg, #3498db 0%, #2980b9 100%); }
+.gradient-warning { background: linear-gradient(135deg, #f39c12 0%, #e67e22 100%); }
+.gradient-danger { background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%); }
+.gradient-purple { background: linear-gradient(135deg, #9b59b6 0%, #8e44ad 100%); }
+</style>
 @endpush
 
 @section('content')
     <!-- Page Header -->
     <div class="row mb-4">
         <div class="col-md-8">
-            <h3 class="mb-2">Sistem İstatistikleri</h3>
-            <p class="text-muted mb-0">Detaylı sistem performansı ve kullanım raporları</p>
+            <h1 class="h3 mb-0 text-gray-800">Admin İstatistikleri</h1>
+            <p class="mb-0 text-muted">Sistem yönetimi ve gelir istatistikleri</p>
         </div>
         <div class="col-md-4 text-end">
-            <div class="btn-group">
-                <button class="btn btn-primary-modern">
-                    <i class="bi bi-download"></i>
-                    Rapor İndir
-                </button>
-                <a href="{{ route('admin.dashboard') }}" class="btn btn-outline-secondary">
-                    <i class="bi bi-arrow-left"></i>
-                    Dashboard
-                </a>
+            <div class="btn-group" role="group">
+                <button type="button" class="btn btn-outline-primary active" onclick="showStats('overview')">Genel Bakış</button>
+                <button type="button" class="btn btn-outline-primary" onclick="showStats('packages')">Paket İstatistikleri</button>
             </div>
         </div>
     </div>
 
     <!-- Main Stats Cards -->
-    <div class="row mb-4">
-        <div class="col-lg-3 col-md-6 mb-4">
-            <div class="stats-card">
-                <div class="stats-icon gradient-primary text-white">
-                    <i class="bi bi-people-fill"></i>
-                </div>
-                <div class="stats-value">{{ $stats['total_users'] }}</div>
-                <div class="stats-label">Toplam Kullanıcı</div>
-                <div class="stats-change positive">
-                    <i class="bi bi-arrow-up"></i>
-                    Bu ay +{{ \App\Models\User::whereMonth('created_at', now()->month)->count() }}
+    <div class="row mb-4" id="overview-stats">
+        <div class="col-xl-2 col-md-4 mb-4">
+            <div class="card stats-card gradient-primary shadow h-100 py-3">
+                <div class="card-body text-center">
+                    <div class="stats-icon gradient-primary mx-auto">
+                        <i class="fas fa-users"></i>
+                    </div>
+                    <div class="h4 mb-0 font-weight-bold">{{ number_format($stats['total_users']) }}</div>
+                    <div class="text-sm opacity-75">Toplam Üye</div>
                 </div>
             </div>
         </div>
 
-        <div class="col-lg-3 col-md-6 mb-4">
-            <div class="stats-card">
-                <div class="stats-icon gradient-success text-white">
-                    <i class="bi bi-shop"></i>
-                </div>
-                <div class="stats-value">{{ $stats['total_restaurants'] }}</div>
-                <div class="stats-label">Toplam Restoran</div>
-                <div class="stats-change positive">
-                    <i class="bi bi-check-circle"></i>
-                    {{ $stats['active_restaurants'] }} aktif
+        <div class="col-xl-2 col-md-4 mb-4">
+            <div class="card stats-card gradient-success shadow h-100 py-3">
+                <div class="card-body text-center">
+                    <div class="stats-icon gradient-success mx-auto">
+                        <i class="fas fa-building"></i>
+                    </div>
+                    <div class="h4 mb-0 font-weight-bold">{{ number_format($stats['total_businesses']) }}</div>
+                    <div class="text-sm opacity-75">Toplam İşletme</div>
                 </div>
             </div>
         </div>
 
-        <div class="col-lg-3 col-md-6 mb-4">
-            <div class="stats-card">
-                <div class="stats-icon gradient-warning text-white">
-                    <i class="bi bi-box"></i>
-                </div>
-                <div class="stats-value">{{ $stats['total_products'] }}</div>
-                <div class="stats-label">Toplam Ürün</div>
-                <div class="stats-change positive">
-                    <i class="bi bi-graph-up"></i>
-                    Ortalama {{ $stats['total_restaurants'] > 0 ? round($stats['total_products'] / $stats['total_restaurants'], 1) : 0 }} ürün/restoran
+        <div class="col-xl-2 col-md-4 mb-4">
+            <div class="card stats-card gradient-info shadow h-100 py-3">
+                <div class="card-body text-center">
+                    <div class="stats-icon gradient-info mx-auto">
+                        <i class="fas fa-box"></i>
+                    </div>
+                    <div class="h4 mb-0 font-weight-bold">{{ number_format($stats['active_subscriptions']) }}</div>
+                    <div class="text-sm opacity-75">Aktif Abonelik</div>
                 </div>
             </div>
         </div>
 
-        <div class="col-lg-3 col-md-6 mb-4">
-            <div class="stats-card">
-                <div class="stats-icon gradient-info text-white">
-                    <i class="bi bi-receipt"></i>
+        <div class="col-xl-2 col-md-4 mb-4">
+            <div class="card stats-card gradient-warning shadow h-100 py-3">
+                <div class="card-body text-center">
+                    <div class="stats-icon gradient-warning mx-auto">
+                        <i class="fas fa-lira-sign"></i>
+                    </div>
+                    <div class="h4 mb-0 font-weight-bold">₺{{ number_format($stats['monthly_subscription_revenue'], 0) }}</div>
+                    <div class="text-sm opacity-75">Bu Ay Gelir</div>
                 </div>
-                <div class="stats-value">{{ $stats['total_orders'] }}</div>
-                <div class="stats-label">Toplam Sipariş</div>
-                <div class="stats-change positive">
-                    <i class="bi bi-arrow-up"></i>
-                    Bugün +{{ \App\Models\Order::whereDate('created_at', today())->count() }}
+            </div>
+        </div>
+
+        <div class="col-xl-2 col-md-4 mb-4">
+            <div class="card stats-card gradient-danger shadow h-100 py-3">
+                <div class="card-body text-center">
+                    <div class="stats-icon gradient-danger mx-auto">
+                        <i class="fas fa-chart-line"></i>
+                    </div>
+                    <div class="h4 mb-0 font-weight-bold">₺{{ number_format($stats['total_subscription_revenue'], 0) }}</div>
+                    <div class="text-sm opacity-75">Toplam Gelir</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-2 col-md-4 mb-4">
+            <div class="card stats-card gradient-purple shadow h-100 py-3">
+                <div class="card-body text-center">
+                    <div class="stats-icon gradient-purple mx-auto">
+                        <i class="fas fa-store"></i>
+                    </div>
+                    <div class="h4 mb-0 font-weight-bold">{{ number_format($stats['active_restaurants']) }}</div>
+                    <div class="text-sm opacity-75">Aktif Restoran</div>
                 </div>
             </div>
         </div>
@@ -94,172 +132,80 @@
 
     <!-- Charts Row -->
     <div class="row mb-4">
-        <!-- User Growth Chart -->
+        <!-- Subscription Revenue Chart -->
         <div class="col-lg-6 mb-4">
             <div class="content-card h-100">
-                <div class="card-header">
-                    <h5 class="card-title">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="card-title mb-0">
                         <i class="bi bi-graph-up me-2"></i>
-                        Kullanıcı Artışı (Son 7 Gün)
+                        Abonelik Geliri
                     </h5>
+                    <div class="btn-group btn-group-sm" role="group">
+                        <button type="button" class="btn btn-outline-primary active" onclick="updateRevenueChart('monthly')">Aylık</button>
+                        <button type="button" class="btn btn-outline-primary" onclick="updateRevenueChart('quarterly')">3 Aylık</button>
+                        <button type="button" class="btn btn-outline-primary" onclick="updateRevenueChart('halfyearly')">6 Aylık</button>
+                        <button type="button" class="btn btn-outline-primary" onclick="updateRevenueChart('yearly')">Yıllık</button>
+                    </div>
                 </div>
                 <div class="card-body">
-                    <canvas id="userGrowthChart" height="300"></canvas>
+                    <canvas id="subscriptionRevenueChart" height="300"></canvas>
                 </div>
             </div>
         </div>
 
-        <!-- Restaurant Status Chart -->
+        <!-- Package Usage Chart -->
         <div class="col-lg-6 mb-4">
             <div class="content-card h-100">
                 <div class="card-header">
                     <h5 class="card-title">
                         <i class="bi bi-pie-chart me-2"></i>
-                        Restoran Durumu
+                        Paket Kullanımı
                     </h5>
                 </div>
                 <div class="card-body">
-                    <canvas id="restaurantStatusChart" height="300"></canvas>
+                    <canvas id="packageUsageChart" height="300"></canvas>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Performance Metrics Row -->
+    <!-- Package Statistics Row -->
     <div class="row mb-4">
-        <div class="col-lg-4 mb-4">
+        <div class="col-12">
             <div class="content-card">
                 <div class="card-header">
                     <h5 class="card-title">
-                        <i class="bi bi-speedometer me-2"></i>
-                        Performans
+                        <i class="bi bi-box me-2"></i>
+                        Paket İstatistikleri
                     </h5>
                 </div>
                 <div class="card-body">
-                    <div class="mb-4">
-                        <div class="d-flex justify-content-between align-items-center mb-2">
-                            <span class="fw-medium">Server Status</span>
-                            <span class="badge badge-modern bg-success">Online</span>
-                        </div>
-                        <div class="progress" style="height: 8px;">
-                            <div class="progress-bar bg-success" style="width: 100%"></div>
-                        </div>
-                    </div>
-
-                    <div class="mb-4">
-                        <div class="d-flex justify-content-between align-items-center mb-2">
-                            <span class="fw-medium">Disk Kullanımı</span>
-                            <span class="text-muted">45%</span>
-                        </div>
-                        <div class="progress" style="height: 8px;">
-                            <div class="progress-bar bg-primary" style="width: 45%"></div>
-                        </div>
-                    </div>
-
-                    <div class="border-top pt-3">
-                        <div class="row text-center">
-                            <div class="col-6">
-                                <div class="text-success fw-bold fs-4">99.9%</div>
-                                <small class="text-muted">Uptime</small>
-                            </div>
-                            <div class="col-6">
-                                <div class="text-info fw-bold fs-4">185ms</div>
-                                <small class="text-muted">Avg Response</small>
+                    <div class="row">
+                        @foreach($packageUsage as $package)
+                        <div class="col-lg-3 col-md-6 mb-4">
+                            <div class="card border-left-primary shadow h-100 py-2">
+                                <div class="card-body">
+                                    <div class="row no-gutters align-items-center">
+                                        <div class="col mr-2">
+                                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">{{ $package->name }}</div>
+                                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ $package->active_subscriptions }}</div>
+                                            <div class="text-xs text-muted">Aktif Abonelik</div>
+                                        </div>
+                                        <div class="col-auto">
+                                            <i class="fas fa-box fa-2x text-gray-300"></i>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div class="col-lg-4 mb-4">
-            <div class="content-card">
-                <div class="card-header">
-                    <h5 class="card-title">
-                        <i class="bi bi-activity me-2"></i>
-                        Haftalık Aktivite
-                    </h5>
-                </div>
-                <div class="card-body">
-                    <div class="mb-4">
-                        <div class="d-flex justify-content-between align-items-center mb-2">
-                            <span class="fw-medium">Yeni Üyeler</span>
-                            <span class="text-primary fw-bold">{{ \App\Models\User::where('created_at', '>=', now()->subDays(7))->count() }}</span>
-                        </div>
-                        <small class="text-muted">Son 7 günde katılan kullanıcılar</small>
-                    </div>
-
-                    <div class="mb-4">
-                        <div class="d-flex justify-content-between align-items-center mb-2">
-                            <span class="fw-medium">Yeni Siparişler</span>
-                            <span class="text-warning fw-bold">{{ \App\Models\Order::where('created_at', '>=', now()->subDays(7))->count() }}</span>
-                        </div>
-                        <small class="text-muted">Son 7 günde verilen siparişler</small>
-                    </div>
-
-                    <div class="border-top pt-3">
-                        <div class="row text-center">
-                            <div class="col-6">
-                                <div class="text-primary fw-bold fs-4">{{ \App\Models\Restaurant::where('created_at', '>=', now()->subDays(7))->count() }}</div>
-                                <small class="text-muted">Yeni Restoran</small>
-                            </div>
-                            <div class="col-6">
-                                <div class="text-success fw-bold fs-4">{{ \App\Models\Product::where('created_at', '>=', now()->subDays(7))->count() }}</div>
-                                <small class="text-muted">Yeni Ürün</small>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div class="col-lg-4 mb-4">
-            <div class="content-card">
-                <div class="card-header">
-                    <h5 class="card-title">
-                        <i class="bi bi-star me-2"></i>
-                        Sistem Kalitesi
-                    </h5>
-                </div>
-                <div class="card-body">
-                    <div class="mb-4">
-                        <div class="d-flex justify-content-between align-items-center mb-2">
-                            <span class="fw-medium">Bellek Kullanımı</span>
-                            <span class="text-muted">62%</span>
-                        </div>
-                        <div class="progress" style="height: 8px;">
-                            <div class="progress-bar bg-warning" style="width: 62%"></div>
-                        </div>
-                    </div>
-
-                    <div class="mb-4">
-                        <div class="d-flex justify-content-between align-items-center mb-2">
-                            <span class="fw-medium">Veritabanı</span>
-                            <span class="badge badge-modern bg-success">Bağlı</span>
-                        </div>
-                        <div class="progress" style="height: 8px;">
-                            <div class="progress-bar bg-success" style="width: 100%"></div>
-                        </div>
-                    </div>
-
-                    <div class="border-top pt-3">
-                        <div class="row text-center">
-                            <div class="col-6">
-                                <div class="text-success fw-bold fs-4">4.8</div>
-                                <small class="text-muted">Ortalama Puan</small>
-                            </div>
-                            <div class="col-6">
-                                <div class="text-info fw-bold fs-4">98%</div>
-                                <small class="text-muted">Memnuniyet</small>
-                            </div>
-                        </div>
+                        @endforeach
                     </div>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Recent Orders Table -->
+    <!-- Recent Subscriptions Table -->
     <div class="row">
         <div class="col-12">
             <div class="content-card">
@@ -267,85 +213,95 @@
                     <div class="row align-items-center">
                         <div class="col">
                             <h5 class="card-title">
-                                <i class="bi bi-clock-history me-2"></i>
-                                Son Siparişler
+                                <i class="bi bi-box me-2"></i>
+                                Son Alınan Paketler
                             </h5>
                         </div>
                         <div class="col-auto">
-                            <small class="text-muted">Son 10 sipariş</small>
+                            <small class="text-muted">Son 10 abonelik</small>
                         </div>
                     </div>
                 </div>
                 <div class="card-body p-0">
-                    @if($stats['recent_orders']->count() > 0)
+                    @if($stats['recent_subscriptions']->count() > 0)
                         <div class="table-responsive">
                             <table class="table table-modern">
                                 <thead>
                                     <tr>
-                                        <th>Sipariş #</th>
-                                        <th>Restoran</th>
-                                        <th>Masa</th>
-                                        <th>Ürün Sayısı</th>
-                                        <th>Toplam</th>
+                                        <th>Abonelik #</th>
+                                        <th>İşletme</th>
+                                        <th>Paket</th>
+                                        <th>Ödenen Tutar</th>
                                         <th>Durum</th>
-                                        <th>Tarih</th>
+                                        <th>Ödeme Tarihi</th>
+                                        <th>Bitiş Tarihi</th>
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    @foreach($stats['recent_orders'] as $order)
+                                    @foreach($stats['recent_subscriptions'] as $subscription)
                                         <tr>
                                             <td>
-                                                <span class="fw-bold text-primary">#{{ $order->id }}</span>
+                                                <span class="fw-bold text-primary">#{{ $subscription->id }}</span>
                                             </td>
                                             <td>
                                                 <div>
-                                                    <div class="fw-medium">{{ $order->restaurant->name }}</div>
-                                                    <small class="text-muted">{{ $order->restaurant->slug }}</small>
+                                                    <div class="fw-medium">{{ $subscription->business->name }}</div>
+                                                    <small class="text-muted">{{ $subscription->business->slug }}</small>
                                                 </div>
                                             </td>
                                             <td>
-                                                @if($order->table_number)
-                                                    <span class="badge badge-modern bg-light text-dark">
-                                                        <i class="bi bi-table"></i> {{ $order->table_number }}
-                                                    </span>
-                                                @else
-                                                    <span class="text-muted">-</span>
-                                                @endif
+                                                <span class="badge badge-modern bg-light text-dark">
+                                                    <i class="bi bi-box"></i> {{ $subscription->package->name }}
+                                                </span>
                                             </td>
                                             <td>
-                                                <span class="text-info fw-bold">{{ $order->orderItems->count() }}</span>
-                                                <small class="text-muted">ürün</small>
+                                                <span class="text-success fw-bold">{{ number_format($subscription->amount_paid, 2) }} ₺</span>
                                             </td>
                                             <td>
-                                                <span class="text-success fw-bold">{{ number_format($order->total, 2) }} ₺</span>
-                                            </td>
-                                            <td>
-                                                @if($order->status == 'pending')
-                                                    <span class="badge badge-modern bg-warning">
-                                                        <i class="bi bi-clock"></i> Bekliyor
-                                                    </span>
-                                                @elseif($order->status == 'preparing')
-                                                    <span class="badge badge-modern bg-info">
-                                                        <i class="bi bi-gear"></i> Hazırlanıyor
-                                                    </span>
-                                                @elseif($order->status == 'ready')
-                                                    <span class="badge badge-modern bg-primary">
-                                                        <i class="bi bi-check"></i> Hazır
-                                                    </span>
-                                                @elseif($order->status == 'delivered')
+                                                @if($subscription->status == 'active')
                                                     <span class="badge badge-modern bg-success">
-                                                        <i class="bi bi-check-circle"></i> Teslim Edildi
+                                                        <i class="bi bi-check-circle"></i> Aktif
+                                                    </span>
+                                                @elseif($subscription->status == 'inactive')
+                                                    <span class="badge badge-modern bg-warning">
+                                                        <i class="bi bi-pause-circle"></i> Pasif
+                                                    </span>
+                                                @elseif($subscription->status == 'expired')
+                                                    <span class="badge badge-modern bg-danger">
+                                                        <i class="bi bi-x-circle"></i> Süresi Dolmuş
+                                                    </span>
+                                                @elseif($subscription->status == 'cancelled')
+                                                    <span class="badge badge-modern bg-secondary">
+                                                        <i class="bi bi-dash-circle"></i> İptal
                                                     </span>
                                                 @else
-                                                    <span class="badge badge-modern bg-danger">
-                                                        <i class="bi bi-x-circle"></i> İptal
+                                                    <span class="badge badge-modern bg-info">
+                                                        <i class="bi bi-info-circle"></i> {{ $subscription->status }}
                                                     </span>
                                                 @endif
                                             </td>
                                             <td>
                                                 <div>
-                                                    <div class="fw-medium">{{ $order->created_at->format('d.m.Y') }}</div>
-                                                    <small class="text-muted">{{ $order->created_at->format('H:i') }}</small>
+                                                    @if($subscription->payment_date)
+                                                        <div class="fw-medium">{{ $subscription->payment_date->format('d.m.Y') }}</div>
+                                                        <small class="text-muted">{{ $subscription->payment_date->format('H:i') }}</small>
+                                                    @else
+                                                        <span class="text-muted">-</span>
+                                                    @endif
+                                                </div>
+                                            </td>
+                                            <td>
+                                                <div>
+                                                    @if($subscription->expires_at)
+                                                        <div class="fw-medium">{{ $subscription->expires_at->format('d.m.Y') }}</div>
+                                                        @if($subscription->expires_at->isPast())
+                                                            <small class="text-danger">Süresi dolmuş</small>
+                                                        @else
+                                                            <small class="text-success">{{ $subscription->expires_at->diffForHumans() }}</small>
+                                                        @endif
+                                                    @else
+                                                        <span class="text-muted">-</span>
+                                                    @endif
                                                 </div>
                                             </td>
                                         </tr>
@@ -356,10 +312,10 @@
                     @else
                         <div class="text-center py-5">
                             <div class="text-muted mb-3" style="font-size: 4rem;">
-                                <i class="bi bi-receipt"></i>
+                                <i class="bi bi-box"></i>
                             </div>
-                            <h4 class="text-muted mb-2">Henüz sipariş bulunmuyor</h4>
-                            <p class="text-muted">Sistemde henüz sipariş verilmemiş</p>
+                            <h4 class="text-muted mb-2">Henüz paket aboneliği bulunmuyor</h4>
+                            <p class="text-muted">Sistemde henüz paket satın alınmamış</p>
                         </div>
                     @endif
                 </div>
@@ -370,115 +326,178 @@
 
 @push('scripts')
 <script>
-    // User Growth Chart
-    const userGrowthCtx = document.getElementById('userGrowthChart').getContext('2d');
-    new Chart(userGrowthCtx, {
-        type: 'line',
-        data: {
-            labels: ['6 gün önce', '5 gün önce', '4 gün önce', '3 gün önce', '2 gün önce', 'Dün', 'Bugün'],
-            datasets: [{
-                label: 'Yeni Kullanıcılar',
-                data: [2, 4, 3, 5, 8, 6, 7],
-                borderColor: '#4f46e5',
-                backgroundColor: 'rgba(79, 70, 229, 0.1)',
-                fill: true,
-                tension: 0.4,
-                borderWidth: 3,
-                pointBackgroundColor: '#4f46e5',
-                pointBorderColor: '#ffffff',
-                pointBorderWidth: 2,
-                pointRadius: 6,
-                pointHoverRadius: 8
-            }]
+// Subscription data for different periods
+const subscriptionData = {
+    monthly: {
+        labels: {!! json_encode(array_column($subscriptionStats['monthly'], 'date')) !!},
+        revenue: {!! json_encode(array_column($subscriptionStats['monthly'], 'revenue')) !!},
+        subscriptions: {!! json_encode(array_column($subscriptionStats['monthly'], 'subscriptions')) !!}
+    },
+    quarterly: {
+        labels: {!! json_encode(array_column($subscriptionStats['quarterly'], 'date')) !!},
+        revenue: {!! json_encode(array_column($subscriptionStats['quarterly'], 'revenue')) !!},
+        subscriptions: {!! json_encode(array_column($subscriptionStats['quarterly'], 'subscriptions')) !!}
+    },
+    halfyearly: {
+        labels: {!! json_encode(array_column($subscriptionStats['halfyearly'], 'date')) !!},
+        revenue: {!! json_encode(array_column($subscriptionStats['halfyearly'], 'revenue')) !!},
+        subscriptions: {!! json_encode(array_column($subscriptionStats['halfyearly'], 'subscriptions')) !!}
+    },
+    yearly: {
+        labels: {!! json_encode(array_column($subscriptionStats['yearly'], 'date')) !!},
+        revenue: {!! json_encode(array_column($subscriptionStats['yearly'], 'revenue')) !!},
+        subscriptions: {!! json_encode(array_column($subscriptionStats['yearly'], 'subscriptions')) !!}
+    }
+};
+
+// Subscription Revenue Chart
+const subscriptionRevenueCtx = document.getElementById('subscriptionRevenueChart').getContext('2d');
+let subscriptionRevenueChart = new Chart(subscriptionRevenueCtx, {
+    type: 'line',
+    data: {
+        labels: subscriptionData.monthly.labels,
+        datasets: [{
+            label: 'Abonelik Geliri (₺)',
+            data: subscriptionData.monthly.revenue,
+            borderColor: 'rgb(54, 162, 235)',
+            backgroundColor: 'rgba(54, 162, 235, 0.1)',
+            tension: 0.4,
+            fill: true
+        }, {
+            label: 'Yeni Abonelikler',
+            data: subscriptionData.monthly.subscriptions,
+            borderColor: 'rgb(255, 99, 132)',
+            backgroundColor: 'rgba(255, 99, 132, 0.1)',
+            tension: 0.4,
+            yAxisID: 'y1'
+        }]
+    },
+    options: {
+        responsive: true,
+        interaction: {
+            mode: 'index',
+            intersect: false,
         },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-                legend: {
-                    display: false
+        plugins: {
+            title: {
+                display: true,
+                text: 'Son 30 Günün Abonelik İstatistikleri'
+            },
+            legend: {
+                display: true,
+                position: 'top'
+            }
+        },
+        scales: {
+            x: {
+                display: true,
+                title: {
+                    display: true,
+                    text: 'Tarih'
                 }
             },
-            scales: {
-                y: {
-                    beginAtZero: true,
-                    grid: {
-                        color: '#f1f5f9',
-                        borderColor: '#e2e8f0'
-                    },
-                    ticks: {
-                        color: '#64748b',
-                        font: {
-                            family: 'Inter',
-                            size: 12
-                        }
-                    }
-                },
-                x: {
-                    grid: {
-                        display: false
-                    },
-                    ticks: {
-                        color: '#64748b',
-                        font: {
-                            family: 'Inter',
-                            size: 12
-                        }
-                    }
+            y: {
+                type: 'linear',
+                display: true,
+                position: 'left',
+                title: {
+                    display: true,
+                    text: 'Gelir (₺)'
                 }
+            },
+            y1: {
+                type: 'linear',
+                display: true,
+                position: 'right',
+                title: {
+                    display: true,
+                    text: 'Abonelik Sayısı'
+                },
+                grid: {
+                    drawOnChartArea: false,
+                },
             }
         }
-    });
+    }
+});
 
-    // Restaurant Status Chart
-    const restaurantStatusCtx = document.getElementById('restaurantStatusChart').getContext('2d');
-    new Chart(restaurantStatusCtx, {
-        type: 'doughnut',
-        data: {
-            labels: ['Aktif Restoranlar', 'Pasif Restoranlar'],
-            datasets: [{
-                data: [{{ $stats['active_restaurants'] }}, {{ $stats['total_restaurants'] - $stats['active_restaurants'] }}],
-                backgroundColor: ['#10b981', '#ef4444'],
-                borderWidth: 0,
-                hoverOffset: 4
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            cutout: '60%',
-            plugins: {
-                legend: {
-                    position: 'bottom',
-                    labels: {
-                        padding: 20,
-                        usePointStyle: true,
-                        font: {
-                            family: 'Inter',
-                            size: 14
-                        },
-                        color: '#64748b'
-                    }
-                },
-                tooltip: {
-                    backgroundColor: '#1e293b',
-                    titleColor: '#ffffff',
-                    bodyColor: '#ffffff',
-                    borderColor: '#334155',
-                    borderWidth: 1,
-                    cornerRadius: 8,
-                    titleFont: {
-                        family: 'Inter',
-                        size: 14,
-                        weight: 'bold'
-                    },
-                    bodyFont: {
-                        family: 'Inter',
-                        size: 13
+// Package Usage Chart
+const packageUsageCtx = document.getElementById('packageUsageChart').getContext('2d');
+const packageUsageChart = new Chart(packageUsageCtx, {
+    type: 'doughnut',
+    data: {
+        labels: {!! json_encode($packageUsage->pluck('name')) !!},
+        datasets: [{
+            data: {!! json_encode($packageUsage->pluck('active_subscriptions')) !!},
+            backgroundColor: [
+                '#667eea',
+                '#56ab2f', 
+                '#3498db',
+                '#f39c12',
+                '#e74c3c',
+                '#9b59b6',
+                '#1abc9c',
+                '#34495e'
+            ],
+            borderWidth: 2,
+            borderColor: '#fff'
+        }]
+    },
+    options: {
+        responsive: true,
+        plugins: {
+            legend: {
+                position: 'bottom',
+                labels: {
+                    padding: 20,
+                    usePointStyle: true
+                }
+            },
+            tooltip: {
+                callbacks: {
+                    label: function(context) {
+                        const label = context.label || '';
+                        const value = context.parsed;
+                        const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                        const percentage = ((value / total) * 100).toFixed(1);
+                        return `${label}: ${value} abonelik (${percentage}%)`;
                     }
                 }
             }
         }
+    }
+});
+
+function updateRevenueChart(period) {
+    // Update button states
+    document.querySelectorAll('.btn-group .btn').forEach(btn => {
+        btn.classList.remove('active');
     });
+    event.target.classList.add('active');
+    
+    // Update chart data
+    const data = subscriptionData[period];
+    subscriptionRevenueChart.data.labels = data.labels;
+    subscriptionRevenueChart.data.datasets[0].data = data.revenue;
+    subscriptionRevenueChart.data.datasets[1].data = data.subscriptions;
+    subscriptionRevenueChart.update();
+}
+
+function showStats(type) {
+    // Toggle active button
+    document.querySelectorAll('.btn-group .btn').forEach(btn => {
+        btn.classList.remove('active');
+    });
+    event.target.classList.add('active');
+    
+    // Show/hide content based on type
+    if (type === 'overview') {
+        document.getElementById('overview-stats').style.display = 'block';
+        // Add other overview elements here
+    } else if (type === 'packages') {
+        document.getElementById('overview-stats').style.display = 'block';
+        // Add package view logic here
+    }
+}
 </script>
-@endpush 
+@endpush

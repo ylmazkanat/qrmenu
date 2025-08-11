@@ -130,8 +130,19 @@ class AdminController extends Controller
             'monthly_revenue' => Order::whereMonth('created_at', now()->month)
                 ->where('status', '!=', 'cancelled')
                 ->sum('total'),
-            // Son 10 sipariş - analytics sayfasında kullanılıyor
-            'recent_orders' => Order::with(['restaurant', 'orderItems'])->latest()->take(10)->get(),
+            // Paket abonelik istatistikleri
+            'total_subscriptions' => \App\Models\BusinessSubscription::count(),
+            'active_subscriptions' => \App\Models\BusinessSubscription::where('status', 'active')->count(),
+            'monthly_subscription_revenue' => \App\Models\BusinessSubscription::whereMonth('payment_date', now()->month)
+                ->where('is_paid', true)
+                ->sum('amount_paid'),
+            'total_subscription_revenue' => \App\Models\BusinessSubscription::where('is_paid', true)->sum('amount_paid'),
+            // Son alınan paketler
+            'recent_subscriptions' => \App\Models\BusinessSubscription::with(['business', 'package'])
+                ->whereNotNull('payment_date')
+                ->latest('payment_date')
+                ->take(10)
+                ->get(),
         ];
 
         // Son 30 günün istatistikleri
@@ -162,6 +173,22 @@ class AdminController extends Controller
         ->take(10)
         ->get();
 
+        // Paket kullanım istatistikleri
+        $packageUsage = \App\Models\Package::withCount([
+            'subscriptions as active_subscriptions' => function($query) {
+                $query->where('status', 'active');
+            },
+            'subscriptions as total_subscriptions'
+        ])->get();
+
+        // Farklı zaman aralıkları için abonelik istatistikleri
+        $subscriptionStats = [
+            'monthly' => $this->getSubscriptionStats(30, 'daily'),
+            'quarterly' => $this->getSubscriptionStats(90, 'weekly'),
+            'halfyearly' => $this->getSubscriptionStats(180, 'weekly'),
+            'yearly' => $this->getSubscriptionStats(365, 'monthly')
+        ];
+
         // Plan dağılımı
         $planDistribution = [
             'free' => Business::where('plan', 'free')->count(),
@@ -170,7 +197,65 @@ class AdminController extends Controller
             'enterprise' => Business::where('plan', 'enterprise')->count(),
         ];
 
-        return view('admin.analytics', compact('stats', 'dailyStats', 'topBusinesses', 'planDistribution'));
+        return view('admin.analytics', compact('stats', 'dailyStats', 'topBusinesses', 'planDistribution', 'packageUsage', 'subscriptionStats'));
+    }
+
+    private function getSubscriptionStats($days, $groupBy = 'daily')
+    {
+        $stats = [];
+        $startDate = now()->subDays($days);
+        
+        if ($groupBy === 'daily') {
+            for ($i = $days - 1; $i >= 0; $i--) {
+                $date = now()->subDays($i);
+                $newSubscriptions = \App\Models\BusinessSubscription::whereDate('created_at', $date)->count();
+                $subscriptionRevenue = \App\Models\BusinessSubscription::whereDate('payment_date', $date)
+                    ->where('is_paid', true)
+                    ->sum('amount_paid');
+                
+                $stats[] = [
+                    'date' => $date->format('d.m'),
+                    'subscriptions' => $newSubscriptions,
+                    'revenue' => $subscriptionRevenue,
+                ];
+            }
+        } elseif ($groupBy === 'weekly') {
+            $weeks = ceil($days / 7);
+            for ($i = $weeks - 1; $i >= 0; $i--) {
+                $weekStart = now()->subWeeks($i)->startOfWeek();
+                $weekEnd = now()->subWeeks($i)->endOfWeek();
+                
+                $newSubscriptions = \App\Models\BusinessSubscription::whereBetween('created_at', [$weekStart, $weekEnd])->count();
+                $subscriptionRevenue = \App\Models\BusinessSubscription::whereBetween('payment_date', [$weekStart, $weekEnd])
+                    ->where('is_paid', true)
+                    ->sum('amount_paid');
+                
+                $stats[] = [
+                    'date' => $weekStart->format('d.m') . '-' . $weekEnd->format('d.m'),
+                    'subscriptions' => $newSubscriptions,
+                    'revenue' => $subscriptionRevenue,
+                ];
+            }
+        } elseif ($groupBy === 'monthly') {
+            $months = ceil($days / 30);
+            for ($i = $months - 1; $i >= 0; $i--) {
+                $monthStart = now()->subMonths($i)->startOfMonth();
+                $monthEnd = now()->subMonths($i)->endOfMonth();
+                
+                $newSubscriptions = \App\Models\BusinessSubscription::whereBetween('created_at', [$monthStart, $monthEnd])->count();
+                $subscriptionRevenue = \App\Models\BusinessSubscription::whereBetween('payment_date', [$monthStart, $monthEnd])
+                    ->where('is_paid', true)
+                    ->sum('amount_paid');
+                
+                $stats[] = [
+                    'date' => $monthStart->format('M Y'),
+                    'subscriptions' => $newSubscriptions,
+                    'revenue' => $subscriptionRevenue,
+                ];
+            }
+        }
+        
+        return $stats;
     }
 
     /**
