@@ -105,6 +105,7 @@ Route::middleware(['auth'])->prefix('restaurant')->name('restaurant.')->group(fu
     Route::get('/kitchen', [RestaurantPanelController::class, 'kitchen'])->name('kitchen');
     // Menü Yönetimi (Kategori & Ürün CRUD)
     Route::get('/menu-management', [RestaurantPanelController::class, 'menuManagement'])->name('menu.management');
+    Route::get('/menu-categories', [RestaurantPanelController::class, 'getCategories'])->name('menu.categories');
 
     // Müşteri Menü Route'ları
     Route::prefix('menu')->name('menu.')->group(function () {
@@ -144,6 +145,9 @@ Route::middleware(['auth'])->prefix('restaurant')->name('restaurant.')->group(fu
     Route::get('/cashier/endofday-pdf', [RestaurantPanelController::class, 'endOfDayPdf'])->name('cashier.endofday.pdf');
     Route::get('/tables/{tableNumber}/details', [RestaurantPanelController::class, 'getTableDetails'])->name('tables.details');
     Route::get('/cashier/{order}/print-receipt', [RestaurantPanelController::class, 'printReceipt'])->name('cashier.print-receipt');
+    Route::get('/cashier/table/{tableNumber}/print-receipt/{sessionId?}', [RestaurantPanelController::class, 'printTableReceipt'])->name('cashier.print-table-receipt');
+    Route::delete('/cashier/payment/{paymentId}/delete', [RestaurantPanelController::class, 'deletePayment'])->name('cashier.delete-payment');
+    Route::post('/cashier/table/{tableNumber}/close', [RestaurantPanelController::class, 'closeTable'])->name('cashier.close-table');
     
     // Ortak API'ler (tüm restoran çalışanları)
     Route::get('/api/orders/updates', [RestaurantPanelController::class, 'getOrderUpdates'])->name('api.orders.updates');

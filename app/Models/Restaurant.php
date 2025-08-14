@@ -180,14 +180,21 @@ class Restaurant extends Model
 
     public function getTodayOrdersCount()
     {
-        return $this->orders()->whereDate('created_at', today())->count();
+        return $this->orders()
+            ->whereDate('created_at', today())
+            ->whereNotIn('status', ['cancelled', 'kitchen_cancelled', 'musteri_iptal'])
+            ->count();
     }
 
     public function getTodayRevenue()
     {
         return $this->orders()
             ->whereDate('created_at', today())
-            ->where('status', '!=', 'cancelled')
-            ->sum('total');
+            ->whereNotIn('status', ['cancelled', 'kitchen_cancelled', 'musteri_iptal'])
+            ->where(function($query) {
+                $query->where('payment_status', 'paid')
+                      ->orWhere('payment_status', 'partially_paid');
+            })
+            ->sum('paid_amount');
     }
 }

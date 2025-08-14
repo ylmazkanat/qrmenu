@@ -97,6 +97,24 @@
             @endif
             <div><strong>TARİH:</strong> {{ $order->created_at->format('d.m.Y H:i') }}</div>
             <div><strong>KASIYER:</strong> {{ auth()->user()->name }}</div>
+            
+            @if(in_array($order->status, ['kitchen_cancelled', 'cancelled', 'musteri_iptal', 'zafiyat']))
+                <div style="margin-top: 10px; padding: 5px; border: 1px solid #ccc; background-color: #f8f9fa;">
+                    @if($order->status === 'kitchen_cancelled')
+                        <div style="color: #dc3545; font-weight: bold;">⚠️ MUTFAK İPTALİ</div>
+                        <div style="font-size: 10px; color: #666;">Bu ürünün fiyatı alınmamaktadır.</div>
+                    @elseif($order->status === 'cancelled')
+                        <div style="color: #dc3545; font-weight: bold;">❌ İPTAL EDİLDİ</div>
+                        <div style="font-size: 10px; color: #666;">Bu ürünün fiyatı alınmamaktadır.</div>
+                    @elseif($order->status === 'musteri_iptal')
+                        <div style="color: #dc3545; font-weight: bold;">❌ MÜŞTERİ İPTALİ</div>
+                        <div style="font-size: 10px; color: #666;">Bu ürünün fiyatı alınmamaktadır.</div>
+                    @elseif($order->status === 'zafiyat')
+                        <div style="color: #ffc107; font-weight: bold;">⚠️ ZAFİYAT</div>
+                        <div style="font-size: 10px; color: #666;">Bu ürünün fiyatı alınacaktır.</div>
+                    @endif
+                </div>
+            @endif
         </div>
 
         <div class="items">
@@ -123,35 +141,57 @@
             @endforeach
         </div>
 
+        @php
+            $effectiveTotal = $order->total;
+            $cancelledAmount = 0;
+            
+            if(in_array($order->status, ['kitchen_cancelled', 'cancelled', 'musteri_iptal'])) {
+                $effectiveTotal = 0;
+                $cancelledAmount = $order->total;
+            }
+        @endphp
+        
         <div class="total-section">
             <div class="total-line">
                 <span>ARA TOPLAM:</span>
                 <span>₺{{ number_format($order->total, 2) }}</span>
             </div>
             
-            @if($order->payment_method)
-                <div class="total-line">
-                    <span>ÖDEME YÖNTEMİ:</span>
-                    <span>{{ strtoupper($order->payment_method) }}</span>
+            @if($cancelledAmount > 0)
+                <div class="total-line" style="color: #dc3545;">
+                    <span>İPTAL EDİLEN:</span>
+                    <span>-₺{{ number_format($cancelledAmount, 2) }}</span>
                 </div>
-                
-                @if($order->payment_method === 'nakit' && $order->cash_received)
+            @endif
+            
+            @if($order->payments && $order->payments->count() > 0)
+                @foreach($order->payments as $payment)
                     <div class="total-line">
-                        <span>ALINAN:</span>
-                        <span>₺{{ number_format($order->cash_received, 2) }}</span>
+                        <span>ÖDEME ({{ strtoupper($payment->payment_method) }}):</span>
+                        <span>₺{{ number_format($payment->amount, 2) }}</span>
                     </div>
-                    @if($order->cash_received > $order->total)
-                        <div class="total-line">
-                            <span>PARA ÜSTÜ:</span>
-                            <span>₺{{ number_format($order->cash_received - $order->total, 2) }}</span>
+                    @if($payment->note)
+                        <div class="total-line" style="font-size: 10px; color: #666;">
+                            <span>Not: {{ $payment->note }}</span>
                         </div>
                     @endif
+                @endforeach
+                
+                @php
+                    $totalPaid = $order->payments->sum('amount');
+                @endphp
+                
+                @if($totalPaid > $effectiveTotal)
+                    <div class="total-line">
+                        <span>PARA ÜSTÜ:</span>
+                        <span>₺{{ number_format($totalPaid - $effectiveTotal, 2) }}</span>
+                    </div>
                 @endif
             @endif
             
             <div class="total-line total-amount" style="border-top: 1px solid #000; padding-top: 5px; margin-top: 5px;">
                 <span>TOPLAM:</span>
-                <span>₺{{ number_format($order->total, 2) }}</span>
+                <span>₺{{ number_format($effectiveTotal, 2) }}</span>
             </div>
         </div>
 

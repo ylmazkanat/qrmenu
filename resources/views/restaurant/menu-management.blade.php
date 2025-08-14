@@ -389,14 +389,14 @@
 </div>
 
 <!-- Masa Modal -->
-<div class="modal fade" id="tableModal" tabindex="-1">
+<div class="modal fade" id="tableModal" tabindex="-1" data-bs-backdrop="static">
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title" id="tableModalLabel">Yeni Masa</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" onclick="document.getElementById('tableForm').reset();"></button>
             </div>
-            <form id="tableForm">
+            <form id="tableForm" onreset="tableEditMode = false;">
                 <div class="modal-body">
                     <input type="hidden" id="tableId" name="table_id">
                     
@@ -444,7 +444,11 @@
 </div>
 
 <!-- Sipariş Ayarları Modal -->
-<div class="modal fade" id="orderSettingsModal" tabindex="-1">
+    <!-- Meta bilgileri -->
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+    
+    <!-- Sipariş Ayarları Modal -->
+    <div class="modal fade" id="orderSettingsModal" tabindex="-1">
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
             <div class="modal-header">
@@ -511,19 +515,9 @@ let productEditMode = false;
 document.getElementById('categoryForm').addEventListener('submit', function(e) {
     e.preventDefault();
     
-    const formData = new FormData();
+    const formData = new FormData(this);
     const categoryId = document.getElementById('categoryId').value;
-    
-    // Form verilerini FormData'ya ekle
-    formData.append('name', document.getElementById('categoryName').value);
-    formData.append('sort_order', document.getElementById('categorySortOrder').value);
-    formData.append('_token', '{{ csrf_token() }}');
-    
-    // Resim dosyasını ekle
-    const imageFile = document.getElementById('categoryImage').files[0];
-    if (imageFile) {
-        formData.append('image', imageFile);
-    }
+    formData.append('_token', document.querySelector('meta[name="csrf-token"]').getAttribute('content'));
     
     let url = '{{ route("restaurant.categories.store") }}';
     
@@ -535,8 +529,10 @@ document.getElementById('categoryForm').addEventListener('submit', function(e) {
     fetch(url, {
         method: 'POST',
         body: formData,
+        credentials: 'same-origin',
         headers: {
-            'X-CSRF-TOKEN': '{{ csrf_token() }}'
+            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+            'Accept': 'application/json'
         }
     })
     .then(response => response.json())
@@ -831,8 +827,10 @@ document.getElementById('tableForm').addEventListener('submit', function(e) {
         method: 'POST',
         body: formData,
         headers: {
-            'X-CSRF-TOKEN': '{{ csrf_token() }}'
-        }
+            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+            'Accept': 'application/json'
+        },
+        credentials: 'same-origin'
     })
     .then(response => response.json())
     .then(data => {

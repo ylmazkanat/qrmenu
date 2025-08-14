@@ -12,12 +12,13 @@ class Order extends Model
     protected $fillable = [
         'restaurant_id',
         'table_number',
+        'session_id',
         'customer_name',
         'created_by_user_id',
         'status',
         'total',
-        'payment_method',
-        'cash_received',
+        'paid_amount',
+        'payment_status',
     ];
 
     protected $casts = [
@@ -46,6 +47,22 @@ class Order extends Model
     public function kitchenView()
     {
         return $this->hasOne(KitchenView::class);
+    }
+
+    /**
+     * Get the payments for the order.
+     */
+    public function payments()
+    {
+        return $this->hasMany(OrderPayment::class);
+    }
+
+    /**
+     * Get the remaining amount to be paid.
+     */
+    public function getRemainingAmountAttribute()
+    {
+        return $this->total - $this->paid_amount;
     }
 
     /**
