@@ -11,6 +11,8 @@ return new class extends Migration
      */
     public function up(): void
     {
+        // Drop the table if it exists to avoid 'already exists' error
+        Schema::dropIfExists('orders');
         Schema::create('orders', function (Blueprint $table) {
             $table->id();
             $table->foreignId('restaurant_id')->constrained()->onDelete('cascade');

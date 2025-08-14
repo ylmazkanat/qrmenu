@@ -67,6 +67,7 @@ Route::middleware(['auth', 'role:business_owner'])->prefix('business')->name('bu
     Route::get('/restaurants/{restaurant}', [BusinessController::class, 'showRestaurant'])->name('restaurants.show');
     Route::get('/restaurants/{restaurant}/edit', [BusinessController::class, 'editRestaurant'])->name('restaurants.edit');
     Route::put('/restaurants/{restaurant}', [BusinessController::class, 'updateRestaurant'])->name('restaurants.update');
+    Route::delete('/restaurants/{restaurant}/delete', [BusinessController::class, 'delete'])->name('restaurants.delete');
     Route::get('/staff', [BusinessController::class, 'staffManagement'])->name('staff');
     Route::post('/staff/store', [BusinessController::class, 'storeStaff'])->name('staff.store');
     Route::post('/staff/{staff}/toggle-status', [BusinessController::class, 'toggleStaffStatus'])->name('staff.toggle-status');

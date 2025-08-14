@@ -25,7 +25,6 @@ class RestaurantSocialMediaSeeder extends Seeder
                 'youtube' => 'https://youtube.com/restaurant',
                 'linkedin' => 'https://linkedin.com/company/restaurant',
                 'whatsapp' => '+905551234567',
-                'working_hours_text' => "Pazartesi - Cuma: 09:00 - 22:00\nCumartesi - Pazar: 10:00 - 23:00"
             ]);
             
             $this->command->info('Restaurant social media data updated successfully!');

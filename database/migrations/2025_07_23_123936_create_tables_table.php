@@ -11,15 +11,15 @@ return new class extends Migration
      */
     public function up(): void
     {
+        Schema::dropIfExists('tables');
         Schema::create('tables', function (Blueprint $table) {
             $table->id();
             $table->foreignId('restaurant_id')->constrained()->onDelete('cascade');
             $table->string('table_number', 20);
             $table->string('qr_code')->nullable();
+            $table->integer('capacity')->default(4);
+            $table->boolean('is_occupied')->default(false);
             $table->boolean('is_active')->default(true);
-            $table->integer('capacity')->nullable();
-            $table->string('location')->nullable();
-            $table->text('description')->nullable();
             $table->timestamps();
 
             $table->unique(['restaurant_id', 'table_number']);

@@ -3,7 +3,20 @@
 @section('title', 'Restoran Detayı - QR Menu')
 @section('page-title', $restaurant->name . ' - Detaylar')
 
+@push('styles')
+<style>
+    .alert i {
+        font-size: 1.2em;
+    }
+    #deleteButton:disabled {
+        opacity: 0.65;
+        cursor: not-allowed;
+    }
+</style>
+@endpush
+
 @section('content')
+
     <!-- Restoran Bilgi Başlığı -->
     <div class="row mb-4">
         <div class="col-12">
@@ -73,12 +86,56 @@
                             <a href="{{ route('business.restaurants.edit', $restaurant->id) }}" class="btn btn-business-modern me-2">
                                 <i class="bi bi-pencil-square"></i> Düzenle
                             </a>
-                            <a href="{{ route('business.restaurants.reviews', $restaurant->id) }}" class="btn btn-business-modern">
+                            <a href="{{ route('business.restaurants.reviews', $restaurant->id) }}" class="btn btn-business-modern me-2">
                                 <i class="bi bi-star"></i> Değerlendirmeler
                             </a>
+                            <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#deleteRestaurantModal">
+                                <i class="bi bi-trash"></i> Restoranı Sil
+                            </button>
                         </div>
                     </div>
                 </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Delete Restaurant Modal -->
+    <div class="modal fade" id="deleteRestaurantModal" tabindex="-1" aria-labelledby="deleteRestaurantModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="deleteRestaurantModalLabel">Restoranı Sil</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <form action="{{ route('business.restaurants.delete', $restaurant->id) }}" method="POST">
+                    @csrf
+                    @method('DELETE')
+                    <div class="modal-body">
+                        <div class="alert alert-warning">
+                            <i class="bi bi-exclamation-triangle me-2"></i>
+                            <strong>Uyarı!</strong> Bu işlem geri alınamaz.
+                        </div>
+                        <p>Bu restoranı silmek istediğinizden emin misiniz? Silinen restoranın tüm verileri arşivlenecek ancak ana sistemden kaldırılacaktır.</p>
+                        <div class="form-group mb-3">
+                            <label for="deletion_reason">Silme Nedeni</label>
+                            <select class="form-control" id="deletion_reason" name="deletion_reason" required>
+                                <option value="">Seçiniz...</option>
+                                <option value="business_closed">İşletme Kapandı</option>
+                                <option value="temporary_closure">Geçici Olarak Kapalı</option>
+                                <option value="relocation">Taşınma</option>
+                                <option value="other">Diğer</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="confirmName">Onaylamak için restoran adını yazın: <strong>{{ $restaurant->name }}</strong></label>
+                            <input type="text" class="form-control mt-2" id="confirmName" name="confirm_name" required>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" style="opacity: 1 !important;">İptal</button>
+                        <button type="submit" class="btn btn-danger" id="deleteButton" disabled>Sil</button>
+                    </div>
+                </form>
             </div>
         </div>
     </div>
@@ -343,6 +400,29 @@
 
 @section('scripts')
 <script>
+    // Delete modal validation
+    const confirmNameInput = document.getElementById('confirmName');
+    const deleteButton = document.getElementById('deleteButton');
+    const restaurantName = "{{ $restaurant->name }}";
+
+    confirmNameInput.addEventListener('input', (e) => {
+        const isMatch = e.target.value === restaurantName;
+        deleteButton.disabled = !isMatch;
+        
+        // Add/remove validation classes
+        if (e.target.value) {
+            if (isMatch) {
+                confirmNameInput.classList.remove('is-invalid');
+                confirmNameInput.classList.add('is-valid');
+            } else {
+                confirmNameInput.classList.remove('is-valid');
+                confirmNameInput.classList.add('is-invalid');
+            }
+        } else {
+            confirmNameInput.classList.remove('is-valid', 'is-invalid');
+        }
+    });
+
     // Otomatik sayfa yenileme (3 dakikada bir)
     setInterval(() => {
         location.reload();

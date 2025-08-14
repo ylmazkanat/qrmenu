@@ -12,9 +12,15 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('restaurants', function (Blueprint $table) {
-            $table->boolean('translation_enabled')->default(false)->after('is_active');
-            $table->string('default_language', 10)->default('tr')->after('translation_enabled');
-            $table->json('supported_languages')->nullable()->after('default_language');
+            if (!Schema::hasColumn('restaurants', 'translation_enabled')) {
+                $table->boolean('translation_enabled')->default(false)->after('is_active');
+            }
+            if (!Schema::hasColumn('restaurants', 'default_language')) {
+                $table->string('default_language', 10)->default('tr')->after('translation_enabled');
+            }
+            if (!Schema::hasColumn('restaurants', 'supported_languages')) {
+                $table->json('supported_languages')->nullable()->after('default_language');
+            }
         });
     }
 

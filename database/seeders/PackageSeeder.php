@@ -102,7 +102,6 @@ class PackageSeeder extends Seeder
                 'limit_value' => $feature['limit_value'],
                 'is_enabled' => true,
                 'sort_order' => $index + 1,
-                'is_coming_soon' => $feature['is_coming_soon'] ?? false,
             ]);
         }
 
@@ -115,7 +114,6 @@ class PackageSeeder extends Seeder
                 'limit_value' => $feature['limit_value'],
                 'is_enabled' => true,
                 'sort_order' => $index + 1,
-                'is_coming_soon' => $feature['is_coming_soon'] ?? false,
             ]);
         }
 
@@ -128,7 +126,6 @@ class PackageSeeder extends Seeder
                 'limit_value' => $feature['limit_value'],
                 'is_enabled' => true,
                 'sort_order' => $index + 1,
-                'is_coming_soon' => $feature['is_coming_soon'] ?? false,
             ]);
         }
     }

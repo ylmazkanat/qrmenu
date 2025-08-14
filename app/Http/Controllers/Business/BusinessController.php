@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Business;
 use App\Http\Controllers\Controller;
 use App\Models\Business;
 use App\Models\Restaurant;
+use App\Models\DeletedRestaurant;
 use App\Models\User;
 use App\Models\RestaurantStaff;
 use Illuminate\Http\Request;
@@ -484,5 +485,76 @@ class BusinessController extends Controller
         $review->delete();
 
         return response()->json(['success' => true]);
+    }
+
+    /**
+     * Delete a restaurant and store its data in deleted_restaurants table
+     */
+    public function delete(Request $request, Restaurant $restaurant)
+    {
+        $user = Auth::user();
+        if (!$user->canAccessRestaurant($restaurant)) {
+            abort(403);
+        }
+
+        // Validate confirmation name
+        $request->validate([
+            'confirm_name' => 'required|string',
+        ]);
+
+        if ($request->confirm_name !== $restaurant->name) {
+            return back()->with('error', 'Restoran adı doğru girilmedi. Silme işlemi iptal edildi.');
+        }
+
+        try {
+            \DB::beginTransaction();
+
+            // Save restaurant data to deleted_restaurants table
+            DeletedRestaurant::create([
+                'original_id' => $restaurant->id,
+                'business_id' => $restaurant->business_id,
+                'name' => $restaurant->name,
+                'slug' => $restaurant->slug,
+                'address' => $restaurant->address,
+                'phone' => $restaurant->phone,
+                'email' => $restaurant->email,
+                'description' => $restaurant->description,
+                'currency' => $restaurant->currency,
+                'timezone' => $restaurant->timezone,
+                'logo' => $restaurant->logo,
+                'cover' => $restaurant->cover,
+                'is_featured' => $restaurant->is_featured ?? false, // Default false if null
+                'is_active' => $restaurant->is_active ?? false, // Default false if null
+                'settings' => $restaurant->settings,
+                'deleted_related_data' => [
+                    'categories' => $restaurant->categories()->get()->toArray(),
+                    'products' => $restaurant->products()->get()->toArray(),
+                    'orders' => $restaurant->orders()->with(['orderItems'])->get()->toArray(),
+                    'staff' => $restaurant->staff()->get()->toArray(),
+                    'reviews' => $restaurant->reviews()->get()->toArray(),
+                    'deleted_at' => now(),
+                    'deletion_reason' => $request->input('deletion_reason'),
+                ],
+            ]);
+
+            // Delete related data
+            $restaurant->categories()->delete();
+            $restaurant->products()->delete();
+            $restaurant->orders()->delete();
+            $restaurant->staff()->delete();
+            $restaurant->reviews()->delete();
+
+            // Finally delete the restaurant
+            $restaurant->delete();
+
+            \DB::commit();
+
+            return redirect()->route('business.restaurants')
+                ->with('success', 'Restoran başarıyla silindi ve veriler arşivlendi.');
+
+        } catch (\Exception $e) {
+            \DB::rollBack();
+            return back()->with('error', 'Restoran silinirken bir hata oluştu: ' . $e->getMessage());
+        }
     }
 }

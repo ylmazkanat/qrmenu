@@ -19,27 +19,71 @@ class DatabaseSeeder extends Seeder
     public function run(): void
     {
         // 1. Admin kullanıcısı oluştur
-        $admin = User::create([
+        $admin = User::firstOrCreate([
+            'email' => 'admin@qrmenu.com'
+        ], [
             'name' => 'Admin User',
-            'email' => 'admin@qrmenu.com',
             'password' => 'password',
             'role' => 'admin',
         ]);
 
         // 2. İşletme sahibi oluştur
-        $businessOwner = User::create([
+        $businessOwner = User::firstOrCreate([
+            'email' => 'isletme@qrmenu.com'
+        ], [
             'name' => 'İşletme Sahibi',
-            'email' => 'isletme@qrmenu.com',
             'password' => 'password',
             'role' => 'business_owner',
+        ]);
+
+        // 4. Restoran yöneticisi oluştur
+        $restaurantManager = User::firstOrCreate([
+            'email' => 'mudur@restaurant.com'
+        ], [
+            'name' => 'Restoran Müdürü',
+            'password' => 'password',
+            'role' => 'restaurant_manager',
+        ]);
+
+        // 5. Restoran çalışanları oluştur
+        $waiter1 = User::firstOrCreate([
+            'email' => 'garson1@restaurant.com'
+        ], [
+            'name' => 'Garson Ali',
+            'password' => 'password',
+            'role' => 'waiter',
+        ]);
+
+        $waiter2 = User::firstOrCreate([
+            'email' => 'garson2@restaurant.com'
+        ], [
+            'name' => 'Garson Ayşe',
+            'password' => 'password',
+            'role' => 'waiter',
+        ]);
+
+        $kitchen1 = User::firstOrCreate([
+            'email' => 'asci1@restaurant.com'
+        ], [
+            'name' => 'Aşçı Mehmet',
+            'password' => 'password',
+            'role' => 'kitchen',
+        ]);
+
+        $cashier1 = User::firstOrCreate([
+            'email' => 'kasiyer1@restaurant.com'
+        ], [
+            'name' => 'Kasiyer Fatma',
+            'password' => 'password',
+            'role' => 'cashier',
         ]);
 
         // 3. İşletme oluştur
         $business = Business::create([
             'owner_id' => $businessOwner->id,
+            'user_id' => $businessOwner->id,
             'name' => 'Test İşletmesi',
             'slug' => 'test-isletmesi',
-            'description' => 'Bu bir test işletmesidir. Birden fazla restoranı vardır.',
             'phone' => '+90 555 123 4567',
             'address' => 'Test Mahallesi, Test Caddesi No:1, İstanbul',
             'tax_number' => '1234567890',
@@ -48,62 +92,15 @@ class DatabaseSeeder extends Seeder
             'is_active' => true,
         ]);
 
-        // 4. Restoran yöneticisi oluştur
-        $restaurantManager = User::create([
-            'name' => 'Restoran Müdürü',
-            'email' => 'mudur@restaurant.com',
-            'password' => 'password',
-            'role' => 'restaurant_manager',
-        ]);
-
-        // 5. Restoran çalışanları oluştur
-        $waiter1 = User::create([
-            'name' => 'Garson Ali',
-            'email' => 'garson1@restaurant.com',
-            'password' => 'password',
-            'role' => 'waiter',
-        ]);
-
-        $waiter2 = User::create([
-            'name' => 'Garson Ayşe',
-            'email' => 'garson2@restaurant.com',
-            'password' => 'password',
-            'role' => 'waiter',
-        ]);
-
-        $kitchen1 = User::create([
-            'name' => 'Aşçı Mehmet',
-            'email' => 'asci1@restaurant.com',
-            'password' => 'password',
-            'role' => 'kitchen',
-        ]);
-
-        $cashier1 = User::create([
-            'name' => 'Kasiyer Fatma',
-            'email' => 'kasiyer1@restaurant.com',
-            'password' => 'password',
-            'role' => 'cashier',
-        ]);
-
         // 6. Test restoranı oluştur
         $restaurant = Restaurant::create([
             'business_id' => $business->id,
             'restaurant_manager_id' => $restaurantManager->id,
             'name' => 'Test Restaurant',
             'slug' => 'test-restaurant',
-            'description' => 'Bu bir test restoranıdır. Lezzetli yemekler ve kaliteli hizmet.',
             'phone' => '+90 555 987 6543',
             'address' => 'Restoran Mahallesi, Lezzet Caddesi No:5, İstanbul',
             'table_count' => 20,
-            'working_hours' => [
-                'monday' => ['open' => '09:00', 'close' => '23:00'],
-                'tuesday' => ['open' => '09:00', 'close' => '23:00'],
-                'wednesday' => ['open' => '09:00', 'close' => '23:00'],
-                'thursday' => ['open' => '09:00', 'close' => '23:00'],
-                'friday' => ['open' => '09:00', 'close' => '24:00'],
-                'saturday' => ['open' => '09:00', 'close' => '24:00'],
-                'sunday' => ['open' => '10:00', 'close' => '22:00'],
-            ],
             'is_active' => true,
         ]);
 
@@ -153,7 +150,6 @@ class DatabaseSeeder extends Seeder
             'restaurant_manager_id' => null,
             'name' => 'Pizza House',
             'slug' => 'pizza-house',
-            'description' => 'En lezzetli pizzalar burada!',
             'phone' => '+90 555 111 2233',
             'address' => 'Pizza Mahallesi, İtalyan Caddesi No:10, İstanbul',
             'table_count' => 15,

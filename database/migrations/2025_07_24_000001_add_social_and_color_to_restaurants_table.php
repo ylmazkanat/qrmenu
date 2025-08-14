@@ -7,14 +7,30 @@ return new class extends Migration {
     public function up(): void
     {
         Schema::table('restaurants', function (Blueprint $table) {
-            $table->string('instagram')->nullable();
-            $table->string('whatsapp')->nullable();
-            $table->string('twitter')->nullable();
-            $table->string('facebook')->nullable();
-            $table->string('color_primary', 10)->nullable();
-            $table->string('color_secondary', 10)->nullable();
-            $table->string('color_cart', 10)->nullable();
-            $table->string('wifi_password', 50)->nullable();
+            if (!Schema::hasColumn('restaurants', 'instagram')) {
+                $table->string('instagram')->nullable();
+            }
+            if (!Schema::hasColumn('restaurants', 'whatsapp')) {
+                $table->string('whatsapp')->nullable();
+            }
+            if (!Schema::hasColumn('restaurants', 'twitter')) {
+                $table->string('twitter')->nullable();
+            }
+            if (!Schema::hasColumn('restaurants', 'facebook')) {
+                $table->string('facebook')->nullable();
+            }
+            if (!Schema::hasColumn('restaurants', 'color_primary')) {
+                $table->string('color_primary', 10)->nullable();
+            }
+            if (!Schema::hasColumn('restaurants', 'color_secondary')) {
+                $table->string('color_secondary', 10)->nullable();
+            }
+            if (!Schema::hasColumn('restaurants', 'color_cart')) {
+                $table->string('color_cart', 10)->nullable();
+            }
+            if (!Schema::hasColumn('restaurants', 'wifi_password')) {
+                $table->string('wifi_password', 50)->nullable();
+            }
         });
     }
     public function down(): void

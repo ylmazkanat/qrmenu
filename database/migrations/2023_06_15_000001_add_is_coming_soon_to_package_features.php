@@ -11,9 +11,12 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('package_features', function (Blueprint $table) {
-            $table->boolean('is_coming_soon')->default(false)->after('is_enabled');
-        });
+        // Sütun var mı diye kontrol edelim
+        if (!Schema::hasColumn('package_features', 'is_coming_soon')) {
+            Schema::table('package_features', function (Blueprint $table) {
+                $table->boolean('is_coming_soon')->default(false);
+            });
+        }
     }
 
     /**
