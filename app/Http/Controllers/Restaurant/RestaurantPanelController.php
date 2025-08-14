@@ -37,30 +37,37 @@ class RestaurantPanelController extends Controller
         $restaurant = $this->getUserRestaurant($user);
         
         if (!$restaurant) {
-            abort(403, 'Bu restorana erişim yetkiniz yok.');
+            // Kullanıcının hiç restoranı yoksa veya erişim yetkisi yoksa
+            if ($user->isBusinessOwner()) {
+                return redirect()->route('business.dashboard')->with('error', 'Henüz restoranınız bulunmuyor. Lütfen önce bir restoran oluşturun.');
+            } elseif ($user->isRestaurantManager()) {
+                return redirect()->route('business.dashboard')->with('error', 'Henüz size atanmış bir restoran bulunmuyor.');
+            } else {
+                abort(403, 'Bu restorana erişim yetkiniz yok.');
+            }
         }
 
         $stats = [
-            'today_orders' => $restaurant->getTodayOrdersCount(),
-            'yesterday_orders' => $restaurant->orders()->whereDate('created_at', today()->subDay())->count(),
-            'today_revenue' => $restaurant->getTodayRevenue(),
-            'active_orders' => $restaurant->orders()
+            'today_orders' => $restaurant ? $restaurant->getTodayOrdersCount() : 0,
+            'yesterday_orders' => $restaurant ? $restaurant->orders()->whereDate('created_at', today()->subDay())->count() : 0,
+            'today_revenue' => $restaurant ? $restaurant->getTodayRevenue() : 0,
+            'active_orders' => $restaurant ? $restaurant->orders()
                 ->whereIn('status', ['pending', 'preparing', 'ready'])
-                ->count(),
-            'active_staff' => $restaurant->staff()->where('is_active', true)->count(),
+                ->count() : 0,
+            'active_staff' => $restaurant ? $restaurant->staff()->where('is_active', true)->count() : 0,
         ];
 
-        $recentOrders = $restaurant->orders()
+        $recentOrders = $restaurant ? $restaurant->orders()
             ->with(['orderItems.product'])
             ->latest()
             ->take(10)
-            ->get();
+            ->get() : collect();
 
-        $activeOrders = $restaurant->orders()
+        $activeOrders = $restaurant ? $restaurant->orders()
             ->whereIn('status', ['pending', 'preparing', 'ready'])
             ->with(['orderItems.product'])
             ->latest()
-            ->get();
+            ->get() : collect();
 
         return view('restaurant.dashboard', compact('restaurant', 'stats', 'recentOrders', 'activeOrders'));
     }
@@ -274,7 +281,7 @@ class RestaurantPanelController extends Controller
             return response()->json(['success' => false, 'message' => 'Bu siparişe erişim yetkiniz yok.'], 403);
         }
 
-        $order->update(['status' => 'delivered']);
+        $order->updateStatus('delivered', 'Garson tarafından teslim edildi');
 
         return response()->json([
             'success' => true,
@@ -310,10 +317,7 @@ class RestaurantPanelController extends Controller
             }
         }
 
-        $order->update([
-            'status' => 'cancelled',
-            'last_status' => $order->status,
-        ]);
+        $order->updateStatus('cancelled', 'Garson tarafından iptal edildi');
 
         return response()->json([
             'success' => true,
@@ -401,7 +405,7 @@ class RestaurantPanelController extends Controller
         if (!$order) {
             return response()->json(['success' => false, 'message' => 'Sipariş bulunamadı veya uygun değil.'], 404);
         }
-        $order->update(['status' => 'zafiyat']);
+        $order->updateStatus('zafiyat', 'Kasiyer tarafından zafiyat olarak işaretlendi');
         // Burada kasiyer panelinde zafiyat olarak gösterilecek
         return response()->json(['success' => true, 'message' => 'Sipariş zafiyat olarak işaretlendi.']);
     }
@@ -424,7 +428,7 @@ class RestaurantPanelController extends Controller
             return response()->json(['success' => false, 'message' => 'Bu siparişe erişim yetkiniz yok.'], 403);
         }
 
-        $order->update(['status' => 'preparing']);
+        $order->updateStatus('preparing', 'Mutfak tarafından hazırlanmaya başlandı');
 
         // Kitchen view'ı seen olarak işaretle
         KitchenView::where('order_id', $order->id)->update([
@@ -456,7 +460,7 @@ class RestaurantPanelController extends Controller
             return response()->json(['success' => false, 'message' => 'Bu siparişe erişim yetkiniz yok.'], 403);
         }
 
-        $order->update(['status' => 'ready']);
+        $order->updateStatus('ready', 'Mutfak tarafından hazır olarak işaretlendi');
 
         return response()->json([
             'success' => true,
@@ -487,7 +491,7 @@ class RestaurantPanelController extends Controller
             ->get()
             ->groupBy('table_number');
 
-        // Bugünkü ödemeler (tamamlanmış ve kısmi ödemeler)
+        // Bugünkü ödemeler (tamamlanmış ve kısmi ödemeler) - Session bazlı gruplandırılmış
         $recentPayments = $restaurant->orders()
             ->where(function($query) {
                 $query->where('status', 'delivered')
@@ -498,7 +502,75 @@ class RestaurantPanelController extends Controller
             ->whereDate('updated_at', today()) // Sadece bugün güncellenen siparişler
             ->with(['orderItems.product', 'payments'])
             ->orderByDesc('updated_at')
-            ->get();
+            ->get()
+            ->groupBy(function($order) {
+                // Session ID varsa onu kullan, yoksa masa numarası + updated_at timestamp'i
+                return $order->session_id ?? 'table_' . $order->table_number . '_' . $order->updated_at->format('YmdHis');
+            })
+            ->map(function($tableOrders) {
+                // Her session için tek bir "sipariş" objesi oluştur
+                $firstOrder = $tableOrders->first();
+                
+                // İptal edilen siparişler hariç toplam tutarı hesapla
+                $totalAmount = $tableOrders->whereNotIn('status', ['kitchen_cancelled', 'cancelled', 'musteri_iptal'])->sum('total');
+                $totalPaid = $tableOrders->sum('paid_amount');
+                $allOrderItems = $tableOrders->flatMap(function($order) use ($tableOrders) {
+                    $items = $order->orderItems;
+                    foreach($items as $item) {
+                        $item->order_status = $order->status;
+                        $item->is_cancelled = $order->isCancelled();
+                        $item->is_zafiyat = $order->isZafiyat();
+                    }
+                    return $items;
+                });
+                $allPayments = $tableOrders->flatMap(function($order) {
+                    return $order->payments;
+                });
+                
+                // Yeni bir obje oluştur (Order modeli değil, stdClass)
+                $combinedOrder = new \stdClass();
+                $combinedOrder->id = $firstOrder->session_id ?? 'table_' . $firstOrder->table_number . '_' . $firstOrder->updated_at->format('YmdHis');
+                $combinedOrder->table_number = $firstOrder->table_number;
+                $combinedOrder->customer_name = $firstOrder->customer_name;
+                $combinedOrder->status = $firstOrder->status;
+                $combinedOrder->payment_status = $firstOrder->payment_status;
+                $combinedOrder->total = $totalAmount;
+                $combinedOrder->paid_amount = $totalPaid;
+                $combinedOrder->created_at = $tableOrders->min('created_at');
+                $combinedOrder->updated_at = $tableOrders->max('updated_at');
+                $combinedOrder->orderItems = $allOrderItems;
+                $combinedOrder->payments = $allPayments;
+                $combinedOrder->original_status = $firstOrder->original_status;
+                $combinedOrder->session_id = $firstOrder->session_id ?? 'table_' . $firstOrder->table_number . '_' . $firstOrder->updated_at->format('YmdHis');
+                // Basit boolean değerler olarak hesapla
+                $combinedOrder->isCancelled = $tableOrders->contains(function($order) {
+                    return $order->isCancelled();
+                });
+                
+                $combinedOrder->isZafiyat = $tableOrders->contains(function($order) {
+                    return $order->isZafiyat();
+                });
+                
+                // Display status'u hesapla
+                $cancelledOrder = $tableOrders->first(function($order) {
+                    return $order->isCancelled();
+                });
+                if ($cancelledOrder) {
+                    $combinedOrder->displayStatus = $cancelledOrder->getDisplayStatus();
+                } else {
+                    $zafiyatOrder = $tableOrders->first(function($order) {
+                        return $order->isZafiyat();
+                    });
+                    if ($zafiyatOrder) {
+                        $combinedOrder->displayStatus = $zafiyatOrder->getDisplayStatus();
+                    } else {
+                        $combinedOrder->displayStatus = $tableOrders->first()->getDisplayStatus();
+                    }
+                }
+                
+                return $combinedOrder;
+            })
+            ->values(); // Array'e çevir
 
         $todayRevenue = $restaurant->getTodayRevenue();
         $todayOrdersCount = $restaurant->getTodayOrdersCount();
@@ -829,6 +901,13 @@ class RestaurantPanelController extends Controller
             return response()->json(['success' => false, 'message' => 'Bu siparişe erişim yetkiniz yok.'], 403);
         }
 
+        // Ürün durum bilgilerini ekle
+        foreach($order->orderItems as $item) {
+            $item->order_status = $order->status;
+            $item->is_cancelled = $order->isCancelled();
+            $item->is_zafiyat = $order->isZafiyat();
+        }
+
         return view('restaurant.receipt', compact('order', 'restaurant'));
     }
 
@@ -843,13 +922,35 @@ class RestaurantPanelController extends Controller
         }
 
         if ($sessionId) {
-            // Belirli bir session_id için fiş yazdır
-            $tableOrders = $restaurant->orders()
-                ->where('table_number', $tableNumber)
-                ->where('session_id', $sessionId)
-                ->with(['orderItems.product', 'payments'])
-                ->orderBy('created_at')
-                ->get();
+            // Session ID'yi parse et
+            if (strpos($sessionId, 'table_') === 0) {
+                // Kasiyer panelinden gelen session_id formatı: table_MASANUMARASI_TIMESTAMP
+                $parts = explode('_', $sessionId);
+                if (count($parts) >= 3) {
+                    $tableNum = $parts[1];
+                    $timestamp = $parts[2];
+                    
+                    // Bu timestamp'e yakın zamandaki siparişleri bul (10 dakikalık aralık)
+                    $targetTime = \Carbon\Carbon::createFromFormat('YmdHis', $timestamp);
+                    $tableOrders = $restaurant->orders()
+                        ->where('table_number', $tableNum)
+                        ->where('updated_at', '>=', $targetTime->copy()->subMinutes(10))
+                        ->where('updated_at', '<=', $targetTime->copy()->addMinutes(10))
+                        ->with(['orderItems.product', 'payments'])
+                        ->orderBy('created_at')
+                        ->get();
+                } else {
+                    $tableOrders = collect();
+                }
+            } else {
+                // Gerçek session_id ile arama
+                $tableOrders = $restaurant->orders()
+                    ->where('table_number', $tableNumber)
+                    ->where('session_id', $sessionId)
+                    ->with(['orderItems.product', 'payments'])
+                    ->orderBy('created_at')
+                    ->get();
+            }
         } else {
             // Önce en son kapatılan masayı bul (en son session_id)
             $latestSession = $restaurant->orders()
@@ -881,12 +982,21 @@ class RestaurantPanelController extends Controller
             return response()->json(['success' => false, 'message' => 'Bu masada sipariş bulunamadı. Masa: ' . $tableNumber], 404);
         }
 
-        // Toplam hesaplamaları
+        // Toplam hesaplamaları - İptal edilen siparişler hariç
         $totalAmount = $tableOrders->whereNotIn('status', ['kitchen_cancelled', 'cancelled', 'musteri_iptal'])->sum('total');
         $totalPaid = $tableOrders->sum(function($order) {
             return $order->payments->sum('amount');
         });
         $cancelledAmount = $tableOrders->whereIn('status', ['kitchen_cancelled', 'cancelled', 'musteri_iptal'])->sum('total');
+
+        // Her ürün için durum bilgisini ekle
+        foreach($tableOrders as $order) {
+            foreach($order->orderItems as $item) {
+                $item->order_status = $order->status;
+                $item->is_cancelled = $order->isCancelled();
+                $item->is_zafiyat = $order->isZafiyat();
+            }
+        }
 
         return view('restaurant.table_receipt', compact('tableOrders', 'restaurant', 'tableNumber', 'totalAmount', 'totalPaid', 'cancelledAmount'));
     }
@@ -1173,7 +1283,8 @@ class RestaurantPanelController extends Controller
         if ($user->isBusinessOwner()) {
             $businesses = $user->getActiveBusinesses();
             if ($businesses->isNotEmpty()) {
-                return $businesses->first()->restaurants()->first();
+                $business = $businesses->first();
+                return $business->restaurants()->first();
             }
         }
 
@@ -1464,7 +1575,7 @@ class RestaurantPanelController extends Controller
         if (!$order) {
             return response()->json(['success' => false, 'message' => 'Sipariş bulunamadı veya uygun değil.'], 404);
         }
-        $order->update(['status' => 'kitchen_cancelled']);
+        $order->updateStatus('kitchen_cancelled', 'Mutfak tarafından iptal edildi');
         return response()->json(['success' => true, 'message' => 'Sipariş mutfak tarafından iptal edildi.']);
     }
 }

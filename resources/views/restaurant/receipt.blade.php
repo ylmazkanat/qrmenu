@@ -125,18 +125,33 @@
             </div>
             
             @foreach($order->orderItems as $item)
+                @php
+                    $isCancelled = $item->is_cancelled ?? false;
+                    $isZafiyat = $item->is_zafiyat ?? false;
+                @endphp
                 <div class="item">
                     <div class="item-name">
-                        {{ $item->product->name }}
+                        @if($item->product)
+                            {{ $item->product->name }}
+                        @else
+                            Silinmiş Ürün
+                        @endif
                         @if($item->note)
                             <div style="font-size: 10px; color: #666;">Not: {{ $item->note }}</div>
                         @endif
                     </div>
                     <div class="item-qty">{{ $item->quantity }}</div>
-                    <div class="item-price">₺{{ number_format($item->price * $item->quantity, 2) }}</div>
+                    <div class="item-price" style="{{ $isCancelled ? 'text-decoration: line-through; color: #dc3545;' : '' }}">
+                        ₺{{ number_format($item->price * $item->quantity, 2) }}
+                    </div>
                 </div>
-                <div style="font-size: 10px; color: #666; margin-left: 0; margin-bottom: 5px;">
+                <div style="font-size: 10px; color: {{ $isCancelled ? '#dc3545' : '#666' }}; margin-left: 0; margin-bottom: 5px;">
                     {{ $item->quantity }} x ₺{{ number_format($item->price, 2) }}
+                    @if($isCancelled)
+                        <span style="color: #dc3545;">(İptal)</span>
+                    @elseif($isZafiyat)
+                        <span style="color: #ffc107;">(Zafiyat)</span>
+                    @endif
                 </div>
             @endforeach
         </div>
@@ -151,10 +166,21 @@
             }
         @endphp
         
+        @php
+            $isCancelled = $order->isCancelled();
+            $isZafiyat = $order->isZafiyat();
+        @endphp
         <div class="total-section">
             <div class="total-line">
                 <span>ARA TOPLAM:</span>
-                <span>₺{{ number_format($order->total, 2) }}</span>
+                <span style="{{ $isCancelled ? 'text-decoration: line-through; color: #dc3545;' : '' }}">
+                    ₺{{ number_format($order->total, 2) }}
+                </span>
+                @if($isCancelled)
+                    <div style="font-size: 10px; color: #dc3545; margin-top: 2px;">(İptal - Fiyat alınmıyor)</div>
+                @elseif($isZafiyat)
+                    <div style="font-size: 10px; color: #ffc107; margin-top: 2px;">(Zafiyat - Fiyat alınacak)</div>
+                @endif
             </div>
             
             @if($cancelledAmount > 0)

@@ -12,11 +12,11 @@
                     <div class="row align-items-center">
                         <div class="col-md-8">
                             <h3 class="mb-2">Hoş geldiniz, {{ auth()->user()->name }}! 👋</h3>
-                            <p class="text-muted mb-0">{{ $restaurant->name }} restoranının operasyonel durumunu buradan takip edebilirsiniz.</p>
+                            <p class="text-muted mb-0">{{ $restaurant->name ?? 'Restoran' }} restoranının operasyonel durumunu buradan takip edebilirsiniz.</p>
                         </div>
                         <div class="col-md-4 text-end">
                             <div class="d-flex gap-2 justify-content-end">
-                                <a href="{{ route('menu.show', $restaurant->slug) }}" class="btn btn-restaurant-modern" target="_blank">
+                                <a href="{{ route('menu.show', $restaurant->slug ?? '') }}" class="btn btn-restaurant-modern" target="_blank">
                                     <i class="bi bi-eye"></i>
                                     Menüyü Görüntüle
                                 </a>
@@ -169,11 +169,11 @@
                             <i class="bi bi-clock-history me-2"></i>
                             Aktif Siparişler
                         </h5>
-                        <span class="badge bg-primary">{{ $activeOrders->count() }} aktif</span>
+                        <span class="badge bg-primary">{{ $activeOrders ? $activeOrders->count() : 0 }} aktif</span>
                     </div>
                 </div>
                 <div class="card-body p-0">
-                    @if($activeOrders->count() > 0)
+                    @if($activeOrders && $activeOrders->count() > 0)
                         <div class="table-responsive">
                             <table class="table table-modern">
                                 <thead>
@@ -249,17 +249,17 @@
                 <div class="card-body">
                     <div class="mb-3">
                         <strong>Restoran:</strong><br>
-                        <span class="text-muted">{{ $restaurant->name }}</span>
+                        <span class="text-muted">{{ $restaurant->name ?? 'Belirtilmemiş' }}</span>
                     </div>
                     
-                    @if($restaurant->description)
+                    @if($restaurant->description ?? null)
                         <div class="mb-3">
                             <strong>Açıklama:</strong><br>
                             <span class="text-muted">{{ $restaurant->description }}</span>
                         </div>
                     @endif
                     
-                    @if($restaurant->phone)
+                    @if($restaurant->phone ?? null)
                         <div class="mb-3">
                             <strong>Telefon:</strong><br>
                             <span class="text-muted">{{ $restaurant->phone }}</span>
@@ -268,12 +268,12 @@
                     
                     <div class="mb-3">
                         <strong>Masa Sayısı:</strong><br>
-                        <span class="text-muted">{{ $restaurant->table_count }} masa</span>
+                        <span class="text-muted">{{ $restaurant->table_count ?? 0 }} masa</span>
                     </div>
                     
                     <div class="mb-3">
                         <strong>Durum:</strong><br>
-                        @if($restaurant->is_active)
+                        @if($restaurant->is_active ?? false)
                             <span class="badge badge-modern bg-success">Aktif</span>
                         @else
                             <span class="badge badge-modern bg-danger">Pasif</span>
@@ -283,11 +283,11 @@
                     <div class="border-top pt-3">
                         <div class="row text-center">
                             <div class="col-6">
-                                <div class="text-primary fw-bold fs-5">{{ $restaurant->categories->count() }}</div>
+                                <div class="text-primary fw-bold fs-5">{{ $restaurant->categories->count() ?? 0 }}</div>
                                 <small class="text-muted">Kategori</small>
                             </div>
                             <div class="col-6">
-                                <div class="text-success fw-bold fs-5">{{ $restaurant->products->count() }}</div>
+                                <div class="text-success fw-bold fs-5">{{ $restaurant->products->count() ?? 0 }}</div>
                                 <small class="text-muted">Ürün</small>
                             </div>
                         </div>
@@ -317,7 +317,7 @@
                     </h5>
                 </div>
                 <div class="card-body p-0">
-                    @if($recentOrders->count() > 0)
+                    @if($recentOrders && $recentOrders->count() > 0)
                         <div class="table-responsive">
                             <table class="table table-modern">
                                 <thead>
@@ -348,9 +348,15 @@
                                             <td>
                                                 <div class="d-flex flex-wrap gap-1">
                                                     @foreach($order->orderItems->take(3) as $item)
-                                                        <span class="badge bg-light text-dark">
-                                                            {{ $item->quantity }}x {{ Str::limit($item->product->name, 15) }}
-                                                        </span>
+                                                        @if($item->product)
+                                                            <span class="badge bg-light text-dark">
+                                                                {{ $item->quantity }}x {{ Str::limit($item->product->name, 15) }}
+                                                            </span>
+                                                        @else
+                                                            <span class="badge bg-light text-dark">
+                                                                {{ $item->quantity }}x Silinmiş Ürün
+                                                            </span>
+                                                        @endif
                                                     @endforeach
                                                     @if($order->orderItems->count() > 3)
                                                         <span class="badge bg-secondary">+{{ $order->orderItems->count() - 3 }}</span>

@@ -203,7 +203,7 @@
                                         <div class="mt-2">
                                             @foreach($order->orderItems as $item)
                                                 <span class="badge bg-light text-dark me-1">
-                                                    {{ $item->quantity }}x {{ $item->product->name }}
+                                                    {{ $item->quantity }}x {{ $item->product ? $item->product->name : 'Silinmiş Ürün' }}
                                                 </span>
                                             @endforeach
                                         </div>
@@ -286,7 +286,7 @@
                                 @foreach($order->orderItems as $item)
                                     <div class="d-flex justify-content-between align-items-center mb-1">
                                         <div>
-                                            <span class="fw-medium">{{ $item->product->name }}</span>
+                                            <span class="fw-medium">{{ $item->product ? $item->product->name : 'Silinmiş Ürün' }}</span>
                                             @if($item->note)
                                                 <br><small class="text-muted">Not: {{ $item->note }}</small>
                                             @endif

@@ -130,44 +130,73 @@
             @foreach($tableOrders as $order)
                 <div class="order-header">
                     Sipariş #{{ $order->id }}
-                    @if($order->status === 'kitchen_cancelled')
+                    @php
+                        $displayStatus = $order->getDisplayStatus();
+                    @endphp
+                    @if($displayStatus === 'kitchen_cancelled')
                         <span class="status-badge status-cancelled">MUTFAK İPTALİ</span>
-                    @elseif($order->status === 'cancelled')
+                        <span style="font-size: 10px; color: #dc3545;">(Müşteri İptal)</span>
+                    @elseif($displayStatus === 'cancelled')
                         <span class="status-badge status-cancelled">İPTAL EDİLDİ</span>
-                    @elseif($order->status === 'musteri_iptal')
+                        <span style="font-size: 10px; color: #dc3545;">(Müşteri İptal)</span>
+                    @elseif($displayStatus === 'musteri_iptal')
                         <span class="status-badge status-cancelled">MÜŞTERİ İPTALİ</span>
-                    @elseif($order->status === 'zafiyat')
+                        <span style="font-size: 10px; color: #dc3545;">(Müşteri İptal)</span>
+                    @elseif($displayStatus === 'zafiyat')
                         <span class="status-badge status-zafiyat">ZAFİYAT</span>
-                    @elseif($order->status === 'delivered')
+                        <span style="font-size: 10px; color: #ffc107;">(Zafiyat)</span>
+                    @elseif($displayStatus === 'delivered')
                         <span class="status-badge status-delivered">TESLİM EDİLDİ</span>
                     @else
-                        <span class="status-badge status-pending">{{ strtoupper($order->status) }}</span>
+                        <span class="status-badge status-pending">{{ strtoupper($displayStatus) }}</span>
                     @endif
                     <div style="font-size: 10px; color: #666;">{{ $order->created_at->format('H:i') }}</div>
                 </div>
                 
                 @foreach($order->orderItems as $item)
+                    @php
+                        $isCancelled = $item->is_cancelled ?? false;
+                        $isZafiyat = $item->is_zafiyat ?? false;
+                    @endphp
                     <div class="item">
                         <div class="item-name">
-                            {{ $item->product->name }}
+                            @if($item->product)
+                                {{ $item->product->name }}
+                            @else
+                                Silinmiş Ürün
+                            @endif
                             @if($item->note)
                                 <div style="font-size: 10px; color: #666;">Not: {{ $item->note }}</div>
                             @endif
                         </div>
                         <div class="item-qty">{{ $item->quantity }}</div>
-                        <div class="item-price">₺{{ number_format($item->price * $item->quantity, 2) }}</div>
+                        <div class="item-price" style="{{ $isCancelled ? 'text-decoration: line-through; color: #dc3545;' : '' }}">
+                            ₺{{ number_format($item->price * $item->quantity, 2) }}
+                        </div>
                     </div>
-                    <div style="font-size: 10px; color: #666; margin-left: 0; margin-bottom: 5px;">
+                    <div style="font-size: 10px; color: {{ $isCancelled ? '#dc3545' : '#666' }}; margin-left: 0; margin-bottom: 5px;">
                         {{ $item->quantity }} x ₺{{ number_format($item->price, 2) }}
+                        @if($isCancelled)
+                            <span style="color: #dc3545;">(İptal)</span>
+                        @elseif($isZafiyat)
+                            <span style="color: #ffc107;">(Zafiyat)</span>
+                        @endif
                     </div>
                 @endforeach
                 
+                @php
+                    $isCancelled = $order->isCancelled();
+                    $isZafiyat = $order->isZafiyat();
+                @endphp
                 <div style="text-align: right; margin-bottom: 10px; font-weight: bold;">
-                    Sipariş Toplamı: ₺{{ number_format($order->total, 2) }}
-                    @if(in_array($order->status, ['kitchen_cancelled', 'cancelled', 'musteri_iptal']))
-                        <div style="font-size: 10px; color: #dc3545;">❌ Fiyat alınmıyor</div>
-                    @elseif($order->status === 'zafiyat')
-                        <div style="font-size: 10px; color: #ffc107;">⚠️ Fiyat alınacak</div>
+                    Sipariş Toplamı: 
+                    <span style="{{ $isCancelled ? 'text-decoration: line-through; color: #dc3545;' : '' }}">
+                        ₺{{ number_format($order->total, 2) }}
+                    </span>
+                    @if($isCancelled)
+                        <div style="font-size: 10px; color: #dc3545;">❌ Fiyat alınmıyor (İptal)</div>
+                    @elseif($isZafiyat)
+                        <div style="font-size: 10px; color: #ffc107;">⚠️ Fiyat alınacak (Zafiyat)</div>
                     @endif
                 </div>
             @endforeach

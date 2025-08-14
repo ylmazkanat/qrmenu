@@ -97,7 +97,7 @@
                                         @foreach($order->orderItems as $item)
                                             <div class="d-flex justify-content-between align-items-center mb-2 p-2 bg-light rounded">
                                                 <div>
-                                                    <div class="fw-medium">{{ $item->product->name }}</div>
+                                                    <div class="fw-medium">{{ $item->product ? $item->product->name : 'Silinmiş Ürün' }}</div>
                                                     @if($item->note)
                                                         <small class="text-muted">Not: {{ $item->note }}</small>
                                                     @endif
@@ -167,7 +167,7 @@
                                         @foreach($order->orderItems as $item)
                                             <div class="d-flex justify-content-between align-items-center mb-2 p-2 bg-light rounded">
                                                 <div>
-                                                    <div class="fw-medium">{{ $item->product->name }}</div>
+                                                    <div class="fw-medium">{{ $item->product ? $item->product->name : 'Silinmiş Ürün' }}</div>
                                                     @if($item->note)
                                                         <small class="text-muted">Not: {{ $item->note }}</small>
                                                     @endif
@@ -239,7 +239,7 @@
                                         @foreach($order->orderItems as $item)
                                             <div class="d-flex justify-content-between align-items-center mb-2 p-2 bg-light rounded">
                                                 <div>
-                                                    <div class="fw-medium">{{ $item->product->name }}</div>
+                                                    <div class="fw-medium">{{ $item->product ? $item->product->name : 'Silinmiş Ürün' }}</div>
                                                     @if($item->note)
                                                         <small class="text-muted">Not: {{ $item->note }}</small>
                                                     @endif

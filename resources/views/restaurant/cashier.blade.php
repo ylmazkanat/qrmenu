@@ -177,20 +177,29 @@
                             </thead>
                             <tbody>
                                 @forelse($recentPayments as $order)
-                                    <tr>
+                                    <!-- Ana Satır -->
+                                    <tr class="table-row-main" onclick="toggleOrderDetails(this)" style="cursor: pointer;">
                                         <td>
-                                            <span class="fw-bold">Masa {{ $order->table_number }}</span>
-                                            @if($order->customer_name)
-                                                <br><small class="text-primary">{{ $order->customer_name }}</small>
-                                            @endif
+                                            <div class="d-flex align-items-center">
+                                                <i class="bi bi-chevron-down me-2 text-muted toggle-icon"></i>
+                                                <div>
+                                                    <span class="fw-bold">Masa {{ $order->table_number }}</span>
+                                                    @if($order->customer_name)
+                                                        <br><small class="text-primary">{{ $order->customer_name }}</small>
+                                                    @endif
+                                                </div>
+                                            </div>
                                         </td>
                                         <td>{{ $order->created_at->format('H:i') }}</td>
                                         <td>{{ $order->updated_at->format('H:i') }}</td>
                                         <td>
-                                            @if($order->payments->count() > 0)
-                                                @foreach($order->payments as $payment)
-                                                    <span class="badge {{ $payment->payment_method === 'nakit' ? 'bg-success' : 'bg-primary' }} me-1">
-                                                        {{ ucfirst($payment->payment_method) }} ₺{{ number_format($payment->amount, 2) }}
+                                            @if($order->payments && $order->payments->count() > 0)
+                                                @php
+                                                    $paymentsByMethod = $order->payments->groupBy('payment_method');
+                                                @endphp
+                                                @foreach($paymentsByMethod as $method => $payments)
+                                                    <span class="badge {{ $method === 'nakit' ? 'bg-success' : 'bg-primary' }} me-1">
+                                                        {{ ucfirst($method) }} ₺{{ number_format($payments->sum('amount'), 2) }}
                                                     </span>
                                                 @endforeach
                                             @else
@@ -206,10 +215,54 @@
                                             </span>
                                         </td>
                                         <td>
-                                            <button class="btn btn-sm btn-outline-success" onclick="printTableReceipt('{{ $order->table_number }}', '{{ $order->session_id }}')">
+                                            <button class="btn btn-sm btn-outline-success" onclick="event.stopPropagation(); printTableReceipt('{{ $order->table_number }}', '{{ $order->session_id }}')">
                                                 <i class="bi bi-printer"></i>
                                                 Masa Fişi
                                             </button>
+                                        </td>
+                                    </tr>
+                                    <!-- Sipariş Detayları Satırı -->
+                                    <tr class="table-row-details" style="display: none;">
+                                        <td colspan="7" class="p-0">
+                                            <div class="order-details-collapse" style="background-color: #f8f9fa; padding: 10px; border-top: 1px solid #dee2e6;">
+                                                <div class="row">
+                                                    <div class="col-12">
+                                                        <small class="text-muted fw-medium mb-2 d-block">
+                                                            <i class="bi bi-list-ul me-1"></i>
+                                                            Sipariş İçeriği:
+                                                        </small>
+                                                        <div class="d-flex flex-wrap gap-2">
+                                                            @foreach($order->orderItems as $item)
+                                                                @php
+                                                                    $isCancelled = $item->is_cancelled ?? false;
+                                                                    $isZafiyat = $item->is_zafiyat ?? false;
+                                                                @endphp
+                                                                <span class="badge bg-light text-dark border">
+                                                                    @if($item->product)
+                                                                        {{ $item->quantity }}x {{ Str::limit($item->product->name, 20) }}
+                                                                    @else
+                                                                        {{ $item->quantity }}x Silinmiş Ürün
+                                                                    @endif
+                                                                    @if($item->note)
+                                                                        <small class="text-muted ms-1">({{ Str::limit($item->note, 15) }})</small>
+                                                                    @endif
+                                                                    @if($isCancelled)
+                                                                        <small class="text-danger ms-1">(İptal)</small>
+                                                                    @elseif($isZafiyat)
+                                                                        <small class="text-warning ms-1">(Zafiyat)</small>
+                                                                    @endif
+                                                                </span>
+                                                            @endforeach
+                                                        </div>
+                                                        @if($order->orderItems->count() > 8)
+                                                            <small class="text-muted mt-2 d-block">
+                                                                <i class="bi bi-info-circle me-1"></i>
+                                                                Toplam {{ $order->orderItems->count() }} ürün sipariş edildi
+                                                            </small>
+                                                        @endif
+                                                    </div>
+                                                </div>
+                                            </div>
                                         </td>
                                     </tr>
                                 @empty
@@ -437,6 +490,47 @@
 @endsection
 
 @section('scripts')
+<style>
+    /* Tablo satır stilleri */
+    .table-row-main {
+        background-color: #ffffff;
+        border-bottom: 1px solid #dee2e6;
+    }
+    
+    .table-row-details {
+        background-color: #f8f9fa;
+        border-bottom: 2px solid #dee2e6;
+    }
+    
+    .table-row-details:hover {
+        background-color: #e9ecef;
+    }
+    
+    .order-details-collapse {
+        transition: all 0.3s ease;
+    }
+    
+    .order-details-collapse .badge {
+        font-size: 0.75rem;
+        padding: 0.25rem 0.5rem;
+    }
+    
+    /* Ana satır hover efekti */
+    .table-row-main:hover {
+        background-color: #f8f9fa;
+    }
+    
+    /* Responsive tasarım */
+    @media (max-width: 768px) {
+        .order-details-collapse .d-flex {
+            flex-direction: column;
+        }
+        
+        .order-details-collapse .badge {
+            margin-bottom: 0.25rem;
+        }
+    }
+</style>
 <script>
     let currentTableNumber = null;
     let currentTotalAmount = 0;
@@ -1052,5 +1146,23 @@
         document.getElementById('downloadEndOfDayPdf').href = pdfUrl;
         modal.show();
     });
+
+    // Sipariş detaylarını aç/kapat
+    function toggleOrderDetails(row) {
+        const detailsRow = row.nextElementSibling;
+        const toggleIcon = row.querySelector('.toggle-icon');
+        
+        if (detailsRow.style.display === 'none') {
+            detailsRow.style.display = 'table-row';
+            toggleIcon.classList.remove('bi-chevron-down');
+            toggleIcon.classList.add('bi-chevron-up');
+            row.style.backgroundColor = '#f8f9fa';
+        } else {
+            detailsRow.style.display = 'none';
+            toggleIcon.classList.remove('bi-chevron-up');
+            toggleIcon.classList.add('bi-chevron-down');
+            row.style.backgroundColor = '#ffffff';
+        }
+    }
 </script>
 @endsection 
