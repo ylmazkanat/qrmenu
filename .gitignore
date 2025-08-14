@@ -15,7 +15,7 @@
 /node_modules
 /public/build
 /public/hot
-/public/storage
+# /public/storage - Bu satırı kaldırdık çünkü storage link'i git'e dahil etmek istiyoruz
 /storage/*.key
 /storage/pail
 Homestead.json
