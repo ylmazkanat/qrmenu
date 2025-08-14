@@ -1,7 +1,8 @@
 <IfModule mod_rewrite.c>
     RewriteEngine On
     
-    # Allow direct access to files
+    # Allow direct access to files in app/public
+    RewriteCond %{REQUEST_URI} ^/storage/app/public/
     RewriteCond %{REQUEST_FILENAME} -f
     RewriteRule ^ - [L]
     

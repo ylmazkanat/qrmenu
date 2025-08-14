@@ -1,0 +1,5 @@
+[33mf6fce60[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain[m[33m, [m[1;31morigin/main[m[33m, [m[1;31morigin/HEAD[m[33m)[m Fix 403 error for storage images - Add .htaccess and update .gitignore
+[33m0580020[m Kasiyer düzenleme (zafiyat ve iptal düzenlenicek)
+[33m6ace528[m Kasiyer sorunları düzeltme (Hala sorunlu)
+[33mcbd7f2c[m Restorant silme özelliği ve migration düzenleme
+[33m5a5e37f[m Hata düzeltme 1
