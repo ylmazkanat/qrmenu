@@ -68,7 +68,7 @@
                                 <div class="product-card" onclick="addToOrder({{ $product->id }}, '{{ $product->name }}', {{ $product->price }})">
                                     @if($product->image)
                                         <img src="{{ Storage::url($product->image) }}" 
-                                             class="card-img-top" style="height: 120px; object-fit: contain; background: #f8f9fa;">
+                                             class="card-img-top" style="height: 120px; object-fit: cover; background: #f8f9fa;">
                                     @else
                                         <div style="height: 120px; background: linear-gradient(135deg, #f3f4f6, #e5e7eb); display: flex; align-items: center; justify-content: center;">
                                             <i class="bi bi-image text-muted" style="font-size: 2rem;"></i>

@@ -189,7 +189,7 @@
             }
             
             .mobile-screen .product-image {
-                height: 120px;
+                height: 150px;
             }
             
             .mobile-screen .product-content {
@@ -613,11 +613,12 @@
         }
 
         .product-image {
-            height: 160px;
+            height: 250px;
             background-size: cover;
             background-position: center;
             position: relative;
-            overflow: visible;
+            overflow: hidden;
+            border-radius: 12px 12px 0 0;
         }
 
         .product-image::before {
@@ -1042,7 +1043,7 @@
                         <a href="#category-{{ $catSlug }}" class="text-decoration-none d-block category-card" data-target="category-{{ $catSlug }}">
                             <div class="card h-100 shadow-sm border-0">
                                 @if($category->image)
-                                    <img src="{{ Storage::url($category->image) }}" class="card-img-top" style="height: 160px; object-fit: contain; background: #f8f9fa;">
+                                    <img src="{{ Storage::url($category->image) }}" class="card-img-top" style="height: 160px; object-fit: cover; background: #f8f9fa;">
                                 @else
                                     <div style="height: 160px; background: linear-gradient(135deg, #f3f4f6, #e5e7eb); display: flex; align-items: center; justify-content: center;">
                                         <i class="bi bi-image text-muted" style="font-size: 3rem;"></i>
@@ -1077,7 +1078,7 @@
                                     <div class="product-card fade-in">
                                         <div class="product-image" 
                                              @if($product->image) 
-                                                style="background: #f8f9fa url('{{ Storage::url($product->image) }}') center/contain no-repeat;"
+                                                style="background: #f8f9fa url('{{ Storage::url($product->image) }}') center/cover no-repeat;"
                                              @else
                                                 style="background: linear-gradient(135deg, #f3f4f6, #e5e7eb); display: flex; align-items: center; justify-content: center;"
                                              @endif>
@@ -1182,7 +1183,7 @@
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body">
-                    <div id="productModalImage" class="mb-3" style="height: 200px; border-radius: 12px; background-size: cover; background-position: center; background-repeat: no-repeat;"></div>
+                    <div id="productModalImage" class="mb-3" style="height: 300px; border-radius: 12px; background-size: cover; background-position: center; background-repeat: no-repeat;"></div>
                     <p id="productModalDescription" class="text-muted"></p>
                     <h4 id="productModalPrice" style="color: var(--primary-color);"></h4>
                 </div>
@@ -2563,11 +2564,13 @@
          }
          
          .products-grid.list-view .product-image {
-             width: 30%;
-             height: 130px;
+             width: 35%;
+             height: 120px;
              margin-right: 15px;
              flex-shrink: 0;
              border-radius: 12px;
+             background-size: cover !important;
+             background-position: center !important;
          }
          
          .products-grid.list-view .product-content {

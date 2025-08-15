@@ -24,7 +24,7 @@
                             <div class="col-md-6 col-lg-4 mb-4" data-category-id="{{ $category->id }}">
                                 <div class="card h-100 shadow-sm border-0">
                                     @if($category->image)
-                                        <img src="{{ Storage::url($category->image) }}" class="card-img-top" style="height: 150px; object-fit: contain; background: #f8f9fa;">
+                                        <img src="{{ Storage::url($category->image) }}" class="card-img-top" style="height: 150px; object-fit: cover; background: #f8f9fa;">
                                     @else
                                         <div style="height: 150px; background: linear-gradient(135deg, #f3f4f6, #e5e7eb); display: flex; align-items: center; justify-content: center;">
                                             <i class="bi bi-image text-muted" style="font-size: 3rem;"></i>
@@ -89,7 +89,7 @@
                                 <tr data-product-id="{{ $product->id }}">
                                     <td style="width: 70px;">
                                         @if($product->image)
-                                            <img src="{{ Storage::url($product->image) }}" style="width: 60px; height: 60px; object-fit: contain; border-radius: 6px; background: #f8f9fa;">
+                                            <img src="{{ Storage::url($product->image) }}" style="width: 60px; height: 60px; object-fit: cover; border-radius: 6px; background: #f8f9fa;">
                                         @else
                                             <div style="width: 60px; height: 60px; background: linear-gradient(135deg, #f3f4f6, #e5e7eb); display: flex; align-items: center; justify-content: center; border-radius: 6px;">
                                                 <i class="bi bi-image text-muted" style="font-size: 1.5rem;"></i>
