@@ -1035,7 +1035,7 @@ class RestaurantPanelController extends Controller
         $request->validate([
             'name' => 'required|string|max:100',
             'sort_order' => 'nullable|integer|min:0',
-            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:2048',
         ]);
 
         $data = [
@@ -1145,7 +1145,7 @@ class RestaurantPanelController extends Controller
             'stock' => 'nullable|integer|min:0',
             'is_available' => 'boolean',
             'sort_order' => 'nullable|integer|min:0',
-            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:2048',
         ]);
 
         $data = [
@@ -1194,7 +1194,7 @@ class RestaurantPanelController extends Controller
             'stock' => 'nullable|integer|min:0',
             'is_available' => 'boolean',
             'sort_order' => 'nullable|integer|min:0',
-            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:2048',
         ]);
 
         $data = [

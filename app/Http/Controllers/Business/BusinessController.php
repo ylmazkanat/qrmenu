@@ -107,7 +107,7 @@ class BusinessController extends Controller
             'address' => 'nullable|string',
             'table_count' => 'required|integer|min:1|max:100',
             'restaurant_manager_id' => 'nullable|exists:users,id',
-            'logo' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+            'logo' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:2048',
         ]);
 
         $restaurantData = $request->except('logo');
@@ -242,7 +242,7 @@ class BusinessController extends Controller
             'tax_number' => 'nullable|string|max:50',
             'email' => 'nullable|email',
             'website' => 'nullable|url',
-            'logo' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+            'logo' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:2048',
         ]);
 
         $businessData = $request->except('logo');
@@ -387,7 +387,7 @@ class BusinessController extends Controller
             'address' => 'nullable|string',
             'table_count' => 'required|integer|min:1|max:100',
             'restaurant_manager_id' => 'nullable|exists:users,id',
-            'logo' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+            'logo' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:2048',
             'working_hours_text' => 'nullable|string',
             'primary_color' => 'nullable|string|max:7',
             'secondary_color' => 'nullable|string|max:7',

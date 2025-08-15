@@ -92,7 +92,7 @@ class RestaurantController extends Controller
             'description' => 'nullable|string',
             'phone' => 'nullable|string|max:20',
             'address' => 'nullable|string',
-            'logo' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
+            'logo' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:2048',
             'is_active' => 'boolean',
         ]);
 
