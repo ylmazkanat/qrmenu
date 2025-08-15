@@ -640,7 +640,7 @@
             border-radius: 20px;
             font-weight: 600;
             font-size: 10px;
-            z-index: 10;
+            z-index: 25;
             box-shadow: 0 2px 4px rgba(0,0,0,0.2);
         }
         
@@ -652,13 +652,18 @@
             padding: 6px 10px;
         }
         
-        /* List view için product price */
-        .products-grid.list-view .product-price {
-            top: -10px;
-            left: -10px;
-            font-size: 10px;
-            padding: 4px 8px;
-        }
+                 /* List view için product price */
+         .products-grid.list-view .product-price {
+             top: 8px;
+             right: 8px;
+             font-size: 11px;
+             padding: 4px 8px;
+             z-index: 30;
+             position: absolute;
+             background: rgba(255, 69, 0, 0.95);
+             backdrop-filter: blur(2px);
+             box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+         }
 
         .product-badge {
             position: absolute;
@@ -2571,6 +2576,8 @@
              border-radius: 12px;
              background-size: cover !important;
              background-position: center !important;
+             position: relative;
+             overflow: visible;
          }
          
          .products-grid.list-view .product-content {
